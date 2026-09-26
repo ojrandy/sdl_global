@@ -18,23 +18,26 @@
 - [~] 0.3 Run `npm install` and `npm run dev`; confirm the existing site, tracking, admin login, shipment creation, documents and quotes all work (this is the baseline that must never regress). *API + build verified; the browser-only checks are pending (see Baseline below).*
 - [x] 0.3b Codebase walkthrough: read App.tsx, the main pages, server routes and db.ts; write a short "system notes" summary at the bottom of this tracker so future sessions start with context.
 
-### Baseline (2026-09-26, Node 22.14.0, npm 11.6.2)
-The owner's own servers were already running (Vite :3000, `npm start` :5000). They were left alone. Tests ran against an **isolated API instance** (tsx, port 5055, scratch DB, test-only password). Neither `.env` nor `data/` was touched.
+### Baseline (re-run 2026-09-26 on commit `6b8185f`, Node 22.14.0, npm 11.6.2)
+The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream commits, so it was re-run. The owner's servers (Vite :3000, `npm start` :5000) were left alone. Tests ran against an **isolated API instance** (tsx, port 5055, scratch DB, test-only password, `SEED_DEMO_DATA=true`). Neither `.env` nor `data/` was touched.
 
 | Check | Result | How verified |
 |---|---|---|
 | `npm install` (+ postinstall build) | PASS | 0 vulnerabilities |
-| `npm run build` | PASS, 0 TS errors, 2 warnings | (1) esbuild CSS: orphan declarations with no selector at `src/pages/TrackResultPage.css:231`, so those styles are dead today; (2) main JS chunk 1,697 kB (453 kB gzip) > 500 kB, since nothing is code-split |
-| Fresh DB init + demo seed | PASS | 3 demo shipments, quotes, docs seeded |
+| `npm run build` | PASS, 0 TS errors, 2 warnings | (1) esbuild CSS: orphan declarations with no selector at `src/pages/TrackResultPage.css:242`, so those styles are dead today; (2) main JS chunk 1,710 kB (456 kB gzip) > 500 kB, since nothing is code-split |
+| Fresh DB init + demo seed | PASS | seeded only because `SEED_DEMO_DATA=true` |
 | Public pages load | PASS (HTTP) | `/` 200 on Vite :3000 and on the built app :5000. **Visual render not checked, needs a browser** |
-| Track demo shipment | PASS | `GET /api/track/DXP-2026-7K2M9QRX` 200, PII masked; unknown ID 404; lowercase input works |
+| Track demo shipment | PASS | `GET /api/track/DXP-2026-7K2M9QRX` 200; name/email masked; unknown ID 404 |
 | Admin login | PASS | wrong pw 401, right pw 200, session `isAdmin:true`; admin routes 401 without a session |
-| Create shipment (admin) | PASS | `POST /api/shipments` 201 with 2 pieces; duplicate ID 409; foreign-Origin write 403 (CSRF guard) |
-| Track new shipment publicly | PASS | 200, masked; status update → IN_TRANSIT, event added |
+| Create shipment (admin) | PASS | 201 with 2 pieces; duplicate ID 409 |
+| Track new shipment publicly | PASS | 200; status update → IN_TRANSIT, event added |
+| Trash / restore | PASS | delete → public 404 → listed in trash → restore → public 200 |
 | Piece-label lookup (`…-01`) | 404 (current behaviour) | known gap, fixed in 1.8 |
-| Documents | PASS (API) | `POST /api/documents/generate` 201, listed in admin. **PDF download is client-side (jspdf), needs a browser check** |
-| Quote request → admin | PASS | `POST /api/quotes` 201 (`QR-2026-#####`), appears in the admin list, public lookup 200 |
-| Settings / stats (admin) | PASS | 200 |
+| Documents | PASS (API) | `POST /api/documents/generate` 201; admin list requires a session. **PDF download is client-side (jspdf), needs a browser check** |
+| Quote request → admin | PASS | 201 (`QR-2026-#####`), appears in the admin list, public lookup 200 |
+| Settings | PASS | public GET 200; PUT without a session 401 |
+| Stats (admin) | PASS | 200 |
+| `/api/diag/storage` | responds, **unauthenticated** | returns the server's data path; see System notes |
 
 **Owner to confirm in a browser** (then tick 0.3): pages render; `#/admin` login UI; admin Create Shipment wizard; a document PDF download; the quote form UI.
 - [ ] 0.4 Take "before" screenshots of every page → `screens/before/`.
@@ -138,41 +141,42 @@ The owner's own servers were already running (Vite :3000, `npm start` :5000). Th
 | 2026-09-26 | Tracking ID = `DLS` + 5 characters, 8 total. |
 | 2026-09-26 | All pages rebranded, including admin and generated documents. |
 | 2026-09-26 | Admin console lives only at private.sdlgloballogistics.com (replaces the old `dr.` subdomain). |
-| 2026-09-26 | Admin subdomain is an alias of the same app, domain and API as the public site. The separate `ADMIN_PROXY_TARGET` deployment mode is not used. `ALLOWED_ORIGIN` must accept both the public and `private.` origins. |
+| 2026-09-26 | Admin subdomain is an alias of the same app, domain and API as the public site. The separate `ADMIN_PROXY_TARGET` deployment mode is not used. (The Origin/CSRF check that needed `ALLOWED_ORIGIN` was already removed upstream in `dd47754`.) |
 | 2026-09-26 | Owner's source images are in `images/` at the project root. They are processed into `Public/` in Prompts 03–04. Existing site images that have no SDL replacement are **kept** (Phase 4 deletes only the images that were actually replaced, plus the old logos). |
 | 2026-09-26 | Piece labels use one format for every piece type: base ID + `-NN` (e.g. `DLS7K2M9-01`). The `-PL`, `-CTR`, `-FR`, `-DOC` and `-PET` suffixes are retired. A search for a piece label resolves to its parent. |
 | 2026-09-26 | Demo shipments stay available (rebranded to SDL in 1.10) during the rebrand. They are removed before launch (see 6.7). |
-| 2026-09-26 | `DB_PATH`, `SEED_DEMO_DATA` and `/api/diag/storage` (admin-gated) are added as part of Prompt 09 / task 1.6. |
+| 2026-09-26 | `DB_PATH`, `SEED_DEMO_DATA` and `/api/diag/storage` already exist (upstream commits). Prompt 09 / task 1.6 only renames the default DB file and puts `/api/diag/storage` behind `requireAdminAuth`. |
 
 ## Change log
 | Date | Task | Note |
 |---|---|---|
 | 2026-09-26 | 0.3b | Codebase walkthrough; System notes added at the bottom of this file. |
 | 2026-09-26 | 0.3 | Baseline recorded: install/build pass (2 warnings), all API flows pass; browser-only checks pending owner. No code changed. |
+| 2026-09-26 | 0.3 / 0.3b | Re-ran the baseline and rewrote the System notes for `6b8185f` (11 upstream commits landed after the first pass). Local branch `sdl-rebrand` created. |
 ---
 
-## System notes (codebase walkthrough, 2026-09-26)
+## System notes (codebase walkthrough, updated 2026-09-26 for commit `6b8185f`)
 
 **Shape.** One Node process. `server/index.ts` (Express 5) serves `/api/*` and the built SPA from `dist/`. Dev: Vite on :3000 proxies `/api` to Express on :5000. Build: `tsc` (src) → `vite build` → `tsc -p tsconfig.server.json` → `dist-server/`.
 
-**Routing.** No router library. `src/App.tsx` keeps `currentPage` in state and syncs it with `location.hash` (`#/services`, `#/track/:id`, `#/quote/:id`). `getInitialPage()` resolves the first paint synchronously; a `hashchange` effect handles the rest. `KNOWN_PAGES` is the allow-list. `track-result` and `quote-result` are internal states, not hash pages. Admin: `isAdminHost()` = `hostname.startsWith('dr.')` → always `admin`. On localhost/127.0.0.1, `#/admin` also opens admin; anywhere else `#/admin` falls back to Home. The admin bundle is statically imported, so it ships to every public visitor.
+**Routing.** No router library. `src/App.tsx` keeps `currentPage` in state and syncs it with `location.hash` (`#/services`, `#/track/:id`, `#/quote/:id`). `getInitialPage()` resolves the first paint synchronously; a `hashchange` effect handles the rest. `KNOWN_PAGES` is the allow-list. Admin: `isAdminHost()` = `hostname.startsWith('dr.')` → always `admin`. On localhost, `#/admin` also opens admin; anywhere else `#/admin` falls back to Home. The admin bundle is statically imported, so it ships to every public visitor.
 
-**Frontend ↔ API.** `src/services/api.ts` holds relative `fetch('/api/...')` calls with `credentials: 'include'` on the auth calls. `AdminDataProvider` (`src/context/AdminDataContext.tsx`) wraps the **whole** app, public pages included. It starts from `MOCK_SHIPMENTS` (`src/data/mockShipments.ts`), then replaces them with server data. Public visitors get 401s, so they keep the mocks, and the 12 s poller stops after the first 401. Admin mutations are **optimistic**: local state is updated first, then the API is called fire-and-forget (`.catch(console.error)`). Public tracking (`handleTrackShipment`): quote IDs (`QR…`) first, then local context/mock lookup, then `GET /api/track/:id` (PII-masked per the settings), then the `DXP-SAMPLE`/`7K2M9QRX` sample fallback. TrackResult re-polls every 8 s. `simulationEngine` no longer ticks. It broadcasts updates across tabs through localStorage key `dxp_live_shipment_stream`.
+**Frontend ↔ API.** `src/services/api.ts` holds relative `fetch('/api/...')` calls. `AdminDataProvider` (`src/context/AdminDataContext.tsx`) wraps the **whole** app, public pages included. It starts from `MOCK_SHIPMENTS`, then replaces them with server data. Public visitors get 401s, so they keep the mocks, and the 12 s poller stops after the first 401. Status updates, settings saves and deletes now await the server and roll back on failure. Shipment creation and quote conversion are still fire-and-forget (`AdminDataContext.tsx:871`, `:739`). Public tracking: quote IDs (`QR…`) first, then local context/mock lookup, then `GET /api/track/:id` (PII-masked, including email), then the `DXP-SAMPLE`/`7K2M9QRX` fallback. The public site also reads company contact info from `GET /api/settings`. `simulationEngine` only broadcasts across tabs through localStorage key `dxp_live_shipment_stream`.
 
-**Server progress.** `server/progress.ts` advances `progress_percent` and the map position on every read, based on elapsed time. It imports `src/services/{routingEngine,planningEngine,geocodingService}.ts`, so those files are **shared with Node** and must stay DOM-free.
+**Server progress.** `server/progress.ts` advances progress and the map position on every read. It imports `src/services/{routingEngine,planningEngine,geocodingService}.ts`, so those files are **shared with Node** and must stay DOM-free.
 
-**Where tracking IDs are created.** They're created in six places, and each one makes its own ID: `server/routes/shipments.ts:216` (fallback only), `server/routes/quotes.ts:258`, `AdminDataContext.tsx:464` & `:688` (the REBRAND_MAP line numbers are stale), `CreateShipmentView.tsx:332–338` (`DXP-2026-` + 8 chars), `ShipPage.tsx:181`, and `planningEngine.ts:630` (`DXP-RTO-…`). **The client usually generates the ID and the server accepts it** (`POST /api/shipments` takes `body.trackingNumber` and returns 409 on collision, even on the public, unauthenticated route). Piece suffixes are inconsistent: `-01`, `-PL01`, `-CTR01`, `-FR01`, `-DOC01`, `-PET01`, and piece ids `-P1`. `/api/track` does exact matching only. There's no normalisation and no child→parent resolution. Other IDs: quotes `QR-2026-#####`, docs `BOL/LBL/INV/REC/INS-2026-#####`.
+**Where tracking IDs are created.** Six places, each making its own ID: `server/routes/shipments.ts:216` (fallback only), `server/routes/quotes.ts:258`, `AdminDataContext.tsx:528` & `:752`, `CreateShipmentView.tsx:337` (`DXP-2026-` + 8 chars), `ShipPage.tsx:181`, and `planningEngine.ts:638` (`DXP-RTO-…`). **The client usually generates the ID and the server accepts it** (`POST /api/shipments` takes `body.trackingNumber`, returns 409 on collision, even on the public, unauthenticated route). Piece suffixes are inconsistent (`-01`, `-PL01`, `-CTR01`, `-FR01`, `-DOC01`, `-PET01`; piece ids `-P1`). `/api/track` does exact matching (case-insensitive) with no child→parent resolution.
 
-**Admin auth.** A single shared password, checked with `bcrypt.compare` against `ADMIN_PASSWORD_HASH` (`server/routes/auth.ts`, rate-limited to 20 per 15 min). On success, `req.session.isAdmin = true`. The session uses the default in-memory store: cookie `dxp.sid`, httpOnly, sameSite=lax, secure in production, 12 h, trust proxy 1. Because the store is in memory, **every restart or redeploy logs everyone out.** `requireAdminAuth` gates routes, and for writes it also checks `Origin` against `ALLOWED_ORIGIN` (**one** value) plus the localhost origins. Mixed public/admin routers (shipments, quotes, documents) gate per route; settings and stats are gated at the mount. The login page does a full page reload afterwards.
+**Admin auth.** A single shared password, checked with `bcrypt.compare` against `ADMIN_PASSWORD_HASH` (rate-limited to 20 per 15 min). It sets `req.session.isAdmin`. Session store is in memory: cookie `dxp.sid`, httpOnly, sameSite=lax, secure in production, 12 h, trust proxy 1. **Every restart or redeploy logs everyone out.** `requireAdminAuth` is now a plain session check; the Origin/CSRF check was removed (`dd47754`), so CSRF protection relies on SameSite=lax alone. Shipments, quotes, documents and settings gate per route; stats is gated at the mount.
 
-**DB.** `node:sqlite` (Node ≥ 22.5) at `<cwd>/data/duolingo_express.db`, hard-coded, WAL mode, foreign keys on. **No `DB_PATH` env var exists yet**, although DEPLOYMENT.md assumes one. The schema is created in `initDatabase()` with try/catch `ALTER` migrations, and the default `general` settings are inserted only if missing. `seedDatabaseIfEmpty()` runs **unconditionally**: it seeds if `DXP-2026-7K2M9QRX` is absent. There is **no `SEED_DEMO_DATA` flag.** `ADMIN_PROXY_TARGET` mode (a separate admin deployment that proxies `/api` and uses an in-memory DB) is how the admin subdomain was deployed last time.
+**DB.** `node:sqlite` (Node ≥ 22.5) at `DB_PATH`, or `<cwd>/data/duolingo_express.db` if unset. WAL mode, foreign keys on. The schema is created in `initDatabase()` with try/catch `ALTER` migrations (incl. `deleted_at_ts` for soft delete). The seed runs **only** when `SEED_DEMO_DATA=true` **and** the shipments table is empty. Shipment delete is soft (trash); `/permanent` hard-deletes from the trash.
 
 **Fragile / worth knowing**
-- **DEPLOYMENT.md doesn't match the code.** It expects `DB_PATH`, `SEED_DEMO_DATA` and `/api/diag/storage`. None of them exist, so all three have to be built. The DB currently lives inside the deploy folder, which a redeploy may wipe.
-- Renaming the seed's flagship ID makes the seed re-run on existing DBs. Removing the seed needs the flag.
-- Hosting admin on `private.` as an alias of the same app needs `ALLOWED_ORIGIN` to accept **both** origins, or every admin write gets a 403.
-- Renaming the `dxp.sid` cookie or the `dxp_live_shipment_stream` key is harmless (it just logs everyone out once), but those names must change together with the logout `clearCookie`.
-- There are many `'New York'/'NY'` and `'August 24, 2026'` fallback defaults in the server insert paths. The `ET|CT|MT|PT` timestamp parsing is duplicated in `track.ts` and `shipments.ts`.
-- The schema columns (`*_state`, `*_zip`, `*_lbs`) are U.S.-shaped. They stay as they are (rule 10); the worldwide work has to map onto them.
-- `CreateShipmentView.tsx` is 4,030 lines and `DocumentCenterView.tsx` is 1,967 lines. Edit them surgically.
-- The tree has old git history (`duolingo-express` remote). `package-lock.json` is modified, and `images/` is untracked.
+- **`/api/diag/storage` is public** and returns the server's absolute data path. Gate it (Prompt 09) and remove it after the persistence check.
+- **`GET /api/settings` is public** and returns the whole settings object, including `signatureStampUrl`, `signatoryName`, `defaultFuelSurchargeRate` and `hubSortStatus` once they are set. Consider returning only the public fields.
+- `ADMIN_PROXY_TARGET` mode is still in the code but unused under the same-app decision. Candidate for removal.
+- The `dxp.sid` cookie, the `dxp_live_shipment_stream` key and the logout `clearCookie` must be renamed together. Renaming them logs everyone out once.
+- Many `'New York'/'NY'` and `'August 24, 2026'` fallback defaults sit in the server insert paths. The `ET|CT|MT|PT` timestamp parsing is duplicated in `track.ts` and `shipments.ts`.
+- Schema columns (`*_state`, `*_zip`, `*_lbs`) are U.S.-shaped. They stay (rule 10); the worldwide work maps onto them.
+- `CreateShipmentView.tsx` (4,030 lines) and `DocumentCenterView.tsx` (1,967 lines): edit surgically.
+- The repo still carries the old history (22 commits), and it was pushed to `sdl` (`ojrandy/sdl_global`). `origin` still points at the old `duolingo-express` repo. `screens/` (~11 MB) is tracked.
