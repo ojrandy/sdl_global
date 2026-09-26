@@ -80,7 +80,8 @@ Spelling: International/British English (see BRAND_GUIDE §3).
 
 ### 2.1 Hero
 - **Badge:** `WORLDWIDE LOGISTICS NETWORK`
-- **H1:** `Moving the world,` **`one promise at a time.`** (the second line takes the accent highlight)
+- **H1:** `Fast, Safe,` **`Reliable.`** (the second line takes the accent highlight)
+- **Hero image:** `images/landingimage.png` on web (`hero-home`), `images/landingimage-mobile.png` on phones (`hero-home-mobile`, below 768px)
 - **Sub:** `Express parcels, freight, vehicles and high-value cargo, moved across borders by a team that answers, with one tracking ID from pickup to signed delivery.`
 - **Buttons:** `Get a Rate Quote` (primary) · `Track a Shipment` (ghost)
 - **Inline track field (if present):** placeholder `Enter tracking ID, e.g. DLS7K2M9`, button `Track`
