@@ -23,7 +23,7 @@ Copyright line: `© {currentYear} SDL Global Logistics Ltd. All rights reserved.
 **One line:** SDL Global Logistics moves time-critical and high-value cargo across borders, with one tracking number
 and one accountable team from pickup to proof of delivery.
 
-**Tagline (primary):** *Moving the world, one promise at a time.*
+**Tagline (primary):** *Fast, Safe, Reliable.* (as printed on the logo; owner decision 2026-09-26)
 **Alternates:** *Global reach. Personal accountability.* · *Wherever it's going, we're already there.*
 
 **Pillars** (every page should reinforce at least one):

@@ -41,8 +41,8 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 
 **Browser checks (owner, 2026-09-26): PASS.** Pages render; `#/admin` login UI; admin Create Shipment wizard; document PDF download; quote form UI.
 - [ ] 0.4 Take "before" screenshots of every page → `screens/before/`.
-- [ ] 0.5 Owner drops SDL images into `Public/images/sdl/` using the names in `BRAND_GUIDE.md §8`.
-- [ ] 0.6 Owner supplies logo files (full-colour, white/reversed, icon-only) → `Public/brand/`.
+- [x] 0.5 Owner drops SDL images into `Public/images/sdl/` using the names in `BRAND_GUIDE.md §8`.
+- [~] 0.6 Owner supplies logo files (full-colour, white/reversed, icon-only) → `Public/brand/`. *Derived from `logo.jpeg` (transparent, white, icon); vector/SVG originals still wanted.*
 
 ## Phase 1 — Brand foundation (no visual redesign yet)
 - [ ] 1.1 Create `src/config/brand.ts` with every value from `CLAUDE.md §2`; replace hard-coded brand strings with imports.
@@ -85,7 +85,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [ ] 3.14 Replace invented testimonials & client logos per CONTENT.md §2.10–2.11 (remove until real ones exist)
 
 ## Phase 4 — Images
-- [ ] 4.1 Optimise all SDL images (WebP + JPG fallback, max 2400px wide hero, ≤ 250 KB each where possible).
+- [x] 4.1 Optimise all SDL images (WebP + JPG fallback, max 2400px wide hero, ≤ 250 KB each where possible).
 - [ ] 4.2 Swap image paths in Home, Services, TrackResult; delete old image files from `Public/`.
 - [ ] 4.3 Write alt text for every image (CONTENT.md §12).
 
@@ -144,6 +144,9 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | Admin subdomain is an alias of the same app, domain and API as the public site. The separate `ADMIN_PROXY_TARGET` deployment mode is not used. (The Origin/CSRF check that needed `ALLOWED_ORIGIN` was already removed upstream in `dd47754`.) |
 | 2026-09-26 | Owner's source images are in `images/` at the project root. They are processed into `Public/` in Prompts 03–04. Existing site images that have no SDL replacement are **kept** (Phase 4 deletes only the images that were actually replaced, plus the old logos). |
 | 2026-09-26 | Piece labels use one format for every piece type: base ID + `-NN` (e.g. `DLS7K2M9-01`). The `-PL`, `-CTR`, `-FR`, `-DOC` and `-PET` suffixes are retired. A search for a piece label resolves to its parent. |
+| 2026-09-26 | Tagline is **"Fast, Safe, Reliable"** (from the logo), replacing "Moving the world, one promise at a time". Updated in BRAND_GUIDE §2 and CONTENT §1.1/§1.3. The Home hero H1 (CONTENT §2.1) still uses the old line: owner to confirm the new H1. |
+| 2026-09-26 | Images: use the supplied SDL images as they are (AI artwork, logo lettered "SOL" in places). Every card photo is a 1:1 square so cards line up at one height. Gaps are filled with CC0/public-domain photos (sources in `images/free-cc0/SOURCES.md`); existing site photos without a replacement are kept. Real staff photos replace the AI people when the owner supplies them. |
+| 2026-09-26 | Logo: transparent, white and icon versions are derived from `images/logo.jpeg` by `scripts/optimize-images.mjs` until vector files are supplied. |
 | 2026-09-26 | Demo shipments stay available (rebranded to SDL in 1.10) during the rebrand. They are removed before launch (see 6.7). |
 | 2026-09-26 | `DB_PATH`, `SEED_DEMO_DATA` and `/api/diag/storage` already exist (upstream commits). Prompt 09 / task 1.6 only renames the default DB file and puts `/api/diag/storage` behind `requireAdminAuth`. |
 
@@ -154,6 +157,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | 0.3 | Baseline recorded: install/build pass (2 warnings), all API flows pass; browser-only checks pending owner. No code changed. |
 | 2026-09-26 | 0.3 / 0.3b | Re-ran the baseline and rewrote the System notes for `6b8185f` (11 upstream commits landed after the first pass). Local branch `sdl-rebrand` created. |
 | 2026-09-26 | 0.3 | Owner confirmed the browser checks. Baseline complete. |
+| 2026-09-26 | 4.1 / 0.5 / 0.6 | Prompt 04: `scripts/optimize-images.mjs` builds `Public/brand/*` (transparent/white logo, mark, favicon, apple-touch, OG) and `Public/images/sdl/*` (WebP+JPG, square cards); `<ResponsiveImage>` added; 4 CC0 gap photos in `images/free-cc0/`. Not wired into pages yet. |
 | 2026-09-26 | 0.2 | Docs are in the repo (`CLAUDE.md` at the root, the rest in `/docs`). |
 ---
 
