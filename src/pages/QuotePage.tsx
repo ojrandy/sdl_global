@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './QuotePage.css';
 
 interface QuotePageProps {
@@ -31,8 +32,8 @@ interface QuotePageProps {
 
 export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService }) => {
   const { createQuoteRequest, settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
-  const dotNumber = settings.dotNumber || 'USDOT #3894210 · MC-892401';
+  // Empty phone/regulatory values hide their element (no placeholders).
+  const { phone: supportPhone, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
 
   // Contact Info (Starts clean and blank)
   const [customerName, setCustomerName] = useState('');
@@ -213,7 +214,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
         <div className="dxp-container-wide quote-hero-inner">
           <div className="quote-hero-pill animate-fade-in">
             <span className="quote-pulse-dot" />
-            <span>{dotNumber} · CENTRAL TARIFF & RATING DESK</span>
+            <span>{dotNumber ? `${dotNumber} · ` : ''}CENTRAL TARIFF & RATING DESK</span>
           </div>
 
           <h1 className="quote-hero-title animate-fade-in">
@@ -658,7 +659,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
 
                 <div className="contact-hotline-box">
                   <small>Need Immediate Tariff Assistance?</small>
-                  <strong>{supportPhone}</strong>
+                  <strong>{supportPhone || dispatchEmail}</strong>
                   <p>24/7 Central Operations Desk Connection</p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, FileText, Lock, Eye, DollarSign, CheckCircle2, ChevronRight } from 'lucide-react';
-import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './LegalPage.css';
 
 interface LegalPageProps {
@@ -12,8 +12,8 @@ export const LegalPage: React.FC<LegalPageProps> = ({
   initialSection = 'privacy',
   onNavigate = () => {},
 }) => {
-  const { settings } = useAdminData();
-  const dotNumber = settings.dotNumber || 'USDOT #3894210 · MC-892401';
+  // Empty regulatory line hides its element (no invented licence numbers).
+  const { regulatoryLine: dotNumber } = useCompanyContact();
   const [activeDoc, setActiveDoc] = useState(initialSection);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
         <div className="dxp-container-wide legal-hero-inner">
           <div className="legal-hero-pill animate-fade-in">
             <span className="legal-pulse-dot" />
-            <span>{dotNumber} · MOTOR CARRIER GOVERNANCE</span>
+            <span>{dotNumber ? `${dotNumber} · ` : ''}MOTOR CARRIER GOVERNANCE</span>
           </div>
 
           <h1 className="legal-hero-title animate-fade-in">
@@ -113,8 +113,12 @@ export const LegalPage: React.FC<LegalPageProps> = ({
               <span>Revision: August 2026</span>
               <span>•</span>
               <span>Effective: Immediate</span>
-              <span>•</span>
-              <span>{dotNumber}</span>
+              {dotNumber && (
+                <>
+                  <span>•</span>
+                  <span>{dotNumber}</span>
+                </>
+              )}
             </div>
           </div>
 

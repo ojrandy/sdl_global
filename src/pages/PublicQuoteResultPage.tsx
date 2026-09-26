@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { QuoteRequest } from '../types/admin';
 import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
+import { LEGAL_NAME } from '../config/brand';
 import './PublicQuoteResultPage.css';
 
 interface PublicQuoteResultPageProps {
@@ -36,9 +38,9 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   onNavigate,
 }) => {
   const { updateQuoteStatus, settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
-  const dispatchEmail = settings.dispatchEmail || 'dispatch@duolingoexpress.com';
-  const companyName = settings.companyName || 'Duolingo Express Logistics LLC';
+  // Empty phone/address values hide their element (no placeholders).
+  const { phone: supportPhone, email: dispatchEmail, address: headquartersAddress } = useCompanyContact();
+  const companyName = settings.companyName || LEGAL_NAME;
   const [copiedId, setCopiedId] = useState(false);
   const [accepted, setAccepted] = useState(quote.status === 'ACCEPTED' || quote.status === 'CONVERTED');
 
@@ -232,7 +234,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                   </p>
                   <div className="hotline-banner">
                     <Phone size={16} className="text-blue" />
-                    <span>Need urgent priority quotation? Call <strong>{supportPhone}</strong> with reference <strong className="font-mono text-blue">{quote.id}</strong>.</span>
+                    <span>Need urgent priority quotation? {supportPhone ? 'Call' : 'Email'} <strong>{supportPhone || dispatchEmail}</strong> with reference <strong className="font-mono text-blue">{quote.id}</strong>.</span>
                   </div>
                 </div>
               )}
@@ -322,10 +324,12 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                     <small>Contact Email:</small>
                     <strong className="text-blue">{quote.requesterEmail || (quote as any).customerEmail || 'client@example.com'}</strong>
                   </div>
-                  <div className="info-row">
-                    <small>Contact Phone:</small>
-                    <strong className="font-mono">{quote.requesterPhone || (quote as any).customerPhone || '(212) 555-0148'}</strong>
-                  </div>
+                  {(quote.requesterPhone || (quote as any).customerPhone) && (
+                    <div className="info-row">
+                      <small>Contact Phone:</small>
+                      <strong className="font-mono">{quote.requesterPhone || (quote as any).customerPhone}</strong>
+                    </div>
+                  )}
                   <div className="info-row">
                     <small>Submission Date:</small>
                     <span>{quote.submittedDate || (quote as any).createdAt || 'Recent'}</span>
@@ -364,7 +368,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                     <small>24/7 Operations Line</small>
                   </div>
                 </div>
-                <strong className="desk-phone">{supportPhone}</strong>
+                <strong className="desk-phone">{supportPhone || dispatchEmail}</strong>
                 <p className="desk-sub">Reference quote #{quote.id} when connecting with our tariff team.</p>
               </div>
             </div>
@@ -382,8 +386,8 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
             <img src="/logo.png" alt="Duolingo Express" className="print-doc-logo" />
             <div className="print-company-info">
               <strong>{companyName}</strong>
-              <span>{settings.headquartersAddress || 'JFK International Cargo Terminal, Jamaica, NY 11430'}</span>
-              <span>Operations Desk: {supportPhone} · {dispatchEmail}</span>
+              {headquartersAddress && <span>{headquartersAddress}</span>}
+              <span>Operations Desk: {[supportPhone, dispatchEmail].filter(Boolean).join(' · ')}</span>
             </div>
           </div>
 

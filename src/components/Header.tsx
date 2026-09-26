@@ -17,7 +17,7 @@ import {
   Headphones,
   FileText
 } from 'lucide-react';
-import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './Header.css';
 
 interface HeaderProps {
@@ -33,11 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   // Admin-editable company contact info — this used to be hardcoded here (and independently
   // hardcoded, often with different fake numbers, across every other public page), so
   // changing the phone/email/DOT number in Settings never actually reached any of them.
-  const { settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
-  const supportPhoneDigits = supportPhone.replace(/[^0-9+]/g, '');
-  const dispatchEmail = settings.dispatchEmail || 'dispatch@duolingoexpress.com';
-  const dotNumber = settings.dotNumber || 'USDOT #3894210 · MC-892401';
+  // Empty values hide their element (no placeholder numbers).
+  const { phone: supportPhone, phoneHref, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
 
   // Prevent background scroll when mobile drawer is open
   useEffect(() => {
@@ -62,11 +59,15 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="dxp-topbar hide-mobile-topbar">
         <div className="dxp-container-wide dxp-topbar-inner">
           <div className="dxp-topbar-left">
-            <div className="topbar-item">
-              <Phone size={13} className="text-orange" />
-              <span>Priority Dispatch: <strong>{supportPhone}</strong></span>
-            </div>
-            <div className="topbar-divider" />
+            {supportPhone && (
+              <>
+                <div className="topbar-item">
+                  <Phone size={13} className="text-orange" />
+                  <span>Priority Dispatch: <strong>{supportPhone}</strong></span>
+                </div>
+                <div className="topbar-divider" />
+              </>
+            )}
             <div className="topbar-item">
               <Mail size={13} className="text-orange" />
               <span>{dispatchEmail}</span>
@@ -79,10 +80,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="dxp-topbar-right">
-            <div className="topbar-cert-pill font-mono">
-              <CheckCircle2 size={12} className="text-emerald" />
-              <span>{dotNumber}</span>
-            </div>
+            {dotNumber && (
+              <div className="topbar-cert-pill font-mono">
+                <CheckCircle2 size={12} className="text-emerald" />
+                <span>{dotNumber}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -307,13 +310,22 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="live-status-dot" />
                 <span className="hotline-tag font-mono">24/7 OPERATIONS ACTIVE</span>
               </div>
-              <a href={`tel:${supportPhoneDigits}`} className="hotline-phone-btn">
-                <Phone size={15} />
-                <span>Call Dispatch: {supportPhone}</span>
-              </a>
-              <div className="drawer-regulatory font-mono">
-                {dotNumber}
-              </div>
+              {supportPhone ? (
+                <a href={phoneHref} className="hotline-phone-btn">
+                  <Phone size={15} />
+                  <span>Call Dispatch: {supportPhone}</span>
+                </a>
+              ) : (
+                <a href={`mailto:${dispatchEmail}`} className="hotline-phone-btn">
+                  <Mail size={15} />
+                  <span>{dispatchEmail}</span>
+                </a>
+              )}
+              {dotNumber && (
+                <div className="drawer-regulatory font-mono">
+                  {dotNumber}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ import {
   FileCheck,
   Compass
 } from 'lucide-react';
-import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './AboutPage.css';
 
 interface AboutPageProps {
@@ -27,8 +27,8 @@ interface AboutPageProps {
 }
 
 export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
-  const { settings } = useAdminData();
-  const dotNumber = settings.dotNumber || 'USDOT #3894210 · MC-892401';
+  // Empty regulatory line hides its element (no invented licence numbers).
+  const { regulatoryLine: dotNumber } = useCompanyContact();
   return (
     <div className="dxp-page-about">
       {/* =========================================================================
@@ -39,7 +39,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         <div className="dxp-container-wide about-hero-inner">
             <div className="about-hero-badge animate-fade-in">
               <span className="about-badge-dot" />
-              <span>{dotNumber} · AUTHORIZED U.S. MOTOR CARRIER</span>
+              <span>{dotNumber ? `${dotNumber} · ` : ''}AUTHORIZED U.S. MOTOR CARRIER</span>
             </div>
 
           <h1 className="about-hero-title animate-fade-in">
@@ -51,11 +51,15 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           </p>
 
           <div className="about-hero-credentials animate-fade-in">
-            <div className="cred-badge">
-              <ShieldCheck size={16} className="text-orange" />
-              <span>{dotNumber} Verified</span>
-            </div>
-            <div className="cred-divider" />
+            {dotNumber && (
+              <>
+                <div className="cred-badge">
+                  <ShieldCheck size={16} className="text-orange" />
+                  <span>{dotNumber} Verified</span>
+                </div>
+                <div className="cred-divider" />
+              </>
+            )}
             <div className="cred-badge">
               <FileCheck size={16} className="text-emerald" />
               <span>FMCSA Carrier #MC-948201</span>
@@ -357,13 +361,15 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             </div>
 
             <div className="compliance-badges-grid">
-              <div className="c-badge-item">
-                <ShieldCheck size={28} className="text-orange" />
-                <div>
-                  <strong>{dotNumber}</strong>
-                  <span>Active & Verified Carrier Authority</span>
+              {dotNumber && (
+                <div className="c-badge-item">
+                  <ShieldCheck size={28} className="text-orange" />
+                  <div>
+                    <strong>{dotNumber}</strong>
+                    <span>Active & Verified Carrier Authority</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="c-badge-item">
                 <FileCheck size={28} className="text-emerald" />

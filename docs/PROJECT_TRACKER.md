@@ -45,7 +45,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [~] 0.6 Owner supplies logo files (full-colour, white/reversed, icon-only) → `Public/brand/`. *Derived from `logo.jpeg` (transparent, white, icon); vector/SVG originals still wanted.*
 
 ## Phase 1 — Brand foundation (no visual redesign yet)
-- [ ] 1.1 Create `src/config/brand.ts` with every value from `CLAUDE.md §2`; replace hard-coded brand strings with imports.
+- [~] 1.1 Create `src/config/brand.ts` with every value from `CLAUDE.md §2`; replace hard-coded brand strings with imports. *brand.ts created; admin host, admin title and all public contact/social/licence values now read from it. The remaining old-brand strings are replaced in their own tasks (1.4–1.7, Phase 3).*
 - [ ] 1.2 Extract the colour palette from the SDL logo (BRAND_GUIDE §4), then write the tokens into `src/styles/tokens.css`.
 - [ ] 1.3 Rename token prefix `--dxp-*` → `--sdl-*` and class prefix `dxp-` → `sdl-` across `src/` (~59 files, 63 tokens).
 - [ ] 1.4 Replace `logo.png`, footer logo, favicon, apple-touch-icon; add `site.webmanifest` and OG image.
@@ -147,6 +147,8 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | Tagline is **"Fast, Safe, Reliable"** (from the logo), replacing "Moving the world, one promise at a time". Updated in BRAND_GUIDE §2 and CONTENT §1.1/§1.3. The Home hero H1 (CONTENT §2.1) also uses it: "Fast, Safe, **Reliable.**" (owner confirmed). |
 | 2026-09-26 | Images: use the supplied SDL images as they are (AI artwork, logo lettered "SOL" in places). Every card photo is a 1:1 square so cards line up at one height. Gaps are filled with CC0/public-domain photos (sources in `images/free-cc0/SOURCES.md`); existing site photos without a replacement are kept. Real staff photos replace the AI people when the owner supplies them. Home hero: owner-supplied `landingimage.png` (web) and `landingimage-mobile.png` (mobile), confirmed. |
 | 2026-09-26 | Logo: transparent, white and icon versions are derived from `images/logo.jpeg` by `scripts/optimize-images.mjs` until vector files are supplied. |
+| 2026-09-26 | Public contact values resolve as: admin Settings (DB, editable without a deploy) → `src/config/brand.ts` → empty. Empty phone / address / social / licence values hide their element (`src/utils/useCompanyContact.ts`); where a phone line would disappear, the email is shown instead. |
+| 2026-09-26 | Admin opens only when `hostname === ADMIN_HOST` (`private.sdlgloballogistics.com`, exact match) or via `#/admin` on localhost/127.0.0.1. The admin page adds `<meta name="robots" content="noindex, nofollow">` at runtime and uses the title "SDL Operations Console". The session cookie stays host-only (no `Domain`), so the admin session is never shared with the public domain. |
 | 2026-09-26 | Demo shipments stay available (rebranded to SDL in 1.10) during the rebrand. They are removed before launch (see 6.7). |
 | 2026-09-26 | `DB_PATH`, `SEED_DEMO_DATA` and `/api/diag/storage` already exist (upstream commits). Prompt 09 / task 1.6 only renames the default DB file and puts `/api/diag/storage` behind `requireAdminAuth`. |
 
@@ -158,6 +160,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | 0.3 / 0.3b | Re-ran the baseline and rewrote the System notes for `6b8185f` (11 upstream commits landed after the first pass). Local branch `sdl-rebrand` created. |
 | 2026-09-26 | 0.3 | Owner confirmed the browser checks. Baseline complete. |
 | 2026-09-26 | 4.1 / 0.5 / 0.6 | Prompt 04: `scripts/optimize-images.mjs` builds `Public/brand/*` (transparent/white logo, mark, favicon, apple-touch, OG) and `Public/images/sdl/*` (WebP+JPG, square cards); `<ResponsiveImage>` added; 4 CC0 gap photos in `images/free-cc0/`. Not wired into pages yet. |
+| 2026-09-26 | 1.1 (partial) + admin host | Prompt 05: `src/config/brand.ts`, `useCompanyContact`; `isAdminHost()` reads `ADMIN_HOST`; robots noindex + console title on admin; fake phones/addresses/USDOT/social links removed or hidden across Header, Footer, Home, Contact, Help, Quote, PublicQuoteResult, Track, TrackResult, About, Legal, Locations, Services. Build passes; login + host-only Secure cookie verified on a `private.` Host header (production mode). |
 | 2026-09-26 | 0.2 | Docs are in the repo (`CLAUDE.md` at the root, the rest in `/docs`). |
 ---
 

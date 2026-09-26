@@ -20,7 +20,7 @@ import {
   Send,
   Sparkles
 } from 'lucide-react';
-import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './HelpPage.css';
 
 interface HelpPageProps {
@@ -36,10 +36,8 @@ interface FaqItem {
 }
 
 export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
-  const { settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
-  const supportPhoneDigits = supportPhone.replace(/[^0-9+]/g, '');
-  const dotNumber = settings.dotNumber || 'USDOT #3894210 · MC-892401';
+  // Empty phone/regulatory values hide their element (no placeholders).
+  const { phone: supportPhone, phoneHref, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [openFaqId, setOpenFaqId] = useState<string | null>('trk-1');
@@ -119,7 +117,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       id: 'exc-2',
       category: 'exceptions',
       question: 'How do I request an in-transit address correction or terminal hold?',
-      answer: `Authorized senders or consignees can call our 24/7 central dispatch hotline at ${supportPhone} with the master tracking ID to hold the consignment at a regional gateway before final delivery.`,
+      answer: `Authorized senders or consignees can ${supportPhone ? `call our 24/7 central dispatch hotline at ${supportPhone}` : `email our 24/7 central dispatch desk at ${dispatchEmail}`} with the master tracking ID to hold the consignment at a regional gateway before final delivery.`,
       badge: 'Urgent Hold'
     },
     {
@@ -157,7 +155,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         <div className="dxp-container-wide help-hero-inner">
           <div className="help-hero-pill animate-fade-in">
             <span className="help-pulse-dot" />
-            <span>{dotNumber} · 24/7 CLIENT OPERATIONS DESK</span>
+            <span>{dotNumber ? `${dotNumber} · ` : ''}24/7 CLIENT OPERATIONS DESK</span>
           </div>
 
           <h1 className="help-hero-title animate-fade-in">
@@ -377,13 +375,15 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                 <Send size={16} />
                 <span>Submit Dispatch Ticket</span>
               </button>
-              <a
-                href={`tel:${supportPhoneDigits}`}
-                className="btn-corp-ghost"
-              >
-                <Phone size={16} />
-                <span>Call {supportPhone}</span>
-              </a>
+              {supportPhone && (
+                <a
+                  href={phoneHref}
+                  className="btn-corp-ghost"
+                >
+                  <Phone size={16} />
+                  <span>Call {supportPhone}</span>
+                </a>
+              )}
             </div>
           </div>
         </section>

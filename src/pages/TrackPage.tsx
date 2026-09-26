@@ -20,7 +20,7 @@ import { SupportModal } from '../components/SupportModal';
 import { PRIMARY_SHIPMENT, getShipmentByTrackingNumber } from '../data/mockShipments';
 import { Shipment } from '../types/shipment';
 import { api } from '../services/api';
-import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './TrackPage.css';
 
 interface TrackPageProps {
@@ -30,8 +30,8 @@ interface TrackPageProps {
 }
 
 export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFoundQuery }) => {
-  const { settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
+  // An empty phone hides its badge (no placeholder number).
+  const { phone: supportPhone } = useCompanyContact();
   const [activeTab, setActiveTab] = useState<'single' | 'batch'>('single');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [multiInput, setMultiInput] = useState('');
@@ -354,11 +354,13 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 Our experienced logistics coordinators are available around the clock to assist with address updates, delivery holds, or urgent linehaul status inquiries.
               </p>
               <div className="support-contact-strip">
-                <div className="support-phone-badge">
-                  <Phone size={16} className="text-orange" />
-                  <span className="font-mono font-bold">{supportPhone}</span>
-                  <small>(Toll-Free Dispatch)</small>
-                </div>
+                {supportPhone && (
+                  <div className="support-phone-badge">
+                    <Phone size={16} className="text-orange" />
+                    <span className="font-mono font-bold">{supportPhone}</span>
+                    <small>(Toll-Free Dispatch)</small>
+                  </div>
+                )}
                 <div className="support-status-beacon">
                   <span className="beacon-dot" />
                   <span>Operations Center Active</span>

@@ -13,7 +13,17 @@ import {
   ChevronRight,
   Mail
 } from 'lucide-react';
+import { SOCIAL, SocialNetwork } from '../config/brand';
 import './Footer.css';
+
+// Only networks with a real URL in brand.ts are rendered.
+const SOCIAL_LINKS: { key: SocialNetwork; label: string; Icon: typeof Facebook }[] = [
+  { key: 'facebook', label: 'Facebook', Icon: Facebook },
+  { key: 'x', label: 'Twitter / X', Icon: Twitter },
+  { key: 'instagram', label: 'Instagram', Icon: Instagram },
+  { key: 'linkedin', label: 'LinkedIn', Icon: Linkedin },
+  { key: 'youtube', label: 'YouTube', Icon: Youtube },
+];
 
 interface FooterProps {
   onNavigate?: (page: string, param?: string) => void;
@@ -109,13 +119,15 @@ export const Footer: React.FC<FooterProps> = ({
                 Reliable shipping. Real-time tracking. Nationwide delivery. Duolingo Express connects people, businesses, and opportunities across the country.
               </p>
 
-              <div className="dxp-pro-socials">
-                <a href="#facebook" className="pro-social-btn" aria-label="Facebook"><Facebook size={15} /></a>
-                <a href="#twitter" className="pro-social-btn" aria-label="Twitter / X"><Twitter size={15} /></a>
-                <a href="#instagram" className="pro-social-btn" aria-label="Instagram"><Instagram size={15} /></a>
-                <a href="#linkedin" className="pro-social-btn" aria-label="LinkedIn"><Linkedin size={15} /></a>
-                <a href="#youtube" className="pro-social-btn" aria-label="YouTube"><Youtube size={15} /></a>
-              </div>
+              {SOCIAL_LINKS.some(s => SOCIAL[s.key]) && (
+                <div className="dxp-pro-socials">
+                  {SOCIAL_LINKS.filter(s => SOCIAL[s.key]).map(({ key, label, Icon }) => (
+                    <a key={key} href={SOCIAL[key]} className="pro-social-btn" aria-label={label} target="_blank" rel="noopener noreferrer">
+                      <Icon size={15} />
+                    </a>
+                  ))}
+                </div>
+              )}
 
               <div className="dxp-pro-faster-tagline font-mono">
                 <span>FASTER TOGETHER</span>

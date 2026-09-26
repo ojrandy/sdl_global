@@ -22,18 +22,34 @@ import { Shipment } from './types/shipment';
 import { QuoteRequest } from './types/admin';
 import { api } from './services/api';
 import { simulationEngine } from './services/simulationEngine';
+import { ADMIN_HOST, ADMIN_CONSOLE_NAME } from './config/brand';
 import './styles/global.css';
 
 const KNOWN_PAGES = ['home', 'track', 'services', 'quote', 'ship', 'about', 'help', 'contact', 'legal', 'locations', 'admin'];
 
-// Admin now lives on its own subdomain instead of a hash route on the main site, for cleaner
-// separation from the public site. Deliberately not "admin." — that's one of the most
-// commonly probed/guessed subdomain names, which works against the obscurity this move is
-// for. localhost is exempted so local dev can keep using the plain #/admin hash without a
-// real subdomain being set up.
+// Admin lives only on its own subdomain (ADMIN_HOST in src/config/brand.ts), served by the same
+// app and API as the public site. Deliberately not "admin." — that's one of the most commonly
+// probed/guessed subdomain names. An exact hostname match, so no other host (the public domain,
+// www., or a look-alike such as private.example.com) ever opens the console. localhost is
+// exempted separately so local dev can keep using the plain #/admin hash.
 function isAdminHost(): boolean {
   if (typeof window === 'undefined') return false;
-  return window.location.hostname.startsWith('dr.');
+  return window.location.hostname.toLowerCase() === ADMIN_HOST;
+}
+
+// Search engines must never index the console. Added at runtime (not in index.html) because the
+// public site and the admin host share the same index.html.
+function setRobotsNoIndex(enabled: boolean) {
+  let tag = document.querySelector<HTMLMetaElement>('meta[name="robots"][data-admin]');
+  if (enabled && !tag) {
+    tag = document.createElement('meta');
+    tag.name = 'robots';
+    tag.content = 'noindex, nofollow';
+    tag.setAttribute('data-admin', '');
+    document.head.appendChild(tag);
+  } else if (!enabled && tag) {
+    tag.remove();
+  }
 }
 
 function isLocalDevHost(): boolean {
@@ -123,9 +139,10 @@ function MainAppContent() {
       contact: 'Duolingo Express | 24/7 Logistics Dispatch & Support Desk',
       help: 'Duolingo Express | Client Support & Help Center',
       legal: 'Duolingo Express | Carrier Terms of Service & Tariffs',
-      admin: 'Duolingo Express | Operations Command & Central Dispatch Desk',
+      admin: ADMIN_CONSOLE_NAME,
     };
     document.title = titles[currentPage] || 'Duolingo Express | Priority Courier Logistics';
+    setRobotsNoIndex(currentPage === 'admin' || isAdminHost());
   }, [currentPage, liveShipment, currentQuote]);
 
   // Initialize from hash if available

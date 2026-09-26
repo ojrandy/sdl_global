@@ -56,7 +56,7 @@ import { api } from '../services/api';
 import { generateShipmentPlan, calculateDynamicTimeProgress, getServiceCommitmentHours } from '../services/planningEngine';
 import { resolveLocation } from '../services/geocodingService';
 import { applyForwardOnlyShipmentUpdate } from '../utils/shipmentSync';
-import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './TrackResultPage.css';
 
 interface TrackResultPageProps {
@@ -70,9 +70,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   onTrackAnother,
   onNavigate,
 }) => {
-  const { settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
-  const supportPhoneDigits = supportPhone.replace(/[^0-9+]/g, '');
+  // An empty phone hides the call button (no placeholder number).
+  const { phone: supportPhone, phoneHref } = useCompanyContact();
 
   // Continuous real-time synchronized state
   const [liveShipment, setLiveShipment] = useState<Shipment>(shipment);
@@ -317,7 +316,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   const recipientName = shipment?.recipient?.name || 'Consignee';
   const recipientCompany = shipment?.recipient?.company;
   const recipientAddress = shipment?.recipient?.addressLine;
-  const recipientPhone = shipment?.recipient?.phone || '+1 (310) 555-0144';
+  const recipientPhone = shipment?.recipient?.phone;
   const recipientEmail = shipment?.recipient?.email;
 
   const originGeo = resolveLocation([originCity, originState].filter(Boolean).join(', ')) || resolveLocation(originCity) || resolveLocation(originState) || { lat: 40.7128, lng: -74.0050 };
@@ -1449,10 +1448,12 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           </div>
 
           <div className="help-banner-actions">
-            <a href={`tel:${supportPhoneDigits}`} className="help-btn phone-btn orange-dispatch-btn">
-              <Phone size={15} />
-              <span>Call Dispatch {supportPhone}</span>
-            </a>
+            {supportPhone && (
+              <a href={phoneHref} className="help-btn phone-btn orange-dispatch-btn">
+                <Phone size={15} />
+                <span>Call Dispatch {supportPhone}</span>
+              </a>
+            )}
             <button className="help-btn contact-btn" onClick={() => setSupportOpen(true)} type="button">
               <Mail size={15} />
               <span>Message Dispatch Desk</span>

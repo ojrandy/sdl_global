@@ -16,6 +16,8 @@ import {
   Check
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
+import { useCompanyContact } from '../utils/useCompanyContact';
+import { LEGAL_NAME } from '../config/brand';
 import './ContactPage.css';
 
 interface ContactPageProps {
@@ -24,11 +26,9 @@ interface ContactPageProps {
 
 export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
   const { settings } = useAdminData();
-  const supportPhone = settings.supportPhone || '1-800-555-0199';
-  const dispatchEmail = settings.dispatchEmail || 'dispatch@duolingoexpress.com';
-  const companyName = settings.companyName || 'Duolingo Express Logistics LLC';
-  const headquartersAddress = settings.headquartersAddress || 'One World Trade Center, Suite 8500, New York, NY 10007, USA';
-  const dotNumber = settings.dotNumber || 'USDOT #3894210 · MC-892401';
+  // Empty phone/address/regulatory values hide their element (no placeholders).
+  const { phone: supportPhone, email: dispatchEmail, address: headquartersAddress, regulatoryLine: dotNumber } = useCompanyContact();
+  const companyName = settings.companyName || LEGAL_NAME;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -89,7 +89,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
     },
     {
       q: "Can I request an urgent re-route or address hold for a shipment in transit?",
-      a: `Yes. Authorized shippers or consignees can contact our 24/7 central dispatch desk at ${supportPhone} with their master tracking reference to request a gateway terminal hold or address update prior to final delivery dispatch.`
+      a: `Yes. Authorized shippers or consignees can contact our 24/7 central dispatch desk at ${supportPhone || dispatchEmail} with their master tracking reference to request a gateway terminal hold or address update prior to final delivery dispatch.`
     },
     {
       q: "What services do you provide for high-value tenders and vehicle transport?",
@@ -111,7 +111,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
         <div className="dxp-container-wide contact-hero-inner">
           <div className="contact-hero-pill animate-fade-in">
             <span className="contact-pulse-dot" />
-            <span>{dotNumber} · 24/7 CENTRAL DISPATCH DESK</span>
+            <span>{dotNumber ? `${dotNumber} · ` : ''}24/7 CENTRAL DISPATCH DESK</span>
           </div>
 
           <h1 className="contact-hero-title animate-fade-in">
@@ -314,14 +314,16 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
               <span className="card-top-tag font-mono">DIRECT DISPATCH CHANNELS</span>
               <h3>24/7 Operations Desk</h3>
 
-              <div className="contact-channel-item">
-                <div className="channel-icon icon-orange"><Phone size={22} /></div>
-                <div>
-                  <small>Toll-Free 24/7 Operations Hotline</small>
-                  <strong>{supportPhone}</strong>
-                  <p>Direct Connection to Regional Dispatch Supervisors</p>
+              {supportPhone && (
+                <div className="contact-channel-item">
+                  <div className="channel-icon icon-orange"><Phone size={22} /></div>
+                  <div>
+                    <small>Toll-Free 24/7 Operations Hotline</small>
+                    <strong>{supportPhone}</strong>
+                    <p>Direct Connection to Regional Dispatch Supervisors</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="contact-channel-item">
                 <div className="channel-icon icon-emerald"><Mail size={22} /></div>
@@ -332,21 +334,23 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div className="contact-channel-item">
-                <div className="channel-icon icon-sky"><MapPin size={22} /></div>
-                <div>
-                  <small>National Corporate Headquarters</small>
-                  <strong>{companyName}</strong>
-                  <p>{headquartersAddress}</p>
+              {headquartersAddress && (
+                <div className="contact-channel-item">
+                  <div className="channel-icon icon-sky"><MapPin size={22} /></div>
+                  <div>
+                    <small>National Corporate Headquarters</small>
+                    <strong>{companyName}</strong>
+                    <p>{headquartersAddress}</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="emergency-box">
                 <div className="em-head">
                   <AlertTriangle size={18} className="text-amber" />
                   <strong>Active Interstate Linehaul Emergency?</strong>
                 </div>
-                <p>For urgent in-transit delivery holds or urgent vehicle transports, contact our dedicated supervisor priority line at <strong>{supportPhone} (Ext 1)</strong>.</p>
+                <p>For urgent in-transit delivery holds or urgent vehicle transports, contact our dedicated supervisor {supportPhone ? <>priority line at <strong>{supportPhone} (Ext 1)</strong></> : <>desk at <strong>{dispatchEmail}</strong></>}.</p>
               </div>
             </div>
           </div>
