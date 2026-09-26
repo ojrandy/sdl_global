@@ -1,82 +1,117 @@
+/* =========================================================================
+   SDL Global Logistics design system — tokens (BRAND_GUIDE.md §4)
+   Palette derived from the SDL logo: black #060606 and red #D3070B.
+   Primary = graphite (logo black), Accent = SDL red (500 = logo red),
+   Ink = deep surfaces. Status colours stay semantic, never brand colours.
+   ========================================================================= */
 :root {
-  /* Brand Primary Colors */
-  --dxp-navy-950: #07111e;
-  --dxp-navy-900: #0b192c;
-  --dxp-navy-850: #0f2238;
-  --dxp-navy-800: #152c48;
-  --dxp-navy-700: #1e3e62;
-  
-  /* Brand Vibrant Blues */
-  --dxp-blue-700: #0047b3;
-  --dxp-blue-600: #0056d2;
-  --dxp-blue-500: #0066ff;
-  --dxp-blue-400: #388bfd;
-  --dxp-blue-100: #e0edff;
-  --dxp-blue-50: #eff6ff;
+  /* Brand: Primary (graphite, from the logo black) */
+  --sdl-primary-50: #FAFAFA;
+  --sdl-primary-100: #F4F4F4;
+  --sdl-primary-200: #E5E5E5;
+  --sdl-primary-300: #D4D4D4;
+  --sdl-primary-400: #A1A1A1;
+  --sdl-primary-500: #737373;
+  --sdl-primary-600: #525252;
+  --sdl-primary-700: #404040;
+  --sdl-primary-800: #262626;
+  --sdl-primary-900: #171717;
 
-  /* Accent & Status Colors */
-  --dxp-emerald-700: #047857;
-  --dxp-emerald-600: #059669;
-  --dxp-emerald-500: #10b981;
-  --dxp-emerald-100: #d1fae5;
-  --dxp-emerald-50: #ecfdf5;
+  /* Brand: Accent (SDL red; 500 is the exact logo red). On Ink backgrounds use 400 for
+     small text; 500 only for large text, icons and buttons (3.34:1 on Ink 950). */
+  --sdl-accent-50: #FEF2F0;
+  --sdl-accent-100: #FEE3DE;
+  --sdl-accent-200: #FECBC3;
+  --sdl-accent-300: #FFA699;
+  --sdl-accent-400: #FE7060;
+  --sdl-accent-500: #D3070B;
+  --sdl-accent-600: #B50407;
+  --sdl-accent-700: #920204;
+  --sdl-accent-800: #720102;
+  --sdl-accent-900: #520102;
 
-  --dxp-amber-600: #d97706;
-  --dxp-amber-500: #f59e0b;
-  --dxp-amber-100: #fef3c7;
-  --dxp-amber-50: #fffbeb;
+  /* Brand: Ink (dark hero, footer, admin sidebar) */
+  --sdl-ink-950: #141414;
+  --sdl-ink-900: #1C1C1C;
+  --sdl-ink-800: #242424;
+  --sdl-ink-700: #303030;
 
-  /* Courier Orange Accent Tokens (from corporate reference) */
-  --dxp-orange-600: #ea580c;
-  --dxp-orange-500: #f97316;
-  --dxp-orange-400: #fb923c;
-  --dxp-orange-100: #ffedd5;
-  --dxp-orange-50: #fff7ed;
+  /* RGB triplets for translucent brand colours: rgba(var(--sdl-accent-rgb), 0.2) */
+  --sdl-accent-rgb: 211, 7, 11;
+  --sdl-ink-rgb: 20, 20, 20;
+  --sdl-primary-rgb: 23, 23, 23;
 
-  --dxp-red-600: #dc2626;
-  --dxp-red-500: #ef4444;
-  --dxp-red-100: #fee2e2;
-  --dxp-red-50: #fef2f2;
+  /* Semantic status colours (shipment states) */
+  --sdl-success-50: #ecfdf5;   /* Delivered */
+  --sdl-success-100: #d1fae5;
+  --sdl-success-500: #10b981;
+  --sdl-success-600: #059669;
+  --sdl-success-700: #047857;
 
-  --dxp-indigo-600: #4f46e5;
-  --dxp-indigo-50: #eef2ff;
+  --sdl-warning-50: #fffbeb;   /* Delayed / exception pending */
+  --sdl-warning-100: #fef3c7;
+  --sdl-warning-500: #f59e0b;
+  --sdl-warning-600: #d97706;
 
-  /* Neutrals & Slate */
-  --dxp-slate-900: #0f172a;
-  --dxp-slate-800: #1e293b;
-  --dxp-slate-700: #334155;
-  --dxp-slate-600: #475569;
-  --dxp-slate-500: #64748b;
-  --dxp-slate-400: #94a3b8;
-  --dxp-slate-300: #cbd5e1;
-  --dxp-slate-200: #e2e8f0;
-  --dxp-slate-100: #f1f5f9;
-  --dxp-slate-50: #f8fafc;
-  --dxp-white: #ffffff;
+  --sdl-danger-50: #fef2f2;    /* Exception / held */
+  --sdl-danger-100: #fee2e2;
+  --sdl-danger-500: #ef4444;
+  --sdl-danger-600: #dc2626;
+
+  --sdl-info-50: #eff6ff;      /* In transit */
+  --sdl-info-100: #dbeafe;
+  --sdl-info-200: #bfdbfe;
+  --sdl-info-500: #3b82f6;
+  --sdl-info-600: #2563eb;
+  --sdl-info-700: #1d4ed8;
+
+  /* Neutrals */
+  --sdl-slate-900: #0f172a;
+  --sdl-slate-800: #1e293b;
+  --sdl-slate-700: #334155;
+  --sdl-slate-600: #475569;
+  --sdl-slate-500: #64748b;
+  --sdl-slate-400: #94a3b8;
+  --sdl-slate-300: #cbd5e1;
+  --sdl-slate-200: #e2e8f0;
+  --sdl-slate-100: #f1f5f9;
+  --sdl-slate-50: #f8fafc;
+  --sdl-white: #ffffff;
+
+  /* Role aliases: prefer these in new components */
+  --sdl-color-bg: var(--sdl-white);
+  --sdl-color-surface: var(--sdl-slate-50);
+  --sdl-color-text: var(--sdl-primary-900);
+  --sdl-color-muted: var(--sdl-primary-600);
+  --sdl-color-brand: var(--sdl-primary-900);
+  --sdl-color-brand-contrast: var(--sdl-white);
+  --sdl-color-accent: var(--sdl-accent-500);
+  --sdl-color-border: var(--sdl-slate-200);
+  --sdl-color-focus: var(--sdl-accent-500);
 
   /* Typography */
-  --dxp-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --dxp-font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
-  --dxp-font-mono: 'JetBrains Mono', monospace;
+  --sdl-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --sdl-font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  --sdl-font-mono: 'JetBrains Mono', monospace;
 
   /* Layout & Spacing */
-  --dxp-container-max: 1280px;
-  --dxp-container-wide: 1400px;
-  --dxp-radius-sm: 6px;
-  --dxp-radius-md: 10px;
-  --dxp-radius-lg: 14px;
-  --dxp-radius-xl: 20px;
-  --dxp-radius-full: 9999px;
+  --sdl-container-max: 1280px;
+  --sdl-container-wide: 1400px;
+  --sdl-radius-sm: 6px;
+  --sdl-radius-md: 10px;
+  --sdl-radius-lg: 14px;
+  --sdl-radius-xl: 20px;
+  --sdl-radius-full: 9999px;
 
   /* Shadows */
-  --dxp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --dxp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --dxp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --dxp-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-  --dxp-shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --dxp-shadow-hero: 0 20px 40px -15px rgba(0, 86, 210, 0.15);
+  --sdl-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --sdl-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --sdl-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --sdl-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --sdl-shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --sdl-shadow-hero: 0 20px 40px -15px rgba(var(--sdl-primary-rgb), 0.15);
 
   /* Transitions */
-  --dxp-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  --dxp-transition-slow: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --sdl-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --sdl-transition-slow: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }

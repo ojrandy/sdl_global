@@ -23,13 +23,13 @@ export const LegalPage: React.FC<LegalPageProps> = ({
   }, [initialSection]);
 
   return (
-    <div className="dxp-page-legal">
+    <div className="sdl-page-legal">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
-      <section className="dxp-legal-hero">
+      <section className="sdl-legal-hero">
         <div className="legal-hero-bg-overlay" />
-        <div className="dxp-container-wide legal-hero-inner">
+        <div className="sdl-container-wide legal-hero-inner">
           <div className="legal-hero-pill animate-fade-in">
             <span className="legal-pulse-dot" />
             <span>{dotNumber ? `${dotNumber} · ` : ''}MOTOR CARRIER GOVERNANCE</span>
@@ -48,9 +48,9 @@ export const LegalPage: React.FC<LegalPageProps> = ({
       {/* =========================================================================
           2. MAIN BODY & DOCUMENT VIEWER
           ========================================================================= */}
-      <div className="dxp-container-wide dxp-legal-content-wrap">
+      <div className="sdl-container-wide sdl-legal-content-wrap">
         {/* Sidebar Nav */}
-        <aside className="dxp-legal-sidebar">
+        <aside className="sdl-legal-sidebar">
           <div className="legal-sidebar-card">
             <h4>OFFICIAL POLICIES</h4>
             <nav className="legal-nav-list">
@@ -99,7 +99,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
         </aside>
 
         {/* Main Document Body */}
-        <main className="dxp-legal-document animate-fade-in">
+        <main className="sdl-legal-document animate-fade-in">
           <div className="legal-doc-header">
             <span className="doc-type-tag font-mono">OFFICIAL REGULATORY RECORD</span>
             <h2>

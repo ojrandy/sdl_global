@@ -131,13 +131,13 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
   };
 
   return (
-    <div className="dxp-page-track">
+    <div className="sdl-page-track">
       {/* =========================================================================
           1. CLEAN EXECUTIVE TRACKING PORTAL HERO
           ========================================================================= */}
       <section className="track-hero-section">
         <div className="track-hero-bg-overlay" />
-        <div className="dxp-container-wide track-hero-container">
+        <div className="sdl-container-wide track-hero-container">
           <div className="track-hero-header">
             <div className="track-hero-pill animate-fade-in">
               <span className="track-pulse-dot" />
@@ -276,7 +276,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 </div>
                 <div className="trust-divider" />
                 <div className="trust-item">
-                  <ShieldCheck size={14} className="text-orange" />
+                  <ShieldCheck size={14} className="text-accent" />
                   <span>Piece-Level Linear Code 128 Audited</span>
                 </div>
                 <div className="trust-divider" />
@@ -294,7 +294,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
           3. REFERENCE GUIDE: WHERE TO FIND YOUR TRACKING NUMBER
           ========================================================================= */}
       <section className="track-reference-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">OFFICIAL DISPATCH DOCUMENTATION</span>
             <h2>Where to Locate Your Consignment Reference</h2>
@@ -345,7 +345,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
           4. 24/7 CENTRAL DISPATCH & CONTEXTUAL SUPPORT
           ========================================================================= */}
       <section className="track-support-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="track-support-card">
             <div className="support-card-content">
               <span className="support-card-eyebrow font-mono">24/7 CENTRAL DISPATCH DESK</span>
@@ -356,7 +356,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
               <div className="support-contact-strip">
                 {supportPhone && (
                   <div className="support-phone-badge">
-                    <Phone size={16} className="text-orange" />
+                    <Phone size={16} className="text-accent" />
                     <span className="font-mono font-bold">{supportPhone}</span>
                     <small>(Toll-Free Dispatch)</small>
                   </div>
@@ -410,7 +410,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
             <div className="batch-modal-header">
               <div>
                 <div className="batch-header-title">
-                  <Truck size={20} className="text-orange" />
+                  <Truck size={20} className="text-accent" />
                   <h3>Batch Multi-Shipment Fleet Monitor</h3>
                 </div>
                 <p>Real-time consolidated status across {batchShipments.length} queried trade corridor consignments.</p>

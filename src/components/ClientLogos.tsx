@@ -14,8 +14,8 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
     svg: (
       <svg viewBox="0 0 170 48" width="160" height="46" fill="none" aria-label="TITAN Heavyworks">
         <path d="M6 10h14v28H6V10zm22 0h12l8 16 8-16h12v28H56V22l-7 14h-3l-7-14v16H28V10zm46 0h28v7h-8v21h-12V17h-8V10zm32 0h12l10 28h-12l-2-6h-7l-2 6h-11l12-28zm6 16h4l-2-8-2 8z" fill="#0F172A"/>
-        <path d="M152 10h12v28h-12V10z" fill="#EA580C"/>
-        <polygon points="144,38 164,10 168,10 148,38" fill="#F97316" opacity="0.6"/>
+        <path d="M152 10h12v28h-12V10z" fill="#D3070B"/>
+        <polygon points="144,38 164,10 168,10 148,38" fill="#D3070B" opacity="0.6"/>
       </svg>
     )
   },
@@ -29,8 +29,8 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
         <text x="5" y="34" fontFamily="'Inter', -apple-system, sans-serif" fontWeight="800" fontSize="32" fill="#0F172A" letterSpacing="-1.5">
           kroma
         </text>
-        <circle cx="118" cy="29" r="6" fill="#EA580C"/>
-        <circle cx="118" cy="29" r="3" fill="#FDBA74"/>
+        <circle cx="118" cy="29" r="6" fill="#D3070B"/>
+        <circle cx="118" cy="29" r="3" fill="#FFA699"/>
       </svg>
     )
   },
@@ -43,7 +43,7 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
       <svg viewBox="0 0 190 48" width="175" height="46" fill="none" aria-label="SYNTHEX">
         <g transform="translate(6, 6)">
           <path d="M18 4C10 4 4 10 4 18C4 28 20 20 20 30C20 34 16 36 12 36C6 36 2 32 2 32" stroke="#059669" strokeWidth="4" strokeLinecap="round"/>
-          <path d="M14 4C22 4 28 10 28 18C28 28 12 20 12 30C12 34 16 36 20 36C26 36 30 32 30 32" stroke="#0056D2" strokeWidth="4" strokeLinecap="round"/>
+          <path d="M14 4C22 4 28 10 28 18C28 28 12 20 12 30C12 34 16 36 20 36C26 36 30 32 30 32" stroke="#171717" strokeWidth="4" strokeLinecap="round"/>
         </g>
         <text x="46" y="32" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="22" fill="#0F172A" letterSpacing="3">
           SYNTHEX
@@ -62,10 +62,10 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
     svg: (
       <svg viewBox="0 0 170 48" width="160" height="46" fill="none" aria-label="VOLTIX">
         <g transform="translate(6, 8)">
-          <polygon points="16,0 2,18 14,18 8,32 26,14 14,14" fill="#EA580C"/>
+          <polygon points="16,0 2,18 14,18 8,32 26,14 14,14" fill="#D3070B"/>
         </g>
         <text x="42" y="33" fontFamily="'Outfit', sans-serif" fontStyle="italic" fontWeight="900" fontSize="26" fill="#0F172A" letterSpacing="1">
-          VOLT<tspan fill="#EA580C">IX</tspan>
+          VOLT<tspan fill="#D3070B">IX</tspan>
         </text>
       </svg>
     )
@@ -78,7 +78,7 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
     svg: (
       <svg viewBox="0 0 200 48" width="185" height="46" fill="none" aria-label="BLACKWOOD">
         <circle cx="20" cy="24" r="16" stroke="#0F172A" strokeWidth="2.5"/>
-        <polygon points="20,11 23,19 32,20 25,26 27,35 20,30 13,35 15,26 8,20 17,19" fill="#EA580C"/>
+        <polygon points="20,11 23,19 32,20 25,26 27,35 20,30 13,35 15,26 8,20 17,19" fill="#D3070B"/>
         <text x="44" y="27" fontFamily="Georgia, serif" fontWeight="800" fontSize="17" fill="#0F172A" letterSpacing="2">
           BLACKWOOD
         </text>
@@ -136,7 +136,7 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
       <svg viewBox="0 0 180 48" width="165" height="46" fill="none" aria-label="ZENITH">
         <g transform="translate(6, 6)">
           <path d="M4 32L18 6L32 32H24L18 18L12 32H4Z" fill="#0F172A"/>
-          <polygon points="18,12 24,24 12,24" fill="#EA580C"/>
+          <polygon points="18,12 24,24 12,24" fill="#D3070B"/>
         </g>
         <text x="46" y="31" fontFamily="'Inter', sans-serif" fontWeight="900" fontSize="22" fill="#0F172A" letterSpacing="3">
           ZENITH

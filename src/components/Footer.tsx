@@ -47,46 +47,46 @@ export const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <footer className="dxp-pro-footer-wrapper">
+    <footer className="sdl-pro-footer-wrapper">
       {/* 1. TRUST FEATURE STRIP */}
       {showTrustStrip && (
-        <div className="dxp-footer-trust-strip">
-          <div className="dxp-container-wide dxp-trust-grid">
-            <div className="dxp-trust-card">
-              <div className="dxp-trust-icon">
+        <div className="sdl-footer-trust-strip">
+          <div className="sdl-container-wide sdl-trust-grid">
+            <div className="sdl-trust-card">
+              <div className="sdl-trust-icon">
                 <ShieldCheck size={24} />
               </div>
-              <div className="dxp-trust-info">
+              <div className="sdl-trust-info">
                 <h4>Verified Carrier Custody</h4>
                 <p>Armored and monitored chain-of-custody across all linehaul corridors.</p>
               </div>
             </div>
 
-            <div className="dxp-trust-card">
-              <div className="dxp-trust-icon">
+            <div className="sdl-trust-card">
+              <div className="sdl-trust-icon">
                 <Clock size={24} />
               </div>
-              <div className="dxp-trust-info">
+              <div className="sdl-trust-info">
                 <h4>Real-Time Highway Telemetry</h4>
                 <p>Continuous milestone scan updates and live highway transit tracking.</p>
               </div>
             </div>
 
-            <div className="dxp-trust-card">
-              <div className="dxp-trust-icon">
+            <div className="sdl-trust-card">
+              <div className="sdl-trust-icon">
                 <Layers size={24} />
               </div>
-              <div className="dxp-trust-info">
+              <div className="sdl-trust-info">
                 <h4>Piece-Level Barcodes</h4>
                 <p>Serialized Code 128 multi-piece tracking on every individual carton.</p>
               </div>
             </div>
 
-            <div className="dxp-trust-card">
-              <div className="dxp-trust-icon">
+            <div className="sdl-trust-card">
+              <div className="sdl-trust-icon">
                 <Globe size={24} />
               </div>
-              <div className="dxp-trust-info">
+              <div className="sdl-trust-info">
                 <h4>Nationwide Coverage</h4>
                 <p>Daily scheduled linehaul connections across all 50 states.</p>
               </div>
@@ -96,31 +96,31 @@ export const Footer: React.FC<FooterProps> = ({
       )}
 
       {/* 2. MAIN EXECUTIVE FOOTER */}
-      <div className="dxp-pro-footer-main">
+      <div className="sdl-pro-footer-main">
         {/* Subtle Map Watermark Background */}
         <div className="footer-world-map-bg" />
         
         {/* Glowing Orange Corner Swoosh */}
         <div className="footer-orange-swoosh" />
 
-        <div className="dxp-container-wide footer-content-relative">
-          <div className="dxp-pro-footer-grid">
+        <div className="sdl-container-wide footer-content-relative">
+          <div className="sdl-pro-footer-grid">
             {/* Column 1: Brand & Tagline */}
-            <div className="dxp-pro-brand-col">
-              <div className="dxp-pro-footer-logo" onClick={() => onNavigate('home')}>
+            <div className="sdl-pro-brand-col">
+              <div className="sdl-pro-footer-logo" onClick={() => onNavigate('home')}>
                 <img
                   src="/logo-for-footer-or-any-area-having-thesame-color-as-the-footer.png"
                   alt="Duolingo Express"
-                  className="dxp-pro-footer-logo-img"
+                  className="sdl-pro-footer-logo-img"
                 />
               </div>
 
-              <p className="dxp-pro-brand-desc">
+              <p className="sdl-pro-brand-desc">
                 Reliable shipping. Real-time tracking. Nationwide delivery. Duolingo Express connects people, businesses, and opportunities across the country.
               </p>
 
               {SOCIAL_LINKS.some(s => SOCIAL[s.key]) && (
-                <div className="dxp-pro-socials">
+                <div className="sdl-pro-socials">
                   {SOCIAL_LINKS.filter(s => SOCIAL[s.key]).map(({ key, label, Icon }) => (
                     <a key={key} href={SOCIAL[key]} className="pro-social-btn" aria-label={label} target="_blank" rel="noopener noreferrer">
                       <Icon size={15} />
@@ -129,19 +129,19 @@ export const Footer: React.FC<FooterProps> = ({
                 </div>
               )}
 
-              <div className="dxp-pro-faster-tagline font-mono">
+              <div className="sdl-pro-faster-tagline font-mono">
                 <span>FASTER TOGETHER</span>
                 <div className="tagline-bar" />
               </div>
             </div>
 
             {/* Column 2: Quick Links */}
-            <div className="dxp-pro-links-col">
-              <h4 className="dxp-pro-col-title">
+            <div className="sdl-pro-links-col">
+              <h4 className="sdl-pro-col-title">
                 Quick Links
                 <span className="title-orange-dash" />
               </h4>
-              <ul className="dxp-pro-links-list">
+              <ul className="sdl-pro-links-list">
                 <li>
                   <button type="button" onClick={() => onNavigate('home')}>
                     <ChevronRight size={14} className="link-chevron" />
@@ -182,12 +182,12 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             {/* Column 3: Our Services */}
-            <div className="dxp-pro-links-col">
-              <h4 className="dxp-pro-col-title">
+            <div className="sdl-pro-links-col">
+              <h4 className="sdl-pro-col-title">
                 Our Services
                 <span className="title-orange-dash" />
               </h4>
-              <ul className="dxp-pro-links-list">
+              <ul className="sdl-pro-links-list">
                 <li>
                   <button type="button" onClick={() => onNavigate('services')}>
                     <ChevronRight size={14} className="link-chevron" />
@@ -228,12 +228,12 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             {/* Column 4: Support */}
-            <div className="dxp-pro-links-col">
-              <h4 className="dxp-pro-col-title">
+            <div className="sdl-pro-links-col">
+              <h4 className="sdl-pro-col-title">
                 Support
                 <span className="title-orange-dash" />
               </h4>
-              <ul className="dxp-pro-links-list">
+              <ul className="sdl-pro-links-list">
                 <li>
                   <button type="button" onClick={() => onNavigate('help')}>
                     <ChevronRight size={14} className="link-chevron" />
@@ -274,17 +274,17 @@ export const Footer: React.FC<FooterProps> = ({
             </div>
 
             {/* Column 5: Stay Updated */}
-            <div className="dxp-pro-newsletter-col">
-              <h4 className="dxp-pro-col-title">
+            <div className="sdl-pro-newsletter-col">
+              <h4 className="sdl-pro-col-title">
                 Stay Updated
                 <span className="title-orange-dash" />
               </h4>
               
-              <p className="dxp-pro-newsletter-desc">
+              <p className="sdl-pro-newsletter-desc">
                 Subscribe to our newsletter for the latest updates, shipping tips and special offers.
               </p>
 
-              <form onSubmit={handleSubscribe} className="dxp-pro-subscribe-form">
+              <form onSubmit={handleSubscribe} className="sdl-pro-subscribe-form">
                 <div className="pro-input-wrap">
                   <Mail size={16} className="pro-mail-icon" />
                   <input
@@ -307,9 +307,9 @@ export const Footer: React.FC<FooterProps> = ({
               )}
 
               {/* Worldwide Network Callout */}
-              <div className="dxp-pro-global-pill">
+              <div className="sdl-pro-global-pill">
                 <div className="global-pill-icon">
-                  <Globe size={26} className="text-orange" />
+                  <Globe size={26} className="text-accent" />
                 </div>
                 <div className="global-pill-text">
                   <strong>We Deliver Worldwide</strong>
@@ -321,7 +321,7 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* 3. BOTTOM BAR */}
-          <div className="dxp-pro-footer-bottom">
+          <div className="sdl-pro-footer-bottom">
             <div className="pro-copy-text">
               © 2026 Duolingo Express. All rights reserved.
             </div>

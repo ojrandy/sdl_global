@@ -161,7 +161,7 @@ export const FacilityNetworkMap: React.FC = () => {
       LINEHAUL_CORRIDORS.forEach(corridor => {
         // Outer glow
         L.polyline(corridor, {
-          color: '#f97316',
+          color: '#D3070B',
           weight: 4,
           opacity: 0.25,
           dashArray: '8, 8'
@@ -169,7 +169,7 @@ export const FacilityNetworkMap: React.FC = () => {
 
         // Inner crisp line
         L.polyline(corridor, {
-          color: '#ea580c',
+          color: '#D3070B',
           weight: 2,
           opacity: 0.75,
           dashArray: '6, 6'
@@ -320,7 +320,7 @@ export const FacilityNetworkMap: React.FC = () => {
           <div className="spotlight-header">
             <div>
               <div className="spotlight-code-badge font-mono">
-                <Radio size={12} className="text-orange" />
+                <Radio size={12} className="text-accent" />
                 <span>{selectedFacility.code} REGIONAL GATEWAY</span>
                 <span className="spotlight-status font-mono">● {selectedFacility.status}</span>
               </div>
@@ -335,7 +335,7 @@ export const FacilityNetworkMap: React.FC = () => {
 
           <div className="spotlight-details-grid">
             <div className="spotlight-info-item">
-              <MapPin size={16} className="text-orange flex-shrink-0" />
+              <MapPin size={16} className="text-accent flex-shrink-0" />
               <div>
                 <small>Intake Facility Address</small>
                 <strong>{selectedFacility.address}, {selectedFacility.city}, {selectedFacility.state} {selectedFacility.zip}</strong>
@@ -343,7 +343,7 @@ export const FacilityNetworkMap: React.FC = () => {
             </div>
 
             <div className="spotlight-info-item">
-              <Clock size={16} className="text-orange flex-shrink-0" />
+              <Clock size={16} className="text-accent flex-shrink-0" />
               <div>
                 <small>Operating Intake Hours</small>
                 <strong>{selectedFacility.hours}</strong>

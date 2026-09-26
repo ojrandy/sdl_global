@@ -116,11 +116,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const currentMeta = VIEW_METADATA[currentView] || VIEW_METADATA['operations-center'];
 
   return (
-    <div className="dxp-admin-root">
+    <div className="sdl-admin-root">
       {/* =========================================================================
           LEFT SIDEBAR: EXECUTIVE DISPATCH COMMAND (DEEP NAVY)
           ========================================================================= */}
-      <aside className={`dxp-admin-sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
+      <aside className={`sdl-admin-sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
         {/* Brand Header */}
         <div className="admin-sidebar-header">
           <div className="admin-brand-card" onClick={() => onSelectView('operations-center')}>
@@ -273,9 +273,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       {/* =========================================================================
           MAIN WORKSPACE WRAPPER
           ========================================================================= */}
-      <div className="dxp-admin-main-wrapper">
+      <div className="sdl-admin-main-wrapper">
         {/* TOP DISPATCH HEADER */}
-        <header className="dxp-admin-top-header">
+        <header className="sdl-admin-top-header">
           {/* Left Column: Clean View Title */}
           <div className="header-titles-column">
             <button className="mobile-menu-trigger" onClick={() => setMobileSidebarOpen(true)}>
@@ -419,7 +419,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </header>
 
         {/* DYNAMIC VIEW BODY */}
-        <main className="dxp-admin-page-content">
+        <main className="sdl-admin-page-content">
           {children}
         </main>
       </div>

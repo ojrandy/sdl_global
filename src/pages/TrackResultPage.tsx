@@ -604,23 +604,23 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   };
 
   return (
-    <div className="dxp-redesign-tracking-page animate-fade-in">
+    <div className="sdl-redesign-tracking-page animate-fade-in">
       {/* =========================================================================
           0. CINEMATIC HERO BANNER (DUSK HIGHWAY WITH BRANDED SEMI-TRUCK)
           ========================================================================= */}
-      <section className="dxp-cinematic-hero-section">
-        <div className="dxp-hero-backdrop-img">
+      <section className="sdl-cinematic-hero-section">
+        <div className="sdl-hero-backdrop-img">
           <img
             src="/images/tracking/truck_highway_hero.jpg"
             alt="Duolingo Express Commercial Linehaul Highway Hauler"
             className="hero-bg-photo"
           />
-          <div className="dxp-hero-overlay" />
+          <div className="sdl-hero-overlay" />
         </div>
 
-        <div className="dxp-hero-content-wrap">
+        <div className="sdl-hero-content-wrap">
           {/* Top Breadcrumb & Status */}
-          <div className="dxp-hero-top-bar">
+          <div className="sdl-hero-top-bar">
             <button
               type="button"
               className="hero-back-link"
@@ -707,7 +707,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
       </section>
 
       {/* Main Content Body */}
-      <div className="dxp-track-container">
+      <div className="sdl-track-container">
         {/* Hold / Delay Advisory — surfaces the specific reason an admin recorded via
             Operations Control, instead of leaving a customer to guess why their shipment
             stopped moving or when it'll actually arrive. */}
@@ -740,7 +740,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         {/* =========================================================================
             1. WHITE CONSIGNMENT SUMMARY CARD (3 COLUMNS + CORRIDOR RAIL)
             ========================================================================= */}
-        <section className="dxp-hero-summary-card">
+        <section className="sdl-hero-summary-card">
           <div className="hero-summary-grid">
             {/* Column 1: Tracking Number & Barcode */}
             <div className="hero-col-barcode">
@@ -912,7 +912,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         {/* =========================================================================
             2. FULL-WIDTH INTERACTIVE HIGHWAY ROUTE MAP
             ========================================================================= */}
-        <section className="dxp-route-map-section">
+        <section className="sdl-route-map-section">
           <USJourneyMap
             checkpoints={routeCheckpoints}
             currentLocationText={currentLocationText}
@@ -931,7 +931,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         {/* =========================================================================
             3. TWO-COLUMN MAIN CONTENT (LEFT: TIMELINE | RIGHT: VEHICLE & DETAILS)
             ========================================================================= */}
-        <section className="dxp-main-content-grid">
+        <section className="sdl-main-content-grid">
           {/* LEFT COLUMN: Clean Chronological Shipment Timeline */}
           <div id="shipment-timeline-section" className="content-col-timeline">
             <div className="timeline-card">
@@ -1432,7 +1432,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         {/* =========================================================================
             4. 24/7 OPERATIONS CONCIERGE & DRIVER DISPATCH BANNER
             ========================================================================= */}
-        <section className="dxp-help-banner-card">
+        <section className="sdl-help-banner-card">
           <div className="help-banner-left">
             <div className="help-icon-bubble">
               <Headphones size={22} />
@@ -1468,7 +1468,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         {/* =========================================================================
             5. TRUST & VERIFICATION STRIP
             ========================================================================= */}
-        <div className="dxp-bottom-trust-strip">
+        <div className="sdl-bottom-trust-strip">
           <div className="trust-item">
             <ShieldCheck size={15} className="text-blue" />
             <span>Secure Tracking</span>

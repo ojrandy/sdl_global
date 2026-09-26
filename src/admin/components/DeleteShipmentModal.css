@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DUOLINGO EXPRESS — DELETE SHIPMENT CONFIRMATION MODAL
+   SDL GLOBAL LOGISTICS — DELETE SHIPMENT CONFIRMATION MODAL
    Light Executive Safety Dialog
    ========================================================================== */
 
@@ -138,7 +138,7 @@
 }
 
 .inline-arrow {
-  color: #ea580c;
+  color: var(--sdl-accent-500);
   margin: 0 0.15rem;
 }
 

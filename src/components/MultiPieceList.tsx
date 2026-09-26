@@ -13,22 +13,22 @@ export const MultiPieceList: React.FC<MultiPieceListProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`dxp-pieces-card ${className}`}>
-      <div className="dxp-pieces-header">
-        <h3 className="dxp-pieces-title">Shipment Pieces</h3>
-        <span className="dxp-pieces-count-badge">{pieces.length} PIECES</span>
+    <div className={`sdl-pieces-card ${className}`}>
+      <div className="sdl-pieces-header">
+        <h3 className="sdl-pieces-title">Shipment Pieces</h3>
+        <span className="sdl-pieces-count-badge">{pieces.length} PIECES</span>
       </div>
 
-      <div className="dxp-pieces-grid">
+      <div className="sdl-pieces-grid">
         {pieces.map((piece) => (
-          <div key={piece.id} className="dxp-piece-item">
+          <div key={piece.id} className="sdl-piece-item">
             <div className="piece-item-top">
               <div className="piece-meta">
                 <span className="piece-label">Piece {String(piece.pieceNumber).padStart(2, '0')}</span>
                 <span className="piece-tracking-id">{piece.trackingNumber}</span>
               </div>
               <div className="piece-status-wrap">
-                <span className="dxp-badge-in-transit-sm">IN TRANSIT</span>
+                <span className="sdl-badge-in-transit-sm">IN TRANSIT</span>
                 <span className="piece-location">
                   {typeof piece.currentLocation === 'string'
                     ? piece.currentLocation

@@ -286,7 +286,7 @@ export const EditShipmentModal: React.FC<EditShipmentModalProps> = ({
             <div className="edit-waybill-wrap">
               <h3 className="edit-waybill font-mono">{shipment.trackingNumber}</h3>
               <span className="edit-route-sub">
-                {senderCity}, {senderState} <ArrowRight size={11} className="text-orange" /> {recipientCity}, {recipientState}
+                {senderCity}, {senderState} <ArrowRight size={11} className="text-accent" /> {recipientCity}, {recipientState}
               </span>
             </div>
           </div>
@@ -304,7 +304,7 @@ export const EditShipmentModal: React.FC<EditShipmentModalProps> = ({
             {/* Section 1: Shipper / Sender */}
             <div className="form-section-card">
               <div className="section-head">
-                <User size={13} className="text-orange" />
+                <User size={13} className="text-accent" />
                 <span>Shipper (Origin)</span>
               </div>
               <div className="form-fields-grid">

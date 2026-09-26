@@ -68,7 +68,7 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeHub, onSel
 
     routes.forEach((route) => {
       L.polyline(route, {
-        color: '#ea580c',
+        color: '#D3070B',
         weight: 3,
         opacity: 0.65,
         dashArray: '6, 8',

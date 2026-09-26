@@ -1,9 +1,9 @@
 /* ============================================================
-   DUOLINGO EXPRESS — TRACK RESULT PAGE REDESIGN
+   SDL GLOBAL LOGISTICS — TRACK RESULT PAGE REDESIGN
    100% Faithful to Reference Logistics Dispatch Mockup
    ============================================================ */
 
-.dxp-redesign-tracking-page {
+.sdl-redesign-tracking-page {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -16,15 +16,15 @@
 /* ============================================================
    0. CINEMATIC HERO BANNER (DUSK HIGHWAY COMMERCIAL LINEHAUL)
    ============================================================ */
-.dxp-cinematic-hero-section {
+.sdl-cinematic-hero-section {
   position: relative;
   width: 100%;
   overflow: hidden;
-  background-color: #0b192c;
+  background-color: var(--sdl-ink-900);
   margin-bottom: 2rem;
 }
 
-.dxp-hero-backdrop-img {
+.sdl-hero-backdrop-img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -41,13 +41,13 @@
   transform: scale(1.02);
 }
 
-.dxp-hero-overlay {
+.sdl-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(11, 25, 44, 0.95) 0%, rgba(11, 25, 44, 0.88) 45%, rgba(11, 25, 44, 0.5) 100%);
+  background: linear-gradient(90deg, rgba(var(--sdl-ink-rgb), 0.95) 0%, rgba(var(--sdl-ink-rgb), 0.88) 45%, rgba(var(--sdl-ink-rgb), 0.5) 100%);
 }
 
-.dxp-hero-content-wrap {
+.sdl-hero-content-wrap {
   position: relative;
   z-index: 2;
   max-width: 1240px;
@@ -56,7 +56,7 @@
   color: #ffffff;
 }
 
-.dxp-hero-top-bar {
+.sdl-hero-top-bar {
   margin-bottom: 1rem;
 }
 
@@ -158,7 +158,7 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
   align-items: center;
-  background: rgba(11, 25, 44, 0.78);
+  background: rgba(var(--sdl-ink-rgb), 0.78);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -233,7 +233,7 @@
   margin: 0 1rem;
 }
 
-.dxp-track-container {
+.sdl-track-container {
   width: 100%;
   max-width: 1240px;
   margin: 0 auto;
@@ -306,7 +306,7 @@
 
 .track-search-btn {
   padding: 0.65rem 1.35rem;
-  background: #0056d2;
+  background: var(--sdl-primary-900);
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 700;
@@ -323,7 +323,7 @@
 /* ============================================================
    2. HERO CONSIGNMENT SUMMARY CARD (3 COLUMNS)
    ============================================================ */
-.dxp-hero-summary-card {
+.sdl-hero-summary-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
@@ -675,14 +675,14 @@
 /* ============================================================
    3. ROUTE MAP SECTION
    ============================================================ */
-.dxp-route-map-section {
+.sdl-route-map-section {
   margin-bottom: 2rem;
 }
 
 /* ============================================================
    4. MAIN LOWER CONTENT GRID (2 COLUMNS)
    ============================================================ */
-.dxp-main-content-grid {
+.sdl-main-content-grid {
   display: grid;
   grid-template-columns: 1fr 1.8fr;
   gap: 2rem;
@@ -828,9 +828,9 @@
 }
 
 .t-tag.current {
-  background: #0056d2;
+  background: var(--sdl-primary-900);
   color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(0, 86, 210, 0.2);
+  box-shadow: 0 0 0 2px rgba(var(--sdl-primary-rgb), 0.2);
 }
 
 .t-tag.estimated {
@@ -845,9 +845,9 @@
 }
 
 .t-icon-badge.current {
-  background: #0056d2;
+  background: var(--sdl-primary-900);
   color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.22);
+  box-shadow: 0 0 0 4px rgba(var(--sdl-primary-rgb), 0.22);
 }
 
 .t-icon-badge.estimated {
@@ -881,7 +881,7 @@
 }
 
 .t-event-title.text-blue {
-  color: #0056d2;
+  color: var(--sdl-primary-900);
 }
 
 .t-event-meta-sub {
@@ -919,7 +919,7 @@
   border-radius: 10px;
   font-size: 0.825rem;
   font-weight: 700;
-  color: #0056d2;
+  color: var(--sdl-primary-900);
   cursor: pointer;
   transition: all 0.15s ease;
   margin-top: 1.25rem;
@@ -1017,9 +1017,9 @@
 }
 
 .gallery-arrow-btn:hover {
-  background: #0056d2;
+  background: var(--sdl-primary-900);
   color: #ffffff;
-  border-color: #0056d2;
+  border-color: var(--sdl-primary-900);
 }
 
 .veh-main-photo-frame {
@@ -1051,7 +1051,7 @@
   bottom: 0.75rem;
   width: 32px;
   height: 32px;
-  background: rgba(11, 25, 44, 0.75);
+  background: rgba(var(--sdl-ink-rgb), 0.75);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -1065,8 +1065,8 @@
 }
 
 .veh-expand-btn:hover {
-  background: #0056d2;
-  border-color: #0056d2;
+  background: var(--sdl-primary-900);
+  border-color: var(--sdl-primary-900);
 }
 
 /* 6 Thumbnail buttons row */
@@ -1090,8 +1090,8 @@
 }
 
 .veh-thumb-btn.active {
-  border-color: #0056d2;
-  box-shadow: 0 0 0 2px rgba(0, 86, 210, 0.25);
+  border-color: var(--sdl-primary-900);
+  box-shadow: 0 0 0 2px rgba(var(--sdl-primary-rgb), 0.25);
 }
 
 .thumb-img {
@@ -1103,7 +1103,7 @@
 .veh-thumb-more-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(11, 25, 44, 0.78);
+  background: rgba(var(--sdl-ink-rgb), 0.78);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1187,7 +1187,7 @@
 }
 
 .inline-copy-btn:hover {
-  color: #0056d2;
+  color: var(--sdl-primary-900);
 }
 
 .status-highlight {
@@ -1266,7 +1266,7 @@
   gap: 0.4rem;
   font-size: 0.825rem;
   font-weight: 700;
-  color: #0056d2;
+  color: var(--sdl-primary-900);
   text-decoration: none;
   margin-top: 0.35rem;
   transition: color 0.15s ease;
@@ -1283,7 +1283,7 @@
   gap: 0.4rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #0056d2;
+  color: var(--sdl-primary-900);
   text-decoration: none;
   margin-top: 0.3rem;
   transition: color 0.15s ease;
@@ -1395,15 +1395,15 @@
 
 /* ORANGE CALL DISPATCH BUTTON */
 .orange-dispatch-btn {
-  background: #f97316 !important;
-  border-color: #fb923c !important;
+  background: var(--sdl-accent-500) !important;
+  border-color: var(--sdl-accent-400) !important;
   color: #ffffff !important;
   font-weight: 800;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 14px rgba(var(--sdl-accent-rgb), 0.3);
 }
 
 .orange-dispatch-btn:hover {
-  background: #ea580c !important;
+  background: var(--sdl-accent-500) !important;
 }
 
 /* LIGHTBOX MODAL */
@@ -1411,7 +1411,7 @@
   position: fixed;
   inset: 0;
   z-index: 10000;
-  background: rgba(11, 25, 44, 0.92);
+  background: rgba(var(--sdl-ink-rgb), 0.92);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -1475,7 +1475,7 @@
 }
 
 .lightbox-arrow-btn:hover {
-  background: #0056d2;
+  background: var(--sdl-primary-900);
 }
 
 .handling-pill {
@@ -1502,15 +1502,15 @@
 /* ============================================================
    5. NEED HELP WITH THIS SHIPMENT BANNER
    ============================================================ */
-.dxp-help-banner-card {
-  background: #0b192c;
-  border: 1px solid #1e3e62;
+.sdl-help-banner-card {
+  background: var(--sdl-ink-900);
+  border: 1px solid var(--sdl-ink-700);
   border-radius: 16px;
   padding: 1.75rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 10px 25px -5px rgba(11, 25, 44, 0.2);
+  box-shadow: 0 10px 25px -5px rgba(var(--sdl-ink-rgb), 0.2);
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1.5rem;
@@ -1527,7 +1527,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #1e3e62;
+  background: var(--sdl-ink-700);
   color: #38bdf8;
   display: flex;
   align-items: center;
@@ -1590,7 +1590,7 @@
 /* ============================================================
    6. BOTTOM TRUST & VERIFICATION STRIP
    ============================================================ */
-.dxp-bottom-trust-strip {
+.sdl-bottom-trust-strip {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1619,7 +1619,7 @@
     grid-template-columns: 1fr;
     gap: 1.75rem;
   }
-  .dxp-main-content-grid {
+  .sdl-main-content-grid {
     grid-template-columns: 1fr;
   }
   .parties-two-col-layout {
@@ -1949,7 +1949,7 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem;
-  background: #0056d2;
+  background: var(--sdl-primary-900);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -2014,7 +2014,7 @@
   border-radius: 10px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  color: #0056d2;
+  color: var(--sdl-primary-900);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2043,7 +2043,7 @@
 .corridor-city {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #0b192c;
+  color: var(--sdl-ink-900);
   line-height: 1.2;
 }
 
@@ -2084,7 +2084,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: #0b192c;
+  color: var(--sdl-ink-900);
   font-weight: 700;
 }
 
@@ -2099,7 +2099,7 @@
 
 .corridor-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #0056d2 0%, #38bdf8 70%, #10b981 100%);
+  background: linear-gradient(90deg, var(--sdl-primary-900) 0%, #38bdf8 70%, #10b981 100%);
   border-radius: 9999px;
   position: relative;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2169,9 +2169,9 @@
 }
 
 .lifecycle-step.active .step-dot {
-  background: #0056d2;
-  border-color: #0056d2;
-  box-shadow: 0 0 0 4px rgba(0, 86, 210, 0.18);
+  background: var(--sdl-primary-900);
+  border-color: var(--sdl-primary-900);
+  box-shadow: 0 0 0 4px rgba(var(--sdl-primary-rgb), 0.18);
 }
 
 .step-live-pulse {
@@ -2199,7 +2199,7 @@
 
 .lifecycle-step.completed .step-txt,
 .lifecycle-step.active .step-txt {
-  color: #0b192c;
+  color: var(--sdl-ink-900);
 }
 
 .lifecycle-line {
@@ -2273,7 +2273,7 @@
 .security-card-title {
   font-size: 0.98rem;
   font-weight: 800;
-  color: #0b192c;
+  color: var(--sdl-ink-900);
   margin: 0 0 2px 0;
 }
 
@@ -2293,7 +2293,7 @@
   border-radius: 9999px;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #0056d2;
+  color: var(--sdl-primary-900);
 }
 
 .security-specs-grid {
@@ -2323,7 +2323,7 @@
 .sec-val {
   font-size: 0.825rem;
   font-weight: 800;
-  color: #0b192c;
+  color: var(--sdl-ink-900);
 }
 
 /* Proof of Delivery Strip */
@@ -2408,7 +2408,7 @@
 }
 
 .help-btn.phone-btn {
-  background: #0056d2;
+  background: var(--sdl-primary-900);
   color: #ffffff;
   border: 1px solid #38bdf8;
   display: inline-flex;
@@ -2424,7 +2424,7 @@
 }
 
 .help-btn.phone-btn:hover {
-  background: #0047b3;
+  background: var(--sdl-primary-800);
   color: #ffffff;
 }
 
@@ -2449,18 +2449,18 @@
     padding-bottom: 1rem;
     border-bottom: 1px solid #f1f5f9;
   }
-  .dxp-main-content-grid {
+  .sdl-main-content-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
 }
 
 @media (max-width: 768px) {
-  .dxp-redesign-tracking-page {
+  .sdl-redesign-tracking-page {
     padding: 0 0 3rem;
     background: #f8fafc;
   }
-  .dxp-hero-content-wrap {
+  .sdl-hero-content-wrap {
     padding: 1.5rem 1rem 1.75rem;
   }
   .hero-tracking-number {
@@ -2481,7 +2481,7 @@
     gap: 0.85rem;
     padding: 1rem;
   }
-  .dxp-track-container {
+  .sdl-track-container {
     padding: 0 0.85rem;
   }
   .tracking-top-alert-banner,
@@ -2490,12 +2490,12 @@
     gap: 0.75rem;
     align-items: flex-start;
   }
-  .dxp-track-search-card {
+  .sdl-track-search-card {
     padding: 1rem;
     border-radius: 14px;
     margin-bottom: 1rem;
   }
-  .dxp-hero-summary-card {
+  .sdl-hero-summary-card {
     padding: 1.25rem 1rem;
     border-radius: 16px;
     margin-bottom: 1.25rem;
@@ -2567,7 +2567,7 @@
   }
 
   /* Clean, unboxed lower content on mobile */
-  .dxp-main-content-grid {
+  .sdl-main-content-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
@@ -2605,7 +2605,7 @@
   }
 
   /* Concierge banner on mobile */
-  .dxp-help-banner-card {
+  .sdl-help-banner-card {
     flex-direction: column;
     align-items: stretch;
     gap: 1.25rem;

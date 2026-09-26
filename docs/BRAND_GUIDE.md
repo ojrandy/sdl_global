@@ -92,11 +92,11 @@ The existing site uses an **orange** highlight (`--dxp-orange-*`, `.corp-highlig
 
 | Role | Hex | Notes |
 |---|---|---|
-| Primary 600 (main) | `#______` | from logo |
-| Accent 500 | `#______` | from logo / complement |
-| Ink 950 | `#______` | hero/footer background |
-| Text on light | `#______` | ≥ 4.5:1 on white |
-| Text on dark | `#______` | ≥ 4.5:1 on Ink 950 |
+| Primary 900 (main buttons, headings) | `#171717` | graphite from the logo black `#060606`; full scale in `src/styles/tokens.css` |
+| Accent 500 | `#D3070B` | the exact logo red (Track button, highlights). Use Accent 600 `#B50407` for small red text on white, Accent 400 `#FE7060` for small red text on Ink |
+| Ink 950 | `#141414` | hero/footer/admin sidebar (7.8% lightness) |
+| Text on light | `#171717` | 17.93:1 on white (muted `#525252`: 7.81:1) |
+| Text on dark | `#FFFFFF` | 18.42:1 on Ink 950 (muted `#D4D4D4`: 12.43:1). Logo red on Ink is 3.34:1: large text/icons only |
 
 **Fallback if the logo is monochrome:** Primary = logo colour; Accent = a warm contrasting hue (amber/orange if
 Primary is blue/navy; teal if Primary is red/orange). Get the owner's approval before using it.

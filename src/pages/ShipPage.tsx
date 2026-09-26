@@ -332,14 +332,14 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
   };
 
   return (
-    <div className="dxp-page-ship">
+    <div className="sdl-page-ship">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
-      <section className="dxp-ship-hero">
-        <div className="dxp-ship-hero-bg" />
-        <div className="dxp-container-wide ship-hero-container">
-          <div className="dxp-ship-breadcrumbs">
+      <section className="sdl-ship-hero">
+        <div className="sdl-ship-hero-bg" />
+        <div className="sdl-container-wide ship-hero-container">
+          <div className="sdl-ship-breadcrumbs">
             <span onClick={() => onNavigate('home')} className="crumb-link">Home</span>
             <span className="crumb-sep">/</span>
             <span className="crumb-current">Ship a Consignment</span>
@@ -369,10 +369,10 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       {/* =========================================================================
           2. MAIN FORM CONTAINER & STICKY LIVE SUMMARY
           ========================================================================= */}
-      <div className="dxp-container-wide dxp-ship-workspace">
+      <div className="sdl-container-wide sdl-ship-workspace">
         {submittedBooking ? (
           /* BOOKING CONFIRMATION SCREEN */
-          <div className="dxp-booking-confirmed-card animate-fade-in">
+          <div className="sdl-booking-confirmed-card animate-fade-in">
             <div className="confirm-top-pill">
               <span className="pulse-dot" />
               <span>CONSIGNMENT REGISTERED · PENDING DISPATCH INTAKE REVIEW</span>
@@ -388,7 +388,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
             {/* Agency Official Documentation Notice */}
             <div className="admin-rate-notice-banner">
-              <div className="rate-notice-icon"><ShieldCheck size={24} className="text-orange flex-shrink-0" /></div>
+              <div className="rate-notice-icon"><ShieldCheck size={24} className="text-accent flex-shrink-0" /></div>
               <div>
                 <strong>Official Documentation & Invoicing Dispatch Notice</strong>
                 <p>
@@ -444,7 +444,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
             {/* Next Steps Instructions */}
             <div className="confirm-instructions-card">
-              <div className="inst-icon"><Clock size={20} className="text-orange flex-shrink-0" /></div>
+              <div className="inst-icon"><Clock size={20} className="text-accent flex-shrink-0" /></div>
               <div>
                 <h4>Next Operational Steps:</h4>
                 <p>
@@ -498,9 +498,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
           </div>
         ) : (
           /* MULTI-STEP BOOKING FORM + STICKY SIDEBAR */
-          <div className="dxp-ship-grid">
+          <div className="sdl-ship-grid">
             {/* Left Column: Multi-Section Form */}
-            <div className="dxp-ship-main-form">
+            <div className="sdl-ship-main-form">
               {/* Unified Responsive Step Stepper */}
               <div className="form-steps-nav">
                 <button
@@ -594,7 +594,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         type="text"
                         value={senderCompany}
                         onChange={(e) => setSenderCompany(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. Apex Distribution Logistics LLC"
                       />
                     </div>
@@ -606,7 +606,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={senderContact}
                         onChange={(e) => setSenderContact(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. John Anderson"
                       />
                     </div>
@@ -618,7 +618,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={senderPhone}
                         onChange={(e) => setSenderPhone(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. (212) 555-0148"
                       />
                     </div>
@@ -630,7 +630,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={senderAddress}
                         onChange={(e) => setSenderAddress(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. 140 West Street, 8th Floor"
                       />
                     </div>
@@ -642,7 +642,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={senderCity}
                         onChange={(e) => setSenderCity(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. New York"
                       />
                     </div>
@@ -655,7 +655,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         maxLength={2}
                         value={senderState}
                         onChange={(e) => setSenderState(e.target.value.toUpperCase())}
-                        className="dxp-input uppercase font-mono"
+                        className="sdl-input uppercase font-mono"
                         placeholder="NY"
                       />
                     </div>
@@ -667,7 +667,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={senderZip}
                         onChange={(e) => setSenderZip(e.target.value)}
-                        className="dxp-input font-mono"
+                        className="sdl-input font-mono"
                         placeholder="10007"
                       />
                     </div>
@@ -681,7 +681,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         className={`tender-card ${pickupType === 'pickup' ? 'selected' : ''}`}
                         onClick={() => setPickupType('pickup')}
                       >
-                        <Truck size={22} className="text-orange" />
+                        <Truck size={22} className="text-accent" />
                         <div>
                           <strong>Schedule Courier Pickup</strong>
                           <p>Driver dispatches to your dock, office, or facility</p>
@@ -692,7 +692,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         className={`tender-card ${pickupType === 'dropoff' ? 'selected' : ''}`}
                         onClick={() => setPickupType('dropoff')}
                       >
-                        <Building size={22} className="text-orange" />
+                        <Building size={22} className="text-accent" />
                         <div>
                           <strong>Drop Off at Logistics Gateway Hub</strong>
                           <p>Tender directly to regional sortation terminal</p>
@@ -706,7 +706,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         <select
                           value={pickupWindow}
                           onChange={(e) => setPickupWindow(e.target.value)}
-                          className="dxp-input"
+                          className="sdl-input"
                         >
                           <option value="Today 2:00 PM - 5:00 PM ET">Today 2:00 PM - 5:00 PM ET</option>
                           <option value="Tomorrow Morning 8:00 AM - 12:00 PM ET">Tomorrow Morning 8:00 AM - 12:00 PM ET</option>
@@ -747,7 +747,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         type="text"
                         value={recipientCompany}
                         onChange={(e) => setRecipientCompany(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. Pacific Horizon Technologies Inc."
                       />
                     </div>
@@ -759,7 +759,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={recipientContact}
                         onChange={(e) => setRecipientContact(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. Michael Johnson"
                       />
                     </div>
@@ -771,7 +771,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={recipientPhone}
                         onChange={(e) => setRecipientPhone(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. (213) 555-0199"
                       />
                     </div>
@@ -783,7 +783,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={recipientAddress}
                         onChange={(e) => setRecipientAddress(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. 900 Wilshire Blvd, Suite 1400"
                       />
                     </div>
@@ -795,7 +795,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={recipientCity}
                         onChange={(e) => setRecipientCity(e.target.value)}
-                        className="dxp-input"
+                        className="sdl-input"
                         placeholder="e.g. Los Angeles"
                       />
                     </div>
@@ -808,7 +808,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         maxLength={2}
                         value={recipientState}
                         onChange={(e) => setRecipientState(e.target.value.toUpperCase())}
-                        className="dxp-input uppercase font-mono"
+                        className="sdl-input uppercase font-mono"
                         placeholder="CA"
                       />
                     </div>
@@ -820,7 +820,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         required
                         value={recipientZip}
                         onChange={(e) => setRecipientZip(e.target.value)}
-                        className="dxp-input font-mono"
+                        className="sdl-input font-mono"
                         placeholder="90017"
                       />
                     </div>
@@ -832,7 +832,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         value={deliveryInstructions}
                         onChange={(e) => setDeliveryInstructions(e.target.value)}
                         placeholder="e.g. Loading dock #4, Direct signature required"
-                        className="dxp-input"
+                        className="sdl-input"
                       />
                     </div>
                   </div>
@@ -907,7 +907,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                                 required
                                 value={piece.weight}
                                 onChange={(e) => handleUpdatePiece(index, 'weight', e.target.value)}
-                                className="dxp-input"
+                                className="sdl-input"
                               />
                             </div>
 
@@ -917,7 +917,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                                 type="number"
                                 value={piece.length}
                                 onChange={(e) => handleUpdatePiece(index, 'length', e.target.value)}
-                                className="dxp-input"
+                                className="sdl-input"
                               />
                             </div>
 
@@ -927,7 +927,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                                 type="number"
                                 value={piece.width}
                                 onChange={(e) => handleUpdatePiece(index, 'width', e.target.value)}
-                                className="dxp-input"
+                                className="sdl-input"
                               />
                             </div>
 
@@ -937,7 +937,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                                 type="number"
                                 value={piece.height}
                                 onChange={(e) => handleUpdatePiece(index, 'height', e.target.value)}
-                                className="dxp-input"
+                                className="sdl-input"
                               />
                             </div>
                           </div>
@@ -949,7 +949,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                               value={piece.description}
                               onChange={(e) => handleUpdatePiece(index, 'description', e.target.value)}
                               placeholder="e.g. Precision Electronics, Document Archive"
-                              className="dxp-input"
+                              className="sdl-input"
                             />
                           </div>
                         </div>
@@ -997,7 +997,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       onClick={() => setSelectedService('courier')}
                     >
                       <div className="serv-head">
-                        <Clock size={20} className="text-orange" />
+                        <Clock size={20} className="text-accent" />
                         <strong>Priority Express Courier</strong>
                       </div>
                       <div className="serv-transit">Next Business Day by 10:30 AM</div>
@@ -1011,7 +1011,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     >
                       <span className="pop-badge">RECOMMENDED</span>
                       <div className="serv-head">
-                        <Truck size={20} className="text-orange" />
+                        <Truck size={20} className="text-accent" />
                         <strong>Scheduled Commercial Linehaul</strong>
                       </div>
                       <div className="serv-transit">2 - 3 Business Days</div>
@@ -1024,7 +1024,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       onClick={() => setSelectedService('auto')}
                     >
                       <div className="serv-head">
-                        <Car size={20} className="text-orange" />
+                        <Car size={20} className="text-accent" />
                         <strong>Auto & Vehicle Transport</strong>
                       </div>
                       <div className="serv-transit">Specialized 3 - 5 Days</div>
@@ -1037,7 +1037,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       onClick={() => setSelectedService('vault')}
                     >
                       <div className="serv-head">
-                        <Lock size={20} className="text-orange" />
+                        <Lock size={20} className="text-accent" />
                         <strong>Time-Critical Secure Vault</strong>
                       </div>
                       <div className="serv-transit">Dedicated Custody Delivery</div>
@@ -1082,7 +1082,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                           type="number"
                           value={declaredValue}
                           onChange={(e) => setDeclaredValue(e.target.value)}
-                          className="dxp-input font-mono"
+                          className="sdl-input font-mono"
                         />
                       </div>
                     </div>
@@ -1122,7 +1122,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             {/* Right Column: Sticky Real-Time Summary */}
-            <aside className="dxp-ship-sidebar">
+            <aside className="sdl-ship-sidebar">
               <div className="sidebar-sticky-card">
                 <div className="sidebar-head">
                   <h3>Consignment Summary</h3>
@@ -1131,7 +1131,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
                 <div className="sidebar-route-preview">
                   <div className="route-loc origin">
-                    <MapPin size={16} className="text-orange" />
+                    <MapPin size={16} className="text-accent" />
                     <div>
                       <small>ORIGIN</small>
                       <strong>{senderCity || 'Origin'}, {senderState || 'US'}</strong>
@@ -1142,7 +1142,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     <span className="route-dot" />
                   </div>
                   <div className="route-loc dest">
-                    <MapPin size={16} className="text-orange" />
+                    <MapPin size={16} className="text-accent" />
                     <div>
                       <small>DESTINATION</small>
                       <strong>{recipientCity || 'Destination'}, {recipientState || 'US'}</strong>
@@ -1161,7 +1161,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   </div>
                   <div className="spec-row">
                     <span>Service Tier:</span>
-                    <strong className="text-orange">
+                    <strong className="text-accent">
                       {getServiceName()}
                     </strong>
                   </div>
@@ -1198,8 +1198,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       {/* =========================================================================
           3. HOW SHIPMENT INTAKE WORKS SECTION
           ========================================================================= */}
-      <section className="dxp-ship-process-section">
-        <div className="dxp-container-wide">
+      <section className="sdl-ship-process-section">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">OPERATIONAL PROVENANCE</span>
             <h2>How Consignment Tender Works</h2>

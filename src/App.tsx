@@ -360,13 +360,13 @@ function MainAppContent() {
   }
 
   return (
-    <div className="dxp-app-shell">
+    <div className="sdl-app-shell">
       <Header
         activePage={currentPage}
         onNavigate={handleNavigate}
       />
 
-      <main className="dxp-main-view">
+      <main className="sdl-main-view">
         {isTrackSearching ? (
           <TrackingLoadingScreen query={trackSearchQuery} />
         ) : (

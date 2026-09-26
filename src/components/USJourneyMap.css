@@ -1,7 +1,7 @@
 /* ============================================================
-   DUOLINGO EXPRESS — US JOURNEY MAP COMPONENT STYLES
+   SDL GLOBAL LOGISTICS — US JOURNEY MAP COMPONENT STYLES
    ============================================================ */
-.dxp-journey-map-card {
+.sdl-journey-map-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
@@ -253,7 +253,7 @@
 }
 
 /* 3. CUSTOM MAP MARKERS & PINS */
-.dxp-clean-map-marker {
+.sdl-clean-map-marker {
   background: transparent !important;
   border: none !important;
 }
@@ -430,16 +430,16 @@
 }
 
 .map-speed-btn:hover {
-  background: rgba(234, 88, 12, 0.3);
-  border-color: #ea580c;
-  color: #fed7aa;
+  background: rgba(var(--sdl-accent-rgb), 0.3);
+  border-color: var(--sdl-accent-500);
+  color: var(--sdl-accent-200);
 }
 
 .map-speed-btn.active {
-  background: #ea580c;
-  border-color: #ea580c;
+  background: var(--sdl-accent-500);
+  border-color: var(--sdl-accent-500);
   color: #ffffff;
-  box-shadow: 0 0 8px rgba(234, 88, 12, 0.6);
+  box-shadow: 0 0 8px rgba(var(--sdl-accent-rgb), 0.6);
   font-weight: 800;
 }
 

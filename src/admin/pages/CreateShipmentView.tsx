@@ -1357,7 +1357,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // MAIN MULTI-STEP WORKSPACE VIEW
   // ----------------------------------------------------
   return (
-    <div className="dxp-create-shipment-workspace">
+    <div className="sdl-create-shipment-workspace">
       {draftSavedToast && (
         <div className="draft-saved-toast animate-fade-in">
           <CheckCircle2 size={16} className="text-emerald" />
@@ -2900,7 +2900,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                             </span>
                           </div>
                           <div className="opt-radio-circle">
-                            {petIsBrachycephalic && <span className="opt-radio-dot" style={{ backgroundColor: '#ea580c' }} />}
+                            {petIsBrachycephalic && <span className="opt-radio-dot" style={{ backgroundColor: '#D3070B' }} />}
                           </div>
                         </div>
                         <p className="opt-desc">
@@ -3274,7 +3274,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                 </div>
                 <div className="corridor-endpoint dest">
                   <span className="corridor-role">DESTINATION</span>
-                  <strong className="text-orange">{recipientCity || 'Los Angeles'}, {recipientState || 'CA'}</strong>
+                  <strong className="text-accent">{recipientCity || 'Los Angeles'}, {recipientState || 'CA'}</strong>
                   <span className="corridor-zip font-mono">ZIP {recipientZip || '90071'}</span>
                 </div>
               </div>
@@ -3569,7 +3569,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     <div className="seg-grid-2" style={{ marginTop: '0.4rem' }}>
                       <div>
                         <small>Stackability Directive:</small>
-                        <span className={palletStackable ? 'text-emerald font-bold' : 'text-orange font-bold'}>
+                        <span className={palletStackable ? 'text-emerald font-bold' : 'text-accent font-bold'}>
                           {palletStackable ? 'Stackable (Double-Stack Certified)' : 'Do Not Double Stack (Top-Tier Only)'}
                         </span>
                       </div>
@@ -3647,7 +3647,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     {freightHazMat && (
                       <div style={{ marginTop: '0.4rem' }}>
                         <small>Hazardous Materials (HazMat):</small>
-                        <strong className="text-orange">{freightUnNumber || 'HazMat Regulated'}</strong>
+                        <strong className="text-accent">{freightUnNumber || 'HazMat Regulated'}</strong>
                       </div>
                     )}
                   </div>
@@ -3725,7 +3725,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     <div className="seg-grid-2" style={{ marginTop: '0.4rem' }}>
                       <div>
                         <small>Brachycephalic (Snub-Nosed):</small>
-                        <span className={petIsBrachycephalic ? 'text-orange font-bold' : 'text-slate-300'}>
+                        <span className={petIsBrachycephalic ? 'text-accent font-bold' : 'text-slate-300'}>
                           {petIsBrachycephalic ? '⚠️ YES - Snub Nosed (Strict Temp Directives Active)' : 'No (Standard Airway)'}
                         </span>
                       </div>
@@ -3950,7 +3950,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
               </div>
               <div className="corridor-city dest">
                 <span className="corridor-label">DESTINATION</span>
-                <strong className="corridor-name text-orange">{recipientCity || 'Destination'}{recipientState ? `, ${recipientState}` : ''}</strong>
+                <strong className="corridor-name text-accent">{recipientCity || 'Destination'}{recipientState ? `, ${recipientState}` : ''}</strong>
               </div>
             </div>
 

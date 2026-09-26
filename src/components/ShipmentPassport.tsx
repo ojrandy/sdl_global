@@ -22,13 +22,13 @@ export const ShipmentPassport: React.FC<ShipmentPassportProps> = ({
   };
 
   return (
-    <div className={`dxp-passport-card ${className}`}>
-      <div className="dxp-passport-header">
-        <h3 className="dxp-passport-title">Shipment Passport</h3>
-        <p className="dxp-passport-sub">A consolidated record of your shipment's journey.</p>
+    <div className={`sdl-passport-card ${className}`}>
+      <div className="sdl-passport-header">
+        <h3 className="sdl-passport-title">Shipment Passport</h3>
+        <p className="sdl-passport-sub">A consolidated record of your shipment's journey.</p>
       </div>
 
-      <div className="dxp-passport-stages">
+      <div className="sdl-passport-stages">
         {stages.map((stage, idx) => {
           const isCompleted = stage.status === 'completed';
           const isCurrent = stage.status === 'current';
@@ -37,7 +37,7 @@ export const ShipmentPassport: React.FC<ShipmentPassportProps> = ({
           return (
             <div
               key={stage.id}
-              className={`dxp-passport-stage-col ${stage.status}`}
+              className={`sdl-passport-stage-col ${stage.status}`}
             >
               <div className="stage-icon-wrap">
                 <div className={`stage-icon ${stage.status}`}>

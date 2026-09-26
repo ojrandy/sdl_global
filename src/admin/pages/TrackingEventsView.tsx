@@ -103,7 +103,7 @@ const getEventTheme = (statusStr?: string, title?: string) => {
     return { color: '#dc2626', bg: '#fef2f2', border: '#fca5a5', text: '#991b1b', label: 'DELAY / EXCEPTION', theme: 'theme-delay' };
   }
   if (s.includes('HOLD')) {
-    return { color: '#ea580c', bg: '#fff7ed', border: '#fdba74', text: '#9a3412', label: 'ON HOLD', theme: 'theme-hold' };
+    return { color: '#D3070B', bg: '#FEF2F0', border: '#FFA699', text: '#920204', label: 'ON HOLD', theme: 'theme-hold' };
   }
   if (s.includes('PROCESSING') || s.includes('SORT')) {
     return { color: '#7c3aed', bg: '#faf5ff', border: '#d8b4fe', text: '#6b21a8', label: 'PROCESSING', theme: 'theme-processing' };
@@ -112,7 +112,7 @@ const getEventTheme = (statusStr?: string, title?: string) => {
     return { color: '#0284c7', bg: '#f0f9ff', border: '#7dd3fc', text: '#0369a1', label: 'DEPARTED', theme: 'theme-departed' };
   }
   if (s.includes('ARRIVED')) {
-    return { color: '#0056d2', bg: '#eff6ff', border: '#93c5fd', text: '#1e40af', label: 'ARRIVED', theme: 'theme-arrived' };
+    return { color: '#171717', bg: '#eff6ff', border: '#93c5fd', text: '#1e40af', label: 'ARRIVED', theme: 'theme-arrived' };
   }
   if (s.includes('RECEIVED')) {
     return { color: '#0d9488', bg: '#f0fdfa', border: '#99f6e4', text: '#115e59', label: 'RECEIVED', theme: 'theme-received' };
@@ -356,7 +356,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
   };
 
   return (
-    <div className="dxp-tracking-events-workspace animate-fade-in">
+    <div className="sdl-tracking-events-workspace animate-fade-in">
       {successToast && (
         <div className="tracking-toast-success animate-fade-in">
           <CheckCircle2 size={16} className="text-emerald" />

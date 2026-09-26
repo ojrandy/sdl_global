@@ -34,9 +34,9 @@ export const SupportModal: React.FC<SupportModalProps> = ({
   };
 
   return (
-    <div className="dxp-support-overlay" onClick={onClose}>
-      <div className="dxp-support-card" onClick={(e) => e.stopPropagation()}>
-        <div className="dxp-support-header">
+    <div className="sdl-support-overlay" onClick={onClose}>
+      <div className="sdl-support-card" onClick={(e) => e.stopPropagation()}>
+        <div className="sdl-support-header">
           <div className="support-header-left">
             <div className="support-icon-pill">
               <Headphones size={18} />
@@ -52,7 +52,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
         </div>
 
         {submitted ? (
-          <div className="dxp-support-success">
+          <div className="sdl-support-success">
             <CheckCircle size={44} className="text-emerald" />
             <h4>Support Request Received</h4>
             <p>
@@ -61,7 +61,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             <span className="support-timeframe">Our operations specialist will respond within 2 business hours.</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="dxp-support-form">
+          <form onSubmit={handleSubmit} className="sdl-support-form">
             <div className="form-group">
               <label>Tracking Number (Auto-Associated)</label>
               <input
@@ -69,7 +69,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 placeholder="e.g. DXP-2026-7K2M9QRX"
-                className="dxp-input font-mono"
+                className="sdl-input font-mono"
               />
             </div>
 
@@ -79,7 +79,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 <select
                   value={issueType}
                   onChange={(e) => setIssueType(e.target.value)}
-                  className="dxp-input"
+                  className="sdl-input"
                 >
                   <option value="General Inquiry">General Tracking Inquiry</option>
                   <option value="Delay Inquiry">Delay / ETA Reschedule</option>
@@ -97,7 +97,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Michael Johnson"
-                  className="dxp-input"
+                  className="sdl-input"
                 />
               </div>
             </div>
@@ -110,7 +110,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="dxp-input"
+                className="sdl-input"
               />
             </div>
 
@@ -122,15 +122,15 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Please describe any questions or notes regarding your shipment movement..."
-                className="dxp-input"
+                className="sdl-input"
               />
             </div>
 
             <div className="support-form-actions">
-              <button type="button" className="dxp-btn-secondary" onClick={onClose}>
+              <button type="button" className="sdl-btn-secondary" onClick={onClose}>
                 Cancel
               </button>
-              <button type="submit" className="dxp-btn-primary">
+              <button type="submit" className="sdl-btn-primary">
                 <Send size={15} /> Submit Support Request
               </button>
             </div>

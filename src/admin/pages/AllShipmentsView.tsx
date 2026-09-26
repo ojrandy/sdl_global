@@ -197,7 +197,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
   const delayedCount = shipments.filter(s => s.status === 'DELAYED' || s.status === 'EXCEPTION' || s.status === 'ON_HOLD').length;
 
   return (
-    <div className="dxp-shipments-page">
+    <div className="sdl-shipments-page">
       {successToast && (
         <div className={`admin-toast-banner animate-fade-in${toastIsError ? ' toast-error' : ''}`}>
           {toastIsError ? <AlertCircle size={18} className="text-crimson" /> : <CheckCircle2 size={18} className="text-emerald" />}
@@ -257,8 +257,8 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
             <svg viewBox="0 0 160 48" preserveAspectRatio="none" className="kpi-sparkline-svg">
               <defs>
                 <linearGradient id="spark-grad-orange" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.32" />
-                  <stop offset="100%" stopColor="#ea580c" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#D3070B" stopOpacity="0.32" />
+                  <stop offset="100%" stopColor="#D3070B" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path
@@ -268,7 +268,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
               <path
                 d="M0,36 C25,36 40,24 60,30 C80,36 100,26 120,32 C135,36 145,18 160,32"
                 fill="none"
-                stroke="#ea580c"
+                stroke="#D3070B"
                 strokeWidth="1.8"
                 strokeLinecap="round"
               />
@@ -525,7 +525,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
                         <div className="consignment-col-cell">
                           <div className="consignment-mode-box" title={s.service}>
                             {s.service === 'Express' ? (
-                              <Truck size={13} className="text-orange" />
+                              <Truck size={13} className="text-accent" />
                             ) : (
                               <Package size={13} className="text-slate" />
                             )}

@@ -169,8 +169,8 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             <svg viewBox="0 0 160 48" preserveAspectRatio="none" className="kpi-sparkline-svg">
               <defs>
                 <linearGradient id="ops-spark-orange" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#ea580c" stopOpacity="0.32" />
-                  <stop offset="100%" stopColor="#ea580c" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#D3070B" stopOpacity="0.32" />
+                  <stop offset="100%" stopColor="#D3070B" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path
@@ -180,7 +180,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
               <path
                 d="M0,36 C25,36 40,24 60,30 C80,36 100,26 120,32 C135,36 145,18 160,32"
                 fill="none"
-                stroke="#ea580c"
+                stroke="#D3070B"
                 strokeWidth="1.8"
                 strokeLinecap="round"
               />
@@ -240,7 +240,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             </div>
             <span className="ops-card-label">PENDING QUOTES</span>
           </div>
-          <strong className="ops-card-number" style={{ color: pendingQuotes.length > 0 ? '#ea580c' : '#07111e' }}>
+          <strong className="ops-card-number" style={{ color: pendingQuotes.length > 0 ? '#D3070B' : '#141414' }}>
             {pendingQuotes.length}
           </strong>
           <span className="ops-card-subtext">
@@ -251,8 +251,8 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             <svg viewBox="0 0 160 48" preserveAspectRatio="none" className="kpi-sparkline-svg">
               <defs>
                 <linearGradient id="ops-spark-amber" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={pendingQuotes.length > 0 ? '#ea580c' : '#10b981'} stopOpacity="0.32" />
-                  <stop offset="100%" stopColor={pendingQuotes.length > 0 ? '#ea580c' : '#10b981'} stopOpacity="0.0" />
+                  <stop offset="0%" stopColor={pendingQuotes.length > 0 ? '#D3070B' : '#10b981'} stopOpacity="0.32" />
+                  <stop offset="100%" stopColor={pendingQuotes.length > 0 ? '#D3070B' : '#10b981'} stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path
@@ -262,7 +262,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
               <path
                 d="M0,42 C30,42 55,38 80,40 C105,42 125,34 140,22 C148,16 154,26 160,36"
                 fill="none"
-                stroke={pendingQuotes.length > 0 ? '#ea580c' : '#10b981'}
+                stroke={pendingQuotes.length > 0 ? '#D3070B' : '#10b981'}
                 strokeWidth="1.8"
                 strokeLinecap="round"
               />
@@ -283,7 +283,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             </div>
             <span className="ops-card-label">EXCEPTIONS & HOLDS</span>
           </div>
-          <strong className="ops-card-number" style={{ color: exceptionCount > 0 ? '#dc2626' : '#07111e' }}>
+          <strong className="ops-card-number" style={{ color: exceptionCount > 0 ? '#dc2626' : '#141414' }}>
             {exceptionCount}
           </strong>
           <span className="ops-card-subtext">
@@ -454,7 +454,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
                         <div className="ops-consignment-cell">
                           <div className="ops-mode-box" title={shipment.service}>
                             {shipment.service === 'Express' ? (
-                              <Truck size={13} className="text-orange" />
+                              <Truck size={13} className="text-accent" />
                             ) : (
                               <Package size={13} className="text-slate" />
                             )}

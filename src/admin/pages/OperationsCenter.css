@@ -1,7 +1,7 @@
 /* ==========================================================================
-   DUOLINGO EXPRESS — ENTERPRISE DASHBOARD STYLING
+   SDL GLOBAL LOGISTICS — ENTERPRISE DASHBOARD STYLING
    High-density, professional carrier terminal layout.
-   Brand Colors: Deep Navy (#0b192c, #07111e), Courier Orange (#ea580c),
+   Brand Colors: Deep Navy (var(--sdl-ink-900), var(--sdl-ink-950)), Courier Orange (var(--sdl-accent-500)),
    Crisp Slate (#1e293b, #64748b), Pure White (#ffffff).
    ========================================================================== */
 
@@ -135,10 +135,10 @@
   flex-shrink: 0;
 }
 
-.ops-circle-icon.orange { background-color: #ea580c; }
+.ops-circle-icon.orange { background-color: var(--sdl-accent-500); }
 .ops-circle-icon.blue { background-color: #2563eb; }
 .ops-circle-icon.green { background-color: #10b981; }
-.ops-circle-icon.amber { background-color: #ea580c; }
+.ops-circle-icon.amber { background-color: var(--sdl-accent-500); }
 .ops-circle-icon.red { background-color: #ef4444; }
 
 .ops-card-label {
@@ -152,7 +152,7 @@
 .ops-card-number {
   font-size: 2.15rem;
   font-weight: 800;
-  color: #07111e;
+  color: var(--sdl-ink-950);
   line-height: 1.1;
   letter-spacing: -0.025em;
   margin-top: 0.15rem;
@@ -223,7 +223,7 @@
 .ops-section-title {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #07111e;
+  color: var(--sdl-ink-950);
   margin: 0;
   letter-spacing: -0.015em;
 }
@@ -281,7 +281,7 @@
 }
 
 .filter-tab-btn.active {
-  background: #07111e;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   font-weight: 800;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
@@ -317,8 +317,8 @@
 
 .table-search-input:focus {
   background: #ffffff;
-  border-color: #ea580c;
-  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
+  border-color: var(--sdl-accent-500);
+  box-shadow: 0 0 0 2px rgba(var(--sdl-accent-rgb), 0.12);
 }
 
 .ops-btn-secondary {
@@ -366,7 +366,7 @@
 }
 
 .ops-btn-primary {
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   color: #ffffff;
   border: none;
   padding: 0.4rem 0.9rem;
@@ -378,7 +378,7 @@
 }
 
 .ops-btn-primary:hover {
-  background: #c2410c;
+  background: var(--sdl-accent-600);
 }
 
 /* ==========================================================================
@@ -404,11 +404,11 @@
 }
 
 .ops-data-table thead tr {
-  background: #07111e;
+  background: var(--sdl-ink-950);
 }
 
 .ops-data-table th {
-  background-color: #07111e;
+  background-color: var(--sdl-ink-950);
   color: #ffffff;
   font-weight: 800;
   padding: 0.95rem 1rem;
@@ -501,9 +501,9 @@
 }
 
 .ops-service-pill.express {
-  background: #fff7ed;
-  color: #ea580c;
-  border: 1px solid #fed7aa;
+  background: var(--sdl-accent-50);
+  color: var(--sdl-accent-500);
+  border: 1px solid var(--sdl-accent-200);
 }
 
 .ops-service-pill.priority {
@@ -544,7 +544,7 @@
 .ops-route-dest {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #ea580c;
+  color: var(--sdl-accent-500);
   white-space: nowrap;
 }
 
@@ -620,11 +620,11 @@
 .chip-dot.slate { background: #94a3b8; }
 
 .ops-status-chip.out-delivery {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background: var(--sdl-accent-50);
+  color: var(--sdl-accent-600);
+  border: 1px solid var(--sdl-accent-200);
 }
-.chip-dot.orange { background: #ea580c; }
+.chip-dot.orange { background: var(--sdl-accent-500); }
 
 .ops-status-chip.delivered {
   background: #f0fdf4;
@@ -676,10 +676,10 @@
   align-items: center;
   gap: 0.2rem;
   padding: 0.28rem 0.58rem;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: var(--sdl-accent-50);
+  border: 1px solid var(--sdl-accent-200);
   border-radius: 9999px;
-  color: #c2410c;
+  color: var(--sdl-accent-600);
   font-size: 0.71rem;
   font-weight: 700;
   cursor: pointer;
@@ -689,8 +689,8 @@
 }
 
 .ops-control-btn:hover {
-  background: #ffedd5;
-  border-color: #fdba74;
+  background: var(--sdl-accent-100);
+  border-color: var(--sdl-accent-300);
 }
 
 .ops-control-btn.sim-active {

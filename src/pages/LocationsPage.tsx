@@ -57,13 +57,13 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="dxp-page-locations">
+    <div className="sdl-page-locations">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
-      <section className="dxp-locations-hero">
+      <section className="sdl-locations-hero">
         <div className="locations-hero-bg-overlay" />
-        <div className="dxp-container-wide locations-hero-inner">
+        <div className="sdl-container-wide locations-hero-inner">
           <div className="locations-hero-pill animate-fade-in">
             <span className="locations-pulse-dot" />
             <span>{dotNumber ? `${dotNumber} · ` : ''}NATIONAL GATEWAY NETWORK</span>
@@ -82,7 +82,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ onNavigate }) => {
       {/* =========================================================================
           2. MAIN BODY: MAP & FACILITY CARDS
           ========================================================================= */}
-      <div className="dxp-container-wide dxp-locations-content">
+      <div className="sdl-container-wide sdl-locations-content">
         <div className="locations-map-feature animate-fade-in">
           <div className="map-card-header">
             <div className="map-badge-pill font-mono">NATIONAL INFRASTRUCTURE RADAR</div>
@@ -108,11 +108,11 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ onNavigate }) => {
               
               <div className="fac-meta-info">
                 <div className="fac-meta-row">
-                  <Clock size={14} className="text-orange" />
+                  <Clock size={14} className="text-accent" />
                   <span>{fac.hours}</span>
                 </div>
                 <div className="fac-meta-row">
-                  <Phone size={14} className="text-orange" />
+                  <Phone size={14} className="text-accent" />
                   <span>{fac.phone}</span>
                 </div>
               </div>

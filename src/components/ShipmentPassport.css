@@ -1,35 +1,35 @@
-.dxp-passport-card {
-  background: var(--dxp-white);
-  border: 1px solid var(--dxp-slate-200);
-  border-radius: var(--dxp-radius-lg);
+.sdl-passport-card {
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-200);
+  border-radius: var(--sdl-radius-lg);
   padding: 1.25rem 1.5rem;
-  box-shadow: var(--dxp-shadow-card);
+  box-shadow: var(--sdl-shadow-card);
 }
 
-.dxp-passport-header {
+.sdl-passport-header {
   margin-bottom: 1.25rem;
 }
 
-.dxp-passport-title {
+.sdl-passport-title {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
   margin-bottom: 0.125rem;
 }
 
-.dxp-passport-sub {
+.sdl-passport-sub {
   font-size: 0.8125rem;
-  color: var(--dxp-slate-500);
+  color: var(--sdl-slate-500);
 }
 
-.dxp-passport-stages {
+.sdl-passport-stages {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   position: relative;
 }
 
-.dxp-passport-stage-col {
+.sdl-passport-stage-col {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -55,25 +55,25 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: var(--dxp-transition);
+  transition: var(--sdl-transition);
 }
 
 .stage-icon.completed {
-  background-color: var(--dxp-slate-100);
-  color: var(--dxp-slate-700);
-  border: 1.5px solid var(--dxp-slate-300);
+  background-color: var(--sdl-slate-100);
+  color: var(--sdl-slate-700);
+  border: 1.5px solid var(--sdl-slate-300);
 }
 
 .stage-icon.current {
-  background-color: var(--dxp-blue-600);
-  color: var(--dxp-white);
-  box-shadow: 0 0 0 4px var(--dxp-blue-100);
+  background-color: var(--sdl-primary-900);
+  color: var(--sdl-white);
+  box-shadow: 0 0 0 4px var(--sdl-primary-100);
 }
 
 .stage-icon.upcoming {
-  background-color: var(--dxp-slate-50);
-  color: var(--dxp-slate-400);
-  border: 1.5px dashed var(--dxp-slate-300);
+  background-color: var(--sdl-slate-50);
+  color: var(--sdl-slate-400);
+  border: 1.5px dashed var(--sdl-slate-300);
 }
 
 .stage-connector {
@@ -82,17 +82,17 @@
   left: 50%;
   width: 100%;
   height: 2px;
-  background-color: var(--dxp-slate-200);
+  background-color: var(--sdl-slate-200);
   z-index: 1;
   transform: translateY(-50%);
 }
 
 .stage-connector.completed {
-  background-color: var(--dxp-slate-400);
+  background-color: var(--sdl-slate-400);
 }
 
 .stage-connector.current {
-  background: linear-gradient(to right, var(--dxp-blue-600), var(--dxp-slate-200));
+  background: linear-gradient(to right, var(--sdl-primary-900), var(--sdl-slate-200));
 }
 
 .stage-content {
@@ -104,28 +104,28 @@
 .stage-label {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--dxp-slate-800);
+  color: var(--sdl-slate-800);
 }
 
-.dxp-passport-stage-col.current .stage-label {
-  color: var(--dxp-blue-600);
+.sdl-passport-stage-col.current .stage-label {
+  color: var(--sdl-primary-900);
 }
 
-.dxp-passport-stage-col.upcoming .stage-label {
-  color: var(--dxp-slate-500);
+.sdl-passport-stage-col.upcoming .stage-label {
+  color: var(--sdl-slate-500);
 }
 
 .stage-sublabel {
   font-size: 0.75rem;
-  color: var(--dxp-slate-500);
+  color: var(--sdl-slate-500);
 }
 
 @media (max-width: 640px) {
-  .dxp-passport-stages {
+  .sdl-passport-stages {
     flex-direction: column;
     gap: 1.25rem;
   }
-  .dxp-passport-stage-col {
+  .sdl-passport-stage-col {
     flex-direction: row;
     align-items: center;
     text-align: left;

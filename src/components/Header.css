@@ -3,33 +3,33 @@
    Zero Clutter · Hidden Mobile Topbar · Slide-in Drawer
    ============================================================ */
 
-.dxp-header-wrapper {
+.sdl-header-wrapper {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background-color: var(--dxp-white);
+  background-color: var(--sdl-white);
   box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08);
 }
 
 /* ============================================================
    1. TOP UTILITY BAR (Desktop Only - Clean Corporate Strip)
    ============================================================ */
-.dxp-topbar {
-  background-color: #07111e;
+.sdl-topbar {
+  background-color: var(--sdl-ink-950);
   color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 500;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.dxp-topbar-inner {
+.sdl-topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 38px;
 }
 
-.dxp-topbar-left {
+.sdl-topbar-left {
   display: flex;
   align-items: center;
   gap: 1.25rem;
@@ -42,7 +42,7 @@
 }
 
 .topbar-item strong {
-  color: var(--dxp-white);
+  color: var(--sdl-white);
   font-weight: 600;
 }
 
@@ -65,8 +65,8 @@
   font-weight: 600;
 }
 
-.text-orange {
-  color: var(--dxp-orange-500);
+.text-accent {
+  color: var(--sdl-accent-500);
 }
 
 .text-emerald {
@@ -76,12 +76,12 @@
 /* ============================================================
    2. MAIN NAVIGATION BAR (White Surface)
    ============================================================ */
-.dxp-main-header {
-  background-color: var(--dxp-white);
-  border-bottom: 1px solid var(--dxp-slate-200);
+.sdl-main-header {
+  background-color: var(--sdl-white);
+  border-bottom: 1px solid var(--sdl-slate-200);
 }
 
-.dxp-header-inner {
+.sdl-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -89,7 +89,7 @@
 }
 
 /* Brand Logo */
-.dxp-logo-wrap {
+.sdl-logo-wrap {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -97,7 +97,7 @@
   user-select: none;
 }
 
-.dxp-brand-logo-img {
+.sdl-brand-logo-img {
   height: 52px;
   width: auto;
   max-width: 250px;
@@ -106,124 +106,124 @@
   transition: transform 0.2s ease;
 }
 
-.dxp-logo-wrap:hover .dxp-brand-logo-img {
+.sdl-logo-wrap:hover .sdl-brand-logo-img {
   transform: scale(1.02);
 }
 
-.dxp-fallback-logo {
-  font-family: var(--dxp-font-display);
+.sdl-fallback-logo {
+  font-family: var(--sdl-font-display);
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
   letter-spacing: -0.02em;
 }
 
-.dxp-fallback-logo .text-orange {
-  color: var(--dxp-orange-600);
+.sdl-fallback-logo .text-accent {
+  color: var(--sdl-accent-500);
   margin-left: 0.15rem;
 }
 
 /* Desktop Nav Links */
-.dxp-nav-links {
+.sdl-nav-links {
   display: flex;
   align-items: center;
   gap: 2rem;
 }
 
-.dxp-nav-link {
+.sdl-nav-link {
   font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--dxp-slate-700);
+  color: var(--sdl-slate-700);
   background: transparent;
   border: none;
   padding: 0.5rem 0.25rem;
   position: relative;
   cursor: pointer;
-  transition: var(--dxp-transition);
+  transition: var(--sdl-transition);
 }
 
-.dxp-nav-link:hover {
-  color: var(--dxp-orange-600);
+.sdl-nav-link:hover {
+  color: var(--sdl-accent-500);
 }
 
-.dxp-nav-link.active {
-  color: var(--dxp-orange-600);
+.sdl-nav-link.active {
+  color: var(--sdl-accent-500);
 }
 
-.dxp-nav-link.active::after {
+.sdl-nav-link.active::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 2px;
-  background-color: var(--dxp-orange-500);
+  background-color: var(--sdl-accent-500);
   border-radius: 2px;
 }
 
 /* Primary Top Action Button */
-.dxp-header-actions {
+.sdl-header-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.dxp-btn-top-quote {
+.sdl-btn-top-quote {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  color: var(--dxp-white);
+  background: linear-gradient(135deg, var(--sdl-accent-500) 0%, var(--sdl-accent-500) 100%);
+  color: var(--sdl-white);
   padding: 0.6875rem 1.25rem;
-  border-radius: var(--dxp-radius-md);
+  border-radius: var(--sdl-radius-md);
   font-size: 0.875rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
-  transition: var(--dxp-transition);
+  box-shadow: 0 4px 12px rgba(var(--sdl-accent-rgb), 0.25);
+  transition: var(--sdl-transition);
 }
 
-.dxp-btn-top-quote:hover {
+.sdl-btn-top-quote:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.35);
+  box-shadow: 0 6px 16px rgba(var(--sdl-accent-rgb), 0.35);
   filter: brightness(1.05);
 }
 
 /* Mobile Hamburger Toggle Button */
-.dxp-mobile-toggle-btn {
+.sdl-mobile-toggle-btn {
   display: none;
   width: 44px;
   height: 44px;
   background: #f8fafc;
-  border: 1.5px solid var(--dxp-slate-200);
-  border-radius: var(--dxp-radius-md);
-  color: var(--dxp-navy-900);
+  border: 1.5px solid var(--sdl-slate-200);
+  border-radius: var(--sdl-radius-md);
+  color: var(--sdl-ink-900);
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.dxp-mobile-toggle-btn:hover {
-  background: var(--dxp-orange-50);
-  border-color: var(--dxp-orange-300);
-  color: var(--dxp-orange-600);
+.sdl-mobile-toggle-btn:hover {
+  background: var(--sdl-accent-50);
+  border-color: var(--sdl-accent-300);
+  color: var(--sdl-accent-500);
 }
 
-.dxp-mobile-toggle-btn.is-active {
-  background: var(--dxp-orange-50);
-  border-color: var(--dxp-orange-500);
-  color: var(--dxp-orange-600);
+.sdl-mobile-toggle-btn.is-active {
+  background: var(--sdl-accent-50);
+  border-color: var(--sdl-accent-500);
+  color: var(--sdl-accent-500);
 }
 
 /* ============================================================
    3. EXECUTIVE MOBILE SLIDE-IN DRAWER
    ============================================================ */
-.dxp-drawer-backdrop {
+.sdl-drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(7, 17, 30, 0.65);
+  background: rgba(var(--sdl-ink-rgb), 0.65);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 9999;
@@ -232,7 +232,7 @@
   animation: fadeIn 0.25s ease;
 }
 
-.dxp-mobile-drawer-sheet {
+.sdl-mobile-drawer-sheet {
   width: 88%;
   max-width: 380px;
   height: 100%;
@@ -269,7 +269,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1.5px solid var(--dxp-slate-100);
+  border-bottom: 1.5px solid var(--sdl-slate-100);
   background: #ffffff;
   position: sticky;
   top: 0;
@@ -292,8 +292,8 @@
   height: 38px;
   border-radius: 50%;
   background: #f1f5f9;
-  border: 1px solid var(--dxp-slate-200);
-  color: var(--dxp-slate-600);
+  border: 1px solid var(--sdl-slate-200);
+  color: var(--sdl-slate-600);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -302,9 +302,9 @@
 }
 
 .drawer-close-btn:hover {
-  background: var(--dxp-orange-50);
-  color: var(--dxp-orange-600);
-  border-color: var(--dxp-orange-300);
+  background: var(--sdl-accent-50);
+  color: var(--sdl-accent-500);
+  border-color: var(--sdl-accent-300);
 }
 
 /* Drawer Quick Action Cards */
@@ -314,7 +314,7 @@
   gap: 0.625rem;
   padding: 1.25rem 1.5rem;
   background: #f8fafc;
-  border-bottom: 1px solid var(--dxp-slate-200);
+  border-bottom: 1px solid var(--sdl-slate-200);
 }
 
 .drawer-action-card {
@@ -322,8 +322,8 @@
   align-items: center;
   gap: 0.875rem;
   padding: 0.875rem 1rem;
-  border-radius: var(--dxp-radius-lg);
-  border: 1.5px solid var(--dxp-slate-200);
+  border-radius: var(--sdl-radius-lg);
+  border: 1.5px solid var(--sdl-slate-200);
   background: #ffffff;
   text-align: left;
   cursor: pointer;
@@ -339,7 +339,7 @@
 .action-icon-wrap {
   width: 40px;
   height: 40px;
-  border-radius: var(--dxp-radius-md);
+  border-radius: var(--sdl-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -347,14 +347,14 @@
 }
 
 .action-icon-wrap.orange {
-  background: var(--dxp-orange-50);
-  color: var(--dxp-orange-600);
-  border: 1px solid var(--dxp-orange-200);
+  background: var(--sdl-accent-50);
+  color: var(--sdl-accent-500);
+  border: 1px solid var(--sdl-accent-200);
 }
 
 .action-icon-wrap.navy {
-  background: #07111e;
-  color: #fb923c;
+  background: var(--sdl-ink-950);
+  color: var(--sdl-accent-400);
   border: 1px solid #1e293b;
 }
 
@@ -365,26 +365,26 @@
 .action-text strong {
   font-size: 0.9375rem;
   font-weight: 800;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
   display: block;
   line-height: 1.25;
 }
 
 .action-text small {
   font-size: 0.75rem;
-  color: var(--dxp-slate-500);
+  color: var(--sdl-slate-500);
   display: block;
   margin-top: 0.125rem;
 }
 
 .action-arrow {
-  color: var(--dxp-slate-400);
+  color: var(--sdl-slate-400);
   transition: transform 0.2s ease;
 }
 
 .drawer-action-card:hover .action-arrow {
   transform: translateX(3px);
-  color: var(--dxp-orange-600);
+  color: var(--sdl-accent-500);
 }
 
 /* Navigation List Section */
@@ -396,7 +396,7 @@
 .drawer-section-label {
   font-size: 0.6875rem;
   font-weight: 800;
-  color: var(--dxp-slate-400);
+  color: var(--sdl-slate-400);
   letter-spacing: 0.08em;
   display: block;
   margin-bottom: 0.75rem;
@@ -413,10 +413,10 @@
   align-items: center;
   gap: 0.875rem;
   padding: 0.8125rem 1rem;
-  border-radius: var(--dxp-radius-md);
+  border-radius: var(--sdl-radius-md);
   font-size: 0.9375rem;
   font-weight: 700;
-  color: var(--dxp-slate-700);
+  color: var(--sdl-slate-700);
   background: transparent;
   border: none;
   text-align: left;
@@ -425,44 +425,44 @@
 }
 
 .drawer-link .link-icon {
-  color: var(--dxp-slate-400);
+  color: var(--sdl-slate-400);
   transition: color 0.15s ease;
 }
 
 .drawer-link .link-chevron {
   margin-left: auto;
-  color: var(--dxp-slate-300);
+  color: var(--sdl-slate-300);
 }
 
 .drawer-link:hover {
   background: #f1f5f9;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
 }
 
 .drawer-link:hover .link-icon {
-  color: var(--dxp-orange-600);
+  color: var(--sdl-accent-500);
 }
 
 .drawer-link.active {
-  background: var(--dxp-orange-50);
-  color: var(--dxp-orange-600);
-  border-left: 3px solid var(--dxp-orange-500);
+  background: var(--sdl-accent-50);
+  color: var(--sdl-accent-500);
+  border-left: 3px solid var(--sdl-accent-500);
 }
 
 .drawer-link.active .link-icon {
-  color: var(--dxp-orange-600);
+  color: var(--sdl-accent-500);
 }
 
 .drawer-link.active .link-chevron {
-  color: var(--dxp-orange-500);
+  color: var(--sdl-accent-500);
 }
 
 /* Drawer Footer Hotline Box */
 .drawer-footer-hotline {
   margin: 1.25rem 1.5rem 1.75rem;
   padding: 1.25rem;
-  background: #07111e;
-  border-radius: var(--dxp-radius-xl);
+  background: var(--sdl-ink-950);
+  border-radius: var(--sdl-radius-xl);
   color: #ffffff;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
@@ -495,15 +495,15 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, var(--sdl-accent-500) 0%, var(--sdl-accent-500) 100%);
   color: #ffffff;
   padding: 0.75rem;
-  border-radius: var(--dxp-radius-md);
+  border-radius: var(--sdl-radius-md);
   font-size: 0.875rem;
   font-weight: 700;
   text-decoration: none;
   margin-bottom: 0.75rem;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 4px 12px rgba(var(--sdl-accent-rgb), 0.25);
   transition: all 0.2s ease;
 }
 
@@ -522,37 +522,37 @@
    RESPONSIVE DESIGN BREAKPOINTS
    ============================================================ */
 @media (max-width: 1024px) {
-  .dxp-nav-links, .dxp-header-actions {
+  .sdl-nav-links, .sdl-header-actions {
     display: none;
   }
-  .dxp-mobile-toggle-btn {
+  .sdl-mobile-toggle-btn {
     display: flex;
   }
 }
 
 /* HIDE TOP UTILITY BAR COMPLETELY ON MOBILE & TABLET */
 @media (max-width: 900px) {
-  .dxp-topbar {
+  .sdl-topbar {
     display: none !important;
   }
-  .dxp-header-inner {
+  .sdl-header-inner {
     height: 74px;
   }
-  .dxp-brand-logo-img {
+  .sdl-brand-logo-img {
     height: 46px;
     max-width: 210px;
   }
 }
 
 @media (max-width: 480px) {
-  .dxp-header-inner {
+  .sdl-header-inner {
     height: 68px;
   }
-  .dxp-brand-logo-img {
+  .sdl-brand-logo-img {
     height: 40px;
     max-width: 180px;
   }
-  .dxp-mobile-drawer-sheet {
+  .sdl-mobile-drawer-sheet {
     width: 92%;
   }
 }

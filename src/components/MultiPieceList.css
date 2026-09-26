@@ -1,43 +1,43 @@
-.dxp-pieces-card {
-  background: var(--dxp-white);
-  border: 1px solid var(--dxp-slate-200);
-  border-radius: var(--dxp-radius-lg);
+.sdl-pieces-card {
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-200);
+  border-radius: var(--sdl-radius-lg);
   padding: 1.25rem 1.5rem;
-  box-shadow: var(--dxp-shadow-card);
+  box-shadow: var(--sdl-shadow-card);
 }
 
-.dxp-pieces-header {
+.sdl-pieces-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.25rem;
 }
 
-.dxp-pieces-title {
+.sdl-pieces-title {
   font-size: 1.0625rem;
   font-weight: 700;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
 }
 
-.dxp-pieces-count-badge {
-  background-color: var(--dxp-blue-50);
-  color: var(--dxp-blue-600);
+.sdl-pieces-count-badge {
+  background-color: var(--sdl-primary-50);
+  color: var(--sdl-primary-900);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.25rem 0.625rem;
-  border-radius: var(--dxp-radius-full);
+  border-radius: var(--sdl-radius-full);
 }
 
-.dxp-pieces-grid {
+.sdl-pieces-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-.dxp-piece-item {
-  background: var(--dxp-slate-50);
-  border: 1px solid var(--dxp-slate-200);
-  border-radius: var(--dxp-radius-md);
+.sdl-piece-item {
+  background: var(--sdl-slate-50);
+  border: 1px solid var(--sdl-slate-200);
+  border-radius: var(--sdl-radius-md);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -58,13 +58,13 @@
 .piece-label {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
 }
 
 .piece-tracking-id {
-  font-family: var(--dxp-font-mono);
+  font-family: var(--sdl-font-mono);
   font-size: 0.75rem;
-  color: var(--dxp-slate-600);
+  color: var(--sdl-slate-600);
 }
 
 .piece-status-wrap {
@@ -74,24 +74,24 @@
   gap: 0.125rem;
 }
 
-.dxp-badge-in-transit-sm {
-  background-color: var(--dxp-emerald-100);
-  color: var(--dxp-emerald-700);
+.sdl-badge-in-transit-sm {
+  background-color: var(--sdl-info-100);
+  color: var(--sdl-info-700);
   font-size: 0.6875rem;
   font-weight: 700;
   padding: 0.125rem 0.5rem;
-  border-radius: var(--dxp-radius-sm);
+  border-radius: var(--sdl-radius-sm);
 }
 
 .piece-location {
   font-size: 0.75rem;
-  color: var(--dxp-slate-500);
+  color: var(--sdl-slate-500);
 }
 
 .piece-barcode-wrap {
-  background: var(--dxp-white);
-  border: 1px solid var(--dxp-slate-200);
-  border-radius: var(--dxp-radius-sm);
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-200);
+  border-radius: var(--sdl-radius-sm);
   padding: 0.5rem;
   display: flex;
   align-items: center;
@@ -104,16 +104,16 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.75rem;
-  color: var(--dxp-slate-600);
+  color: var(--sdl-slate-600);
   font-weight: 500;
 }
 
 .spec-dot {
-  color: var(--dxp-slate-400);
+  color: var(--sdl-slate-400);
 }
 
 @media (max-width: 768px) {
-  .dxp-pieces-grid {
+  .sdl-pieces-grid {
     grid-template-columns: 1fr;
   }
 }

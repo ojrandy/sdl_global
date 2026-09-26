@@ -138,14 +138,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   ];
 
   const partnerLogos = [
-    { name: 'FedEx Custom Critical', type: 'EXPRESS COURIER', icon: <Truck size={20} className="text-orange" /> },
-    { name: 'DHL Express Network', type: 'TIME-CRITICAL COURIER', icon: <Globe size={20} className="text-orange" /> },
-    { name: 'UPS Express Critical', type: 'INTERSTATE LINEHAUL', icon: <ShieldCheck size={20} className="text-orange" /> },
-    { name: 'Penske Commercial Logistics', type: 'DEDICATED FLEET', icon: <Warehouse size={20} className="text-orange" /> },
-    { name: 'ArcBest Expedited', type: 'EXPEDITED TRANSIT', icon: <Zap size={20} className="text-orange" /> },
-    { name: 'Old Dominion Express', type: 'DIRECT LINEHAUL', icon: <Truck size={20} className="text-orange" /> },
-    { name: 'Estes Express Lines', type: 'REGIONAL COURIER', icon: <Package size={20} className="text-orange" /> },
-    { name: 'Forward Logistics Complete', type: 'AIRPORT GATEWAY COURIER', icon: <Globe size={20} className="text-orange" /> }
+    { name: 'FedEx Custom Critical', type: 'EXPRESS COURIER', icon: <Truck size={20} className="text-accent" /> },
+    { name: 'DHL Express Network', type: 'TIME-CRITICAL COURIER', icon: <Globe size={20} className="text-accent" /> },
+    { name: 'UPS Express Critical', type: 'INTERSTATE LINEHAUL', icon: <ShieldCheck size={20} className="text-accent" /> },
+    { name: 'Penske Commercial Logistics', type: 'DEDICATED FLEET', icon: <Warehouse size={20} className="text-accent" /> },
+    { name: 'ArcBest Expedited', type: 'EXPEDITED TRANSIT', icon: <Zap size={20} className="text-accent" /> },
+    { name: 'Old Dominion Express', type: 'DIRECT LINEHAUL', icon: <Truck size={20} className="text-accent" /> },
+    { name: 'Estes Express Lines', type: 'REGIONAL COURIER', icon: <Package size={20} className="text-accent" /> },
+    { name: 'Forward Logistics Complete', type: 'AIRPORT GATEWAY COURIER', icon: <Globe size={20} className="text-accent" /> }
   ];
 
   const handleCallbackSubmit = (e: React.FormEvent) => {
@@ -169,13 +169,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   };
 
   return (
-    <div className="dxp-homepage-container">
+    <div className="sdl-homepage-container">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION WITH BOLD TYPOGRAPHY & FAST ACTION CONSOLE
           ========================================================================= */}
       <section className="corp-hero-section">
         <div className="corp-hero-overlay" />
-        <div className="dxp-container-wide corp-hero-inner">
+        <div className="sdl-container-wide corp-hero-inner">
           <div className="corp-hero-content animate-fade-in">
             <div className="corp-hero-badge">
               <span className="badge-pulse-dot" />
@@ -184,7 +184,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
             <h1 className="corp-hero-title">
               Delivering confidence <br />
-              <span className="corp-highlight-orange">mile after mile.</span>
+              <span className="sdl-highlight">mile after mile.</span>
             </h1>
 
             <p className="corp-hero-subtitle">
@@ -217,7 +217,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           <div className="corp-hero-service-showcase animate-scale-in">
             <div className="hero-showcase-header">
               <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-orange" />
+                <ShieldCheck size={18} className="text-accent" />
                 <span className="showcase-header-title font-mono">OFFICIAL SERVICE GUARANTEES</span>
               </div>
               <span className="hero-guarantee-badge font-mono">CERTIFIED</span>
@@ -226,7 +226,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <div className="hero-feature-rows">
               <div className="hero-feat-item">
                 <div className="hero-feat-icon">
-                  <Clock size={20} className="text-orange" />
+                  <Clock size={20} className="text-accent" />
                 </div>
                 <div className="hero-feat-text">
                   <strong>Guaranteed Transit Windows</strong>
@@ -258,12 +258,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <div className="hero-showcase-bottom">
               {supportPhone ? (
                 <>
-                  <Phone size={15} className="text-orange" />
+                  <Phone size={15} className="text-accent" />
                   <span>Priority Hotline: <strong>{supportPhone}</strong></span>
                 </>
               ) : (
                 <>
-                  <Mail size={15} className="text-orange" />
+                  <Mail size={15} className="text-accent" />
                   <span>Priority Desk: <strong>{dispatchEmail}</strong></span>
                 </>
               )}
@@ -276,7 +276,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           2. "WHY SHIPPERS CHOOSE US" (3 ELEVATED FLOATING VALUE CARDS)
           ========================================================================= */}
       <section className="corp-why-choose-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">RELIABLE COURIER EXCELLENCE</span>
             <h2>Why commercial shippers choose Duolingo Express</h2>
@@ -351,7 +351,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           3. "HOW IT WORKS" — 4-STEP VERIFIED TRANSIT PROTOCOL
           ========================================================================= */}
       <section className="corp-how-it-works-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">SEAMLESS COURIER PROTOCOL</span>
             <h2>How Duolingo Express moves your shipments</h2>
@@ -373,7 +373,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                     <div className="node-ring-pulse" />
                   </div>
                   <div className="node-icon-bubble">
-                    <FileText size={22} className="text-orange" />
+                    <FileText size={22} className="text-accent" />
                   </div>
                 </div>
                 <div className="node-body">
@@ -397,7 +397,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                     <div className="node-ring-pulse" />
                   </div>
                   <div className="node-icon-bubble">
-                    <Warehouse size={22} className="text-orange" />
+                    <Warehouse size={22} className="text-accent" />
                   </div>
                 </div>
                 <div className="node-body">
@@ -421,7 +421,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                     <div className="node-ring-pulse" />
                   </div>
                   <div className="node-icon-bubble">
-                    <Truck size={22} className="text-orange" />
+                    <Truck size={22} className="text-accent" />
                   </div>
                 </div>
                 <div className="node-body">
@@ -445,7 +445,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                     <div className="node-ring-pulse" />
                   </div>
                   <div className="node-icon-bubble">
-                    <ShieldCheck size={22} className="text-orange" />
+                    <ShieldCheck size={22} className="text-accent" />
                   </div>
                 </div>
                 <div className="node-body">
@@ -465,7 +465,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
           <div className="how-it-works-action-strip">
             <div className="flex items-center gap-3">
-              <Sparkles size={20} className="text-orange" />
+              <Sparkles size={20} className="text-accent" />
               <span>Ready to experience transparent nationwide express delivery?</span>
             </div>
             <div className="flex gap-3">
@@ -493,7 +493,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           4. EDITORIAL "ABOUT US" SECTION (SPLIT SHOWCASE WITH EXPERIENCE BADGE)
           ========================================================================= */}
       <section className="corp-about-section">
-        <div className="dxp-container-wide corp-about-grid">
+        <div className="sdl-container-wide corp-about-grid">
           {/* Left Stacked Image Stage */}
           <div className="about-image-stage">
             <div className="about-main-img-wrapper">
@@ -538,15 +538,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
             <div className="about-stats-strip">
               <div className="about-stat-item">
-                <strong className="font-mono text-orange">99.4%</strong>
+                <strong className="font-mono text-accent">99.4%</strong>
                 <span>On-Time Delivery Rate</span>
               </div>
               <div className="about-stat-item">
-                <strong className="font-mono text-orange">50+</strong>
+                <strong className="font-mono text-accent">50+</strong>
                 <span>Gateway Sorting Hubs</span>
               </div>
               <div className="about-stat-item">
-                <strong className="font-mono text-orange">24/7</strong>
+                <strong className="font-mono text-accent">24/7</strong>
                 <span>Live Dispatch Support</span>
               </div>
             </div>
@@ -567,9 +567,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           5. CORE COURIER SERVICES SHOWCASE (4 ELEVATED CARDS)
           ========================================================================= */}
       <section className="corp-services-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header light">
-            <span className="section-eyebrow text-orange">COURIER SOLUTIONS</span>
+            <span className="section-eyebrow text-accent">COURIER SOLUTIONS</span>
             <h2>Specialized Priority Transportation</h2>
             <p className="section-desc-sub text-slate-300">
               High-velocity transport options engineered for time-sensitive commercial consignments and private shipments.
@@ -689,7 +689,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           6. INDUSTRY-SPECIFIC LOGISTICS SOLUTIONS (INTERACTIVE TABS)
           ========================================================================= */}
       <section className="corp-industry-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">SECTOR EXPERTISE</span>
             <h2>Tailored logistics for key industries</h2>
@@ -831,10 +831,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           7. REGIONAL GATEWAY HUBS & U.S. TRADE CORRIDORS MAP (INTERACTIVE RADAR)
           ========================================================================= */}
       <section className="corp-hubs-map-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="hubs-map-header">
             <div>
-              <span className="section-eyebrow text-orange">NATIONWIDE INTERMODAL HUBS</span>
+              <span className="section-eyebrow text-accent">NATIONWIDE INTERMODAL HUBS</span>
               <h2>Active U.S. Trade Gateways & Sort Facilities</h2>
             </div>
             <div className="hubs-selector-pills">
@@ -909,7 +909,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           8. "YOUR CARGO IS SAFE WITH US" (8-POINT TRUST PILLARS GRID)
           ========================================================================= */}
       <section className="corp-trust-matrix-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">GUARANTEED SECURITY</span>
             <h2>Your cargo is safe with us</h2>
@@ -921,7 +921,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
           <div className="trust-matrix-grid">
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><ShieldCheck size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><ShieldCheck size={22} className="text-accent" /></div>
               <div>
                 <h4>Integrity Guarantee</h4>
                 <p>Strict chain-of-custody verification at every transit checkpoint.</p>
@@ -929,7 +929,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Clock size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><Clock size={22} className="text-accent" /></div>
               <div>
                 <h4>Precise Time Schedules</h4>
                 <p>Dynamic ETA routing calculated on live trade corridor conditions.</p>
@@ -937,7 +937,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Users size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><Users size={22} className="text-accent" /></div>
               <div>
                 <h4>Vetted Professional Drivers</h4>
                 <p>FMCSA-certified commercial drivers with background validation.</p>
@@ -945,7 +945,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Lock size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><Lock size={22} className="text-accent" /></div>
               <div>
                 <h4>PII Privacy Protection</h4>
                 <p>Automated masking of personal contact info on public tracking.</p>
@@ -953,7 +953,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Award size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><Award size={22} className="text-accent" /></div>
               <div>
                 <h4>Certified Quality Standards</h4>
                 <p>USDOT registered commercial carrier authority #3894210.</p>
@@ -961,7 +961,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><FileText size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><FileText size={22} className="text-accent" /></div>
               <div>
                 <h4>Digital Bills of Lading</h4>
                 <p>Instant regulatory BOL, Waybills, and signed POD receipts.</p>
@@ -969,7 +969,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Sparkles size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><Sparkles size={22} className="text-accent" /></div>
               <div>
                 <h4>Linear Code 128 Barcodes</h4>
                 <p>High-density optical symbology for tamper-proof piece tracking.</p>
@@ -977,7 +977,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             </div>
 
             <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Headphones size={22} className="text-orange" /></div>
+              <div className="trust-pillar-icon"><Headphones size={22} className="text-accent" /></div>
               <div>
                 <h4>24/7 Dedicated Support</h4>
                 <p>Live human dispatch assistance with instant shipment lookup.</p>
@@ -991,9 +991,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           9. LINEAR CODE 128 BARCODE SPOTLIGHT (THERMAL SHIPPING LABEL)
           ========================================================================= */}
       <section className="corp-barcode-spotlight-section">
-        <div className="dxp-container-wide barcode-spotlight-grid">
+        <div className="sdl-container-wide barcode-spotlight-grid">
           <div className="barcode-text-col">
-            <span className="section-eyebrow text-orange">PROVENANCE TECHNOLOGY</span>
+            <span className="section-eyebrow text-accent">PROVENANCE TECHNOLOGY</span>
             <h2>High-Density Linear Code 128 Barcode Symbology</h2>
             <p>
               Unlike generic QR codes that fail in industrial dock environments, Duolingo Express utilizes standardized high-density linear Code 128 barcodes across all parcel cartons, auto VIN passes, and Bills of Lading.
@@ -1062,14 +1062,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           10. WHAT OUR CLIENTS SAY (TESTIMONIAL CAROUSEL)
           ========================================================================= */}
       <section className="corp-testimonial-section">
-        <div className="dxp-container">
+        <div className="sdl-container">
           <div className="testimonial-wrapper">
             <div className="testimonial-card-frame">
               <div className="quote-mark-icon">“</div>
               <div className="testimonial-top-row">
-                <div className="flex gap-1 text-orange">
+                <div className="flex gap-1 text-accent">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} fill="#f97316" color="#f97316" />
+                    <Star key={i} size={16} fill="#D3070B" color="#D3070B" />
                   ))}
                 </div>
                 <span className="verified-client-badge font-mono">
@@ -1125,7 +1125,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           11. TRUSTED BY NATIONWIDE COMMERCIAL SHIPPERS (PURE LOGO MARQUEE)
           ========================================================================= */}
       <section className="corp-partners-strip">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="partners-label">TRUSTED BY NATIONWIDE ENTERPRISES & COMMERCIAL SHIPPERS</div>
           <div className="partners-marquee-container">
             <div className="partners-marquee-fade left" />
@@ -1146,7 +1146,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           ========================================================================= */}
       <section className="corp-callback-banner">
         <div className="callback-banner-overlay" />
-        <div className="dxp-container callback-inner">
+        <div className="sdl-container callback-inner">
           <div className="callback-text-block">
             <h3>Need urgent linehaul dispatch or custom rate consultation?</h3>
             <p>Enter your details and our senior logistics coordinator will call you within 15 minutes.</p>
@@ -1204,7 +1204,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           13. FREQUENTLY ASKED QUESTIONS (ACCORDION)
           ========================================================================= */}
       <section className="corp-faq-section">
-        <div className="dxp-container">
+        <div className="sdl-container">
           <div className="section-center-header">
             <span className="section-eyebrow">COMMON QUESTIONS</span>
             <h2>Frequently Asked Questions</h2>
@@ -1222,7 +1222,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                     onClick={() => setOpenFaq(isOpen ? null : index)}
                   >
                     <span>{faq.q}</span>
-                    {isOpen ? <ChevronUp size={18} className="text-orange" /> : <ChevronDown size={18} />}
+                    {isOpen ? <ChevronUp size={18} className="text-accent" /> : <ChevronDown size={18} />}
                   </button>
                   {isOpen && (
                     <div className="faq-answer-pane animate-fade-in">

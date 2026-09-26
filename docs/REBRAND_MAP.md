@@ -93,9 +93,9 @@ Audit taken from the `duolingo-express` repo on 2026-09-26. When you work throug
       personal-name demo ("Randy's Tacoma") and use fictional names like "Demo Consignee".
 
 ## 4. CSS / class naming
-- [ ] Tokens `--dxp-*` → `--sdl-*` (63 unique tokens, 59 files). Do it with a single, scoped find-and-replace on `src/`, then build.
-- [ ] Classes `.dxp-admin-*` → `.sdl-admin-*` (AdminLayout and its CSS).
-- [ ] `.corp-highlight-orange` → `.sdl-highlight`; `text-orange` → `text-accent`.
+- [x] Tokens `--dxp-*` → `--sdl-*` (63 unique tokens, 59 files). Do it with a single, scoped find-and-replace on `src/`, then build.
+- [x] Classes `.dxp-admin-*` → `.sdl-admin-*` (AdminLayout and its CSS). *All `dxp-` class prefixes were renamed to `sdl-` in the same pass.*
+- [x] `.corp-highlight-orange` → `.sdl-highlight`; `text-orange` → `text-accent`. *Other `*-highlight-orange` page classes (about-, contact-, …) keep their names; they now render red.*
 - [ ] Optional (Phase 5 cleanup): rename the `corp-` section prefixes on Home to `sdl-`.
 
 ## 5. Images & static assets (`Public/`)

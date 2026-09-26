@@ -205,13 +205,13 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
   };
 
   return (
-    <div className="dxp-page-quote">
+    <div className="sdl-page-quote">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
-      <section className="dxp-quote-hero">
+      <section className="sdl-quote-hero">
         <div className="quote-hero-bg-overlay" />
-        <div className="dxp-container-wide quote-hero-inner">
+        <div className="sdl-container-wide quote-hero-inner">
           <div className="quote-hero-pill animate-fade-in">
             <span className="quote-pulse-dot" />
             <span>{dotNumber ? `${dotNumber} · ` : ''}CENTRAL TARIFF & RATING DESK</span>
@@ -230,7 +230,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
       {/* =========================================================================
           2. MAIN BODY & FORM
           ========================================================================= */}
-      <div className="dxp-container-wide dxp-quote-body">
+      <div className="sdl-container-wide sdl-quote-body">
         {submitted ? (
           /* =========================================================================
              CONFIRMATION STATE
@@ -245,13 +245,13 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
               <div className="check-badge-icon"><CheckCircle2 size={48} className="text-emerald" /></div>
               <h2>Rate Request Successfully Submitted</h2>
               <p>
-                Your consignment tariff application <strong className="font-mono text-orange">{createdQuoteId}</strong> has been logged in the Duolingo Express dispatch ledger.
+                Your consignment tariff application <strong className="font-mono text-accent">{createdQuoteId}</strong> has been logged in the Duolingo Express dispatch ledger.
               </p>
             </div>
 
             <div className="admin-review-info-box">
               <div className="info-box-head">
-                <Lock size={18} className="text-orange flex-shrink-0" />
+                <Lock size={18} className="text-accent flex-shrink-0" />
                 <h4>How Rate Publishing & Certification Works:</h4>
               </div>
               <p>
@@ -264,7 +264,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
               <div className="receipt-grid">
                 <div className="rec-item">
                   <small>Request ID Reference:</small>
-                  <strong className="font-mono text-orange">{createdQuoteId}</strong>
+                  <strong className="font-mono text-accent">{createdQuoteId}</strong>
                 </div>
                 <div className="rec-item">
                   <small>Applicant Contact:</small>
@@ -288,7 +288,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 </div>
                 <div className="rec-item span-full">
                   <small>Tariff Certification Status:</small>
-                  <strong className="text-orange font-mono">● PENDING DISPATCH DESK CERTIFICATION</strong>
+                  <strong className="text-accent font-mono">● PENDING DISPATCH DESK CERTIFICATION</strong>
                 </div>
               </div>
             </div>
@@ -326,7 +326,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
           /* =========================================================================
              INTERACTIVE RATE REQUEST FORM + LIVE PREVIEW SIDEBAR
              ========================================================================= */
-          <div className="dxp-quote-grid">
+          <div className="sdl-quote-grid">
             <div className="quote-form-card">
               <div className="form-head-title">
                 <h3>Consignment Rate Parameters</h3>
@@ -343,7 +343,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
               <form onSubmit={handleSubmit} className="quote-calc-form">
                 {/* 1. CONTACT INFORMATION */}
                 <div className="form-section-divider">
-                  <User size={16} className="text-orange" />
+                  <User size={16} className="text-accent" />
                   <span>1. Shipper & Contact Information</span>
                 </div>
 
@@ -356,7 +356,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="e.g. John Anderson"
-                      className="dxp-input"
+                      className="sdl-input"
                     />
                   </div>
 
@@ -367,7 +367,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       placeholder="e.g. Apex Distribution LLC"
-                      className="dxp-input"
+                      className="sdl-input"
                     />
                   </div>
                 </div>
@@ -381,7 +381,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
                       placeholder="e.g. j.anderson@example.com"
-                      className="dxp-input"
+                      className="sdl-input"
                     />
                   </div>
 
@@ -392,14 +392,14 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="e.g. (555) 014-8822"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
                 </div>
 
                 {/* 2. ROUTE LOCATIONS */}
                 <div className="form-section-divider">
-                  <MapPin size={16} className="text-orange" />
+                  <MapPin size={16} className="text-accent" />
                   <span>2. Origin & Destination Corridor</span>
                 </div>
 
@@ -413,7 +413,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                         value={originCity}
                         onChange={(e) => setOriginCity(e.target.value)}
                         placeholder="Origin City (e.g. New York)"
-                        className="dxp-input input-city"
+                        className="sdl-input input-city"
                       />
                       <input
                         type="text"
@@ -422,7 +422,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                         value={originState}
                         onChange={(e) => setOriginState(e.target.value.toUpperCase())}
                         placeholder="NY"
-                        className="dxp-input input-state font-mono uppercase"
+                        className="sdl-input input-state font-mono uppercase"
                       />
                     </div>
                   </div>
@@ -434,7 +434,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={originZip}
                       onChange={(e) => setOriginZip(e.target.value)}
                       placeholder="e.g. 10007"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
                 </div>
@@ -449,7 +449,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                         value={destCity}
                         onChange={(e) => setDestCity(e.target.value)}
                         placeholder="Destination City (e.g. Los Angeles)"
-                        className="dxp-input input-city"
+                        className="sdl-input input-city"
                       />
                       <input
                         type="text"
@@ -458,7 +458,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                         value={destState}
                         onChange={(e) => setDestState(e.target.value.toUpperCase())}
                         placeholder="CA"
-                        className="dxp-input input-state font-mono uppercase"
+                        className="sdl-input input-state font-mono uppercase"
                       />
                     </div>
                   </div>
@@ -470,14 +470,14 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={destZip}
                       onChange={(e) => setDestZip(e.target.value)}
                       placeholder="e.g. 90017"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
                 </div>
 
                 {/* 3. CARGO SPECIFICATIONS */}
                 <div className="form-section-divider">
-                  <Package size={16} className="text-orange" />
+                  <Package size={16} className="text-accent" />
                   <span>3. Cargo Specifications & Service Tier</span>
                 </div>
 
@@ -489,7 +489,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                     value={cargoDescription}
                     onChange={(e) => setCargoDescription(e.target.value)}
                     placeholder="e.g. Precision diagnostic electronic assemblies"
-                    className="dxp-input"
+                    className="sdl-input"
                   />
                 </div>
 
@@ -499,7 +499,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                     <select
                       value={cargoType}
                       onChange={(e) => setCargoType(e.target.value)}
-                      className="dxp-input"
+                      className="sdl-input"
                     >
                       <option value="Commercial Parcel">Commercial & Corporate Parcel</option>
                       <option value="Vehicle / Automobile">Vehicle / Automobile Transport</option>
@@ -515,7 +515,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                     <select
                       value={service}
                       onChange={(e) => setService(e.target.value)}
-                      className="dxp-input"
+                      className="sdl-input"
                     >
                       <option value="Priority Express Courier">Priority Express Courier (Time-Definite)</option>
                       <option value="Scheduled Commercial Linehaul">Scheduled Commercial Linehaul (Interstate)</option>
@@ -535,7 +535,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
                       placeholder="e.g. 14.5"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
 
@@ -548,7 +548,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={pieces}
                       onChange={(e) => setPieces(e.target.value)}
                       placeholder="1"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
 
@@ -559,7 +559,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={declaredValue}
                       onChange={(e) => setDeclaredValue(e.target.value)}
                       placeholder="e.g. 2500"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
                 </div>
@@ -572,21 +572,21 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                       value={length}
                       onChange={(e) => setLength(e.target.value)}
                       placeholder="Length (in)"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                     <input
                       type="number"
                       value={width}
                       onChange={(e) => setWidth(e.target.value)}
                       placeholder="Width (in)"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                     <input
                       type="number"
                       value={height}
                       onChange={(e) => setHeight(e.target.value)}
                       placeholder="Height (in)"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
                 </div>
@@ -598,7 +598,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
                     placeholder="Provide facility access details, signature requirements, or handling notes..."
-                    className="dxp-input"
+                    className="sdl-input"
                   />
                 </div>
 
@@ -619,7 +619,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
               {estimatedRate && (
                 <div className="dynamic-estimate-box animate-fade-in">
                   <div className="est-head">
-                    <Sparkles size={18} className="text-orange" />
+                    <Sparkles size={18} className="text-accent" />
                     <strong>Preliminary Tariff Corridor</strong>
                   </div>
                   <div className="est-amount font-mono">
@@ -640,19 +640,19 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 
                 <div className="policy-points">
                   <div className="p-point">
-                    <CheckCircle2 size={16} className="text-orange flex-shrink-0" />
+                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
                     <span>Exact scale weight & dimensional cubic rating</span>
                   </div>
                   <div className="p-point">
-                    <CheckCircle2 size={16} className="text-orange flex-shrink-0" />
+                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
                     <span>Verified Interstate linehaul corridor scheduling</span>
                   </div>
                   <div className="p-point">
-                    <CheckCircle2 size={16} className="text-orange flex-shrink-0" />
+                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
                     <span>Published directly to your official tracking ledger</span>
                   </div>
                   <div className="p-point">
-                    <CheckCircle2 size={16} className="text-orange flex-shrink-0" />
+                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
                     <span>Direct agency documentation issuance</span>
                   </div>
                 </div>

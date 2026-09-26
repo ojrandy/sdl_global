@@ -30,13 +30,13 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
   // Empty regulatory line hides its element (no invented licence numbers).
   const { regulatoryLine: dotNumber } = useCompanyContact();
   return (
-    <div className="dxp-page-about">
+    <div className="sdl-page-about">
       {/* =========================================================================
           1. CINEMATIC EXECUTIVE HERO SECTION
           ========================================================================= */}
       <section className="about-hero-section">
         <div className="about-hero-overlay" />
-        <div className="dxp-container-wide about-hero-inner">
+        <div className="sdl-container-wide about-hero-inner">
             <div className="about-hero-badge animate-fade-in">
               <span className="about-badge-dot" />
               <span>{dotNumber ? `${dotNumber} · ` : ''}AUTHORIZED U.S. MOTOR CARRIER</span>
@@ -54,7 +54,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             {dotNumber && (
               <>
                 <div className="cred-badge">
-                  <ShieldCheck size={16} className="text-orange" />
+                  <ShieldCheck size={16} className="text-accent" />
                   <span>{dotNumber} Verified</span>
                 </div>
                 <div className="cred-divider" />
@@ -77,7 +77,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           2. KEY PERFORMANCE INDICATORS (KPI STRIP)
           ========================================================================= */}
       <section className="about-stats-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="about-stats-grid">
             <div className="about-stat-card">
               <span className="stat-value font-mono">99.4%</span>
@@ -110,7 +110,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           3. OUR MISSION & CORE OPERATING PRINCIPLES
           ========================================================================= */}
       <section className="about-story-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="about-story-grid">
             <div className="about-story-content">
               <span className="section-eyebrow">THE DUOLINGO EXPRESS STANDARD</span>
@@ -190,7 +190,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           4. OUR 4 SPECIALIZED TRANSPORT DIVISIONS
           ========================================================================= */}
       <section className="about-divisions-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">SPECIALIZED CAPABILITIES</span>
             <h2>Our Core Courier & Transportation Divisions</h2>
@@ -272,7 +272,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           5. EXECUTIVE OPERATIONS TIMELINE
           ========================================================================= */}
       <section className="about-timeline-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">PROVENANCE & EVOLUTION</span>
             <h2>The Evolution of Duolingo Express</h2>
@@ -350,7 +350,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           6. REGULATORY COMPLIANCE & SAFETY STANDARDS
           ========================================================================= */}
       <section className="about-compliance-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="compliance-banner">
             <div className="compliance-text-block">
               <span className="section-eyebrow light">VERIFIED CARRIER STANDARDS</span>
@@ -363,7 +363,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="compliance-badges-grid">
               {dotNumber && (
                 <div className="c-badge-item">
-                  <ShieldCheck size={28} className="text-orange" />
+                  <ShieldCheck size={28} className="text-accent" />
                   <div>
                     <strong>{dotNumber}</strong>
                     <span>Active & Verified Carrier Authority</span>
@@ -403,7 +403,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           6. BOTTOM CALL TO ACTION
           ========================================================================= */}
       <section className="about-bottom-cta">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="about-cta-card">
             <div className="about-cta-content">
               <h2>Ready to Experience Reliable Courier Logistics?</h2>

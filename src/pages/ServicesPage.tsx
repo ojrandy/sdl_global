@@ -209,13 +209,13 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
   const activeIndustry = industries.find((ind) => ind.id === activeIndustryTab) || industries[0];
 
   return (
-    <div className="dxp-page-services">
+    <div className="sdl-page-services">
       {/* =========================================================================
           1. CINEMATIC EXECUTIVE HERO SECTION (HARMONIZED WITH HOMEPAGE BRAND)
           ========================================================================= */}
       <section className="services-hero-section">
         <div className="services-hero-overlay" />
-        <div className="dxp-container-wide services-hero-inner">
+        <div className="sdl-container-wide services-hero-inner">
           <div className="services-hero-badge animate-fade-in">
             <span className="services-badge-dot" />
             <span>{dotNumber ? `${dotNumber} · ` : ''}CERTIFIED COMMERCIAL COURIER SERVICES</span>
@@ -253,7 +253,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           2. CORE SERVICE TIERS INTERACTIVE EXPLORER
           ========================================================================= */}
       <section className="services-explorer-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">DOMESTIC TRANSPORTATION CAPABILITIES</span>
             <h2>Select a Service Tier to Inspect Operational Specs</h2>
@@ -348,7 +348,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
               <div className="showcase-right">
                 <div className="specs-card-box">
                   <div className="specs-head">
-                    <FileCheck2 size={18} className="text-orange" />
+                    <FileCheck2 size={18} className="text-accent" />
                     <h4>Technical & Packaging Specifications</h4>
                   </div>
 
@@ -394,7 +394,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           3. SIDE-BY-SIDE SERVICE COMPARISON MATRIX
           ========================================================================= */}
       <section className="services-matrix-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">TRANSPARENT SERVICE MATRIX</span>
             <h2>Compare Delivery Speeds & Capabilities</h2>
@@ -508,7 +508,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           4. INDUSTRY-SPECIFIC LOGISTICS SOLUTIONS
           ========================================================================= */}
       <section className="services-industry-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">SPECIALIZED INDUSTRY SECTORS</span>
             <h2>Tailored Logistics Solutions by Industry</h2>
@@ -595,7 +595,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           5. VALUE-ADDED HANDLING & ENTERPRISE SECURITY ADD-ONS
           ========================================================================= */}
       <section className="services-addons-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">HIGH-ASSURANCE CARGO PROTOCOLS</span>
             <h2>Specialized Cargo Handling & Security Add-Ons</h2>
@@ -681,7 +681,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           6. OPERATIONAL LIFECYCLE PIPELINE
           ========================================================================= */}
       <section className="services-lifecycle-section">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="lifecycle-header">
             <span className="lifecycle-eyebrow">UNBROKEN COURIER PIPELINE</span>
             <h3>How Every Consignment Moves Through Duolingo Express</h3>
@@ -720,7 +720,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           7. BOTTOM CALL TO ACTION
           ========================================================================= */}
       <section className="services-bottom-cta">
-        <div className="dxp-container-wide">
+        <div className="sdl-container-wide">
           <div className="services-cta-card">
             <div className="services-cta-content">
               <div className="cta-telemetry-badge">

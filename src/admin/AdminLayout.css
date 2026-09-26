@@ -1,16 +1,16 @@
 /* ==========================================================================
-   DUOLINGO EXPRESS — EXECUTIVE ADMIN COMMAND CENTER SHELL
-   Brand Tokens: Deep Navy (#07111e, #0b192c) · Carrier Orange (#ea580c)
+   SDL GLOBAL LOGISTICS — EXECUTIVE ADMIN COMMAND CENTER SHELL
+   Brand Tokens: Deep Navy (var(--sdl-ink-950), var(--sdl-ink-900)) · Carrier Orange (var(--sdl-accent-500))
    Authoritative, High-Density, Self-Explanatory Dispatch Terminal
    ========================================================================== */
 
-.dxp-admin-root {
+.sdl-admin-root {
   display: flex;
   min-height: 100vh;
   width: 100%;
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: var(--dxp-font-sans, 'Inter', sans-serif);
+  font-family: var(--sdl-font-sans, 'Inter', sans-serif);
   position: relative;
   overflow-x: hidden;
 }
@@ -18,11 +18,11 @@
 /* ==========================================================================
    1. EXECUTIVE DISPATCH COMMAND SIDEBAR (LEFT)
    ========================================================================== */
-.dxp-admin-sidebar {
+.sdl-admin-sidebar {
   width: 280px;
   min-width: 280px;
-  background-color: var(--dxp-navy-950, #07111e);
-  background-image: linear-gradient(180deg, #07111e 0%, #0b192c 100%);
+  background-color: var(--sdl-ink-950, var(--sdl-ink-950));
+  background-image: linear-gradient(180deg, var(--sdl-ink-950) 0%, var(--sdl-ink-900) 100%);
   color: #94a3b8;
   display: flex;
   flex-direction: column;
@@ -38,10 +38,10 @@
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dxp-admin-sidebar::-webkit-scrollbar {
+.sdl-admin-sidebar::-webkit-scrollbar {
   width: 4px;
 }
-.dxp-admin-sidebar::-webkit-scrollbar-thumb {
+.sdl-admin-sidebar::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 4px;
 }
@@ -79,10 +79,10 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  font-family: var(--dxp-font-mono, monospace);
+  font-family: var(--sdl-font-mono, monospace);
   font-size: 0.65rem;
   font-weight: 700;
-  color: #fb923c;
+  color: var(--sdl-accent-400);
   letter-spacing: 0.06em;
   width: fit-content;
 }
@@ -175,11 +175,11 @@
 }
 
 .admin-nav-btn.active {
-  background: linear-gradient(90deg, rgba(234, 88, 12, 0.16) 0%, rgba(234, 88, 12, 0.04) 100%);
+  background: linear-gradient(90deg, rgba(var(--sdl-accent-rgb), 0.16) 0%, rgba(var(--sdl-accent-rgb), 0.04) 100%);
   color: #ffffff;
-  border-color: rgba(234, 88, 12, 0.3);
-  border-left: 3px solid var(--dxp-orange-500, #f97316);
-  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.1);
+  border-color: rgba(var(--sdl-accent-rgb), 0.3);
+  border-left: 3px solid var(--sdl-accent-500, var(--sdl-accent-500));
+  box-shadow: 0 2px 10px rgba(var(--sdl-accent-rgb), 0.1);
 }
 
 .nav-btn-icon-wrap {
@@ -201,9 +201,9 @@
 }
 
 .admin-nav-btn.active .nav-btn-icon-wrap {
-  background: var(--dxp-orange-600, #ea580c);
+  background: var(--sdl-accent-500, var(--sdl-accent-500));
   color: #ffffff;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+  box-shadow: 0 2px 8px rgba(var(--sdl-accent-rgb), 0.35);
 }
 
 .nav-btn-text {
@@ -255,11 +255,11 @@
   font-weight: 800;
   padding: 0.15rem 0.55rem;
   border-radius: 9999px;
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   color: #ffffff;
   margin-left: auto;
   letter-spacing: 0.04em;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.4);
+  box-shadow: 0 2px 8px rgba(var(--sdl-accent-rgb), 0.4);
 }
 
 .live-telemetry-tag {
@@ -338,7 +338,7 @@
   height: 8px;
   border-radius: 50%;
   background-color: #10b981;
-  border: 2px solid #07111e;
+  border: 2px solid var(--sdl-ink-950);
   position: absolute;
   bottom: -1px;
   right: -1px;
@@ -381,7 +381,7 @@
 .motto-line {
   width: 32px;
   height: 2.5px;
-  background-color: #ea580c;
+  background-color: var(--sdl-accent-500);
   border-radius: 9999px;
   display: inline-block;
 }
@@ -389,7 +389,7 @@
 /* ==========================================================================
    2. MAIN WORKSPACE WRAPPER & TOP DISPATCH HEADER
    ========================================================================= */
-.dxp-admin-main-wrapper {
+.sdl-admin-main-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -399,7 +399,7 @@
   background-color: #f8fafc;
 }
 
-.dxp-admin-page-content {
+.sdl-admin-page-content {
   padding: 1.25rem 1.5rem 3rem;
   flex: 1;
   width: 100%;
@@ -409,7 +409,7 @@
 }
 
 /* TOP DISPATCH HEADER BAR */
-.dxp-admin-top-header {
+.sdl-admin-top-header {
   height: 58px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
@@ -497,8 +497,8 @@
 
 .universal-search-input:focus {
   background: #ffffff;
-  border-color: var(--dxp-orange-500, #f97316);
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+  border-color: var(--sdl-accent-500, var(--sdl-accent-500));
+  box-shadow: 0 0 0 3px rgba(var(--sdl-accent-rgb), 0.12);
 }
 
 .universal-search-input::placeholder {
@@ -666,7 +666,7 @@
   flex-shrink: 0;
 }
 
-.item-dot.quote { background: #ea580c; }
+.item-dot.quote { background: var(--sdl-accent-500); }
 .item-dot.delay { background: #ef4444; }
 
 .item-content strong {
@@ -685,7 +685,7 @@
 .item-time {
   font-size: 0.65rem;
   color: #94a3b8;
-  font-family: var(--dxp-font-mono, monospace);
+  font-family: var(--sdl-font-mono, monospace);
 }
 
 /* User Profile Pill */
@@ -813,12 +813,12 @@
 }
 
 .menu-popover-links .menu-exit-link {
-  color: var(--dxp-orange-600, #ea580c);
+  color: var(--sdl-accent-500, var(--sdl-accent-500));
 }
 
 .menu-popover-links .menu-exit-link:hover {
-  background: #fff7ed;
-  color: #c2410c;
+  background: var(--sdl-accent-50);
+  color: var(--sdl-accent-600);
 }
 
 /* ==========================================================================
@@ -838,7 +838,7 @@
   gap: 0.65rem;
   font-size: 0.85rem;
   font-weight: 600;
-  border-left: 4px solid var(--dxp-orange-500, #f97316);
+  border-left: 4px solid var(--sdl-accent-500, var(--sdl-accent-500));
   z-index: 1000;
 }
 
@@ -860,7 +860,7 @@
 }
 
 @media (max-width: 900px) {
-  .dxp-admin-sidebar {
+  .sdl-admin-sidebar {
     position: fixed;
     left: 0;
     top: 0;
@@ -869,11 +869,11 @@
     box-shadow: 10px 0 25px rgba(0, 0, 0, 0.3);
   }
 
-  .dxp-admin-sidebar.open {
+  .sdl-admin-sidebar.open {
     transform: translateX(0);
   }
 
-  .dxp-admin-main-wrapper {
+  .sdl-admin-main-wrapper {
     margin-left: 0;
     width: 100%;
   }
@@ -890,11 +890,11 @@
     width: 180px;
   }
 
-  .dxp-admin-top-header {
+  .sdl-admin-top-header {
     padding: 0 1.25rem;
   }
 
-  .dxp-admin-page-content {
+  .sdl-admin-page-content {
     padding: 1.25rem 1rem 3rem;
   }
 
@@ -917,7 +917,7 @@
      phone. Trimming padding/gaps, dropping the title's box treatment down to plain text, and
      collapsing the profile button to just its avatar (the name/role text added no value at
      this width and was the biggest space hog) gives the same controls real breathing room. */
-  .dxp-admin-top-header {
+  .sdl-admin-top-header {
     padding: 0 0.85rem;
     gap: 0.5rem;
   }

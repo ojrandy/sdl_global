@@ -17,12 +17,12 @@ export const ShipmentTimeline: React.FC<ShipmentTimelineProps> = ({
   const displayEvents = expanded ? events : events.slice(0, 4);
 
   return (
-    <div className={`dxp-timeline-card ${className}`}>
-      <div className="dxp-timeline-header">
-        <h3 className="dxp-timeline-title">Shipment Journey</h3>
+    <div className={`sdl-timeline-card ${className}`}>
+      <div className="sdl-timeline-header">
+        <h3 className="sdl-timeline-title">Shipment Journey</h3>
       </div>
 
-      <div className="dxp-timeline-list">
+      <div className="sdl-timeline-list">
         {displayEvents.map((evt) => {
           const isCurrent = evt.isCurrent;
           const isCompleted = evt.isCompleted && !isCurrent;
@@ -31,7 +31,7 @@ export const ShipmentTimeline: React.FC<ShipmentTimelineProps> = ({
           return (
             <div
               key={evt.id}
-              className={`dxp-timeline-item ${isCurrent ? 'current' : isCompleted ? 'completed' : 'future'}`}
+              className={`sdl-timeline-item ${isCurrent ? 'current' : isCompleted ? 'completed' : 'future'}`}
             >
               {/* Timeline Spine & Node Icon */}
               <div className="timeline-node-col">
@@ -56,7 +56,7 @@ export const ShipmentTimeline: React.FC<ShipmentTimelineProps> = ({
                 <div className="timeline-event-title-row">
                   <h4 className="timeline-event-title">{evt.title}</h4>
                   {isCurrent && (
-                    <span className="dxp-badge-current-loc">
+                    <span className="sdl-badge-current-loc">
                       CURRENT LOCATION
                     </span>
                   )}
@@ -75,9 +75,9 @@ export const ShipmentTimeline: React.FC<ShipmentTimelineProps> = ({
       </div>
 
       {events.length > 4 && (
-        <div className="dxp-timeline-footer">
+        <div className="sdl-timeline-footer">
           <button
-            className="dxp-btn-toggle-history"
+            className="sdl-btn-toggle-history"
             onClick={() => setExpanded(!expanded)}
           >
             <span>{expanded ? 'Collapse history' : 'View full history'}</span>

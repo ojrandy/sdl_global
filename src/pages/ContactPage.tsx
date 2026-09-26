@@ -102,13 +102,13 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <div className="dxp-page-contact">
+    <div className="sdl-page-contact">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
-      <section className="dxp-contact-hero">
+      <section className="sdl-contact-hero">
         <div className="contact-hero-bg-overlay" />
-        <div className="dxp-container-wide contact-hero-inner">
+        <div className="sdl-container-wide contact-hero-inner">
           <div className="contact-hero-pill animate-fade-in">
             <span className="contact-pulse-dot" />
             <span>{dotNumber ? `${dotNumber} · ` : ''}24/7 CENTRAL DISPATCH DESK</span>
@@ -127,7 +127,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
       {/* =========================================================================
           2. MAIN BODY: FORM & DIRECT CHANNELS
           ========================================================================= */}
-      <div className="dxp-container-wide dxp-contact-body">
+      <div className="sdl-container-wide sdl-contact-body">
         <div className="contact-grid">
           {/* Left Column: Form & Confirmation */}
           <div className="contact-form-card">
@@ -151,7 +151,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                 </div>
 
                 <div className="ticket-notice-banner">
-                  <ShieldCheck size={18} className="text-orange flex-shrink-0" />
+                  <ShieldCheck size={18} className="text-accent flex-shrink-0" />
                   <p>
                     A regional dispatch coordinator will review your request and reach out directly to <strong>{email}</strong>.
                   </p>
@@ -230,7 +230,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. John Anderson"
-                      className="dxp-input"
+                      className="sdl-input"
                     />
                   </div>
 
@@ -242,7 +242,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="e.g. j.anderson@example.com"
-                      className="dxp-input"
+                      className="sdl-input"
                     />
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="e.g. (555) 014-8822"
-                      className="dxp-input"
+                      className="sdl-input"
                     />
                   </div>
 
@@ -266,7 +266,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       value={tracking}
                       onChange={(e) => setTracking(e.target.value)}
                       placeholder="e.g. DXP-2026-7K2M9QRX"
-                      className="dxp-input font-mono"
+                      className="sdl-input font-mono"
                     />
                   </div>
                 </div>
@@ -276,7 +276,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   <select
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="dxp-input"
+                    className="sdl-input"
                   >
                     <option value="General Operations">General Operations & Courier Services</option>
                     <option value="Tracking Assistance">Active Consignment Tracking & Movement</option>
@@ -296,7 +296,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Describe your inquiry, delivery update request, or specialized courier requirements..."
-                    className="dxp-input"
+                    className="sdl-input"
                   />
                 </div>
 
@@ -359,7 +359,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
         {/* =========================================================================
             3. INTERACTIVE FAQ ACCORDION SECTION
             ========================================================================= */}
-        <section className="dxp-contact-faq-section">
+        <section className="sdl-contact-faq-section">
           <div className="section-center-header">
             <span className="section-eyebrow">FREQUENTLY ASKED QUESTIONS</span>
             <h2>Operations & Support Knowledge Base</h2>
@@ -379,11 +379,11 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   onClick={() => toggleFaq(index)}
                 >
                   <div className="q-left">
-                    <HelpCircle size={18} className="text-orange flex-shrink-0" />
+                    <HelpCircle size={18} className="text-accent flex-shrink-0" />
                     <span>{faq.q}</span>
                   </div>
                   {openFaq === index ? (
-                    <ChevronUp size={18} className="text-orange flex-shrink-0" />
+                    <ChevronUp size={18} className="text-accent flex-shrink-0" />
                   ) : (
                     <ChevronDown size={18} className="text-slate-400 flex-shrink-0" />
                   )}

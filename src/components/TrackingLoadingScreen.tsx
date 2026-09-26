@@ -8,7 +8,7 @@ interface TrackingLoadingScreenProps {
 
 export const TrackingLoadingScreen: React.FC<TrackingLoadingScreenProps> = ({ query }) => {
   return (
-    <section className="dxp-tracking-loading-shell">
+    <section className="sdl-tracking-loading-shell">
       <div className="tracking-loading-card">
         <div className="tracking-loading-radar">
           <div className="tl-radar-ring tl-ring-1" />

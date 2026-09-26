@@ -1,5 +1,5 @@
 /* PUBLIC QUOTE RESULT PAGE */
-.dxp-quote-result-page {
+.sdl-quote-result-page {
   background-color: #f8fafc;
   min-height: calc(100vh - 200px);
   padding-bottom: 4rem;
@@ -630,8 +630,8 @@
   /* Hide all website navigation, hero bars, and footers */
   header,
   footer,
-  .dxp-header,
-  .dxp-footer,
+  .sdl-header,
+  .sdl-footer,
   .screen-only-quotation-view,
   .hero-actions-box,
   .btn-print-quote,
@@ -640,9 +640,9 @@
   }
 
   body,
-  .dxp-app-shell,
-  .dxp-main-view,
-  .dxp-quote-result-page {
+  .sdl-app-shell,
+  .sdl-main-view,
+  .sdl-quote-result-page {
     background: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;

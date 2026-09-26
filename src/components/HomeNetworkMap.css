@@ -2,7 +2,7 @@
   position: relative;
   width: 100%;
   height: 380px;
-  border-radius: var(--dxp-radius-xl);
+  border-radius: var(--sdl-radius-xl);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
@@ -42,8 +42,8 @@
 .hub-marker-core {
   width: 14px;
   height: 14px;
-  background-color: var(--dxp-orange-500);
-  border: 2px solid var(--dxp-white);
+  background-color: var(--sdl-accent-500);
+  border: 2px solid var(--sdl-white);
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   z-index: 2;
@@ -54,7 +54,7 @@
   position: absolute;
   width: 30px;
   height: 30px;
-  background: rgba(234, 88, 12, 0.35);
+  background: rgba(var(--sdl-accent-rgb), 0.35);
   border-radius: 50%;
   animation: beaconPulse 2s infinite ease-out;
   z-index: 1;
@@ -63,8 +63,8 @@
 .hub-marker-label {
   position: absolute;
   top: -18px;
-  background: #07111e;
-  color: var(--dxp-white);
+  background: var(--sdl-ink-950);
+  color: var(--sdl-white);
   font-size: 0.6875rem;
   font-weight: 800;
   padding: 0.15rem 0.4rem;
@@ -87,7 +87,7 @@
 
 .active-beacon .hub-marker-label {
   background: #38bdf8;
-  color: #07111e;
+  color: var(--sdl-ink-950);
   border-color: #38bdf8;
 }
 
@@ -101,12 +101,12 @@
   bottom: 1rem;
   left: 1rem;
   z-index: 1000;
-  background: rgba(7, 17, 30, 0.9);
-  color: var(--dxp-white);
+  background: rgba(var(--sdl-ink-rgb), 0.9);
+  color: var(--sdl-white);
   font-size: 0.6875rem;
   font-weight: 700;
   padding: 0.4rem 0.75rem;
-  border-radius: var(--dxp-radius-sm);
+  border-radius: var(--sdl-radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;

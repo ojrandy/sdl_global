@@ -54,22 +54,22 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="dxp-header-wrapper">
+    <header className="sdl-header-wrapper">
       {/* 1. TOP UTILITY BAR (Hidden completely on mobile to eliminate clutter) */}
-      <div className="dxp-topbar hide-mobile-topbar">
-        <div className="dxp-container-wide dxp-topbar-inner">
-          <div className="dxp-topbar-left">
+      <div className="sdl-topbar hide-mobile-topbar">
+        <div className="sdl-container-wide sdl-topbar-inner">
+          <div className="sdl-topbar-left">
             {supportPhone && (
               <>
                 <div className="topbar-item">
-                  <Phone size={13} className="text-orange" />
+                  <Phone size={13} className="text-accent" />
                   <span>Priority Dispatch: <strong>{supportPhone}</strong></span>
                 </div>
                 <div className="topbar-divider" />
               </>
             )}
             <div className="topbar-item">
-              <Mail size={13} className="text-orange" />
+              <Mail size={13} className="text-accent" />
               <span>{dispatchEmail}</span>
             </div>
             <div className="topbar-divider" />
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          <div className="dxp-topbar-right">
+          <div className="sdl-topbar-right">
             {dotNumber && (
               <div className="topbar-cert-pill font-mono">
                 <CheckCircle2 size={12} className="text-emerald" />
@@ -91,22 +91,22 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 2. MAIN NAVIGATION BAR */}
-      <div className="dxp-main-header">
-        <div className="dxp-container-wide dxp-header-inner">
+      <div className="sdl-main-header">
+        <div className="sdl-container-wide sdl-header-inner">
           {/* Brand Logo */}
-          <div className="dxp-logo-wrap" onClick={() => handleNav('home')}>
+          <div className="sdl-logo-wrap" onClick={() => handleNav('home')}>
             <img
               src="/logo.png"
               alt="Duolingo Express"
-              className="dxp-brand-logo-img"
+              className="sdl-brand-logo-img"
               onError={(e) => {
                 const target = e.currentTarget;
                 target.style.display = 'none';
                 const parent = target.parentElement;
-                if (parent && !parent.querySelector('.dxp-fallback-logo')) {
+                if (parent && !parent.querySelector('.sdl-fallback-logo')) {
                   const fallback = document.createElement('div');
-                  fallback.className = 'dxp-fallback-logo';
-                  fallback.innerHTML = '<span class="dxp-brand-name">DUOLINGO<span class="text-orange">EXPRESS</span></span>';
+                  fallback.className = 'sdl-fallback-logo';
+                  fallback.innerHTML = '<span class="sdl-brand-name">DUOLINGO<span class="text-accent">EXPRESS</span></span>';
                   parent.appendChild(fallback);
                 }
               }}
@@ -114,45 +114,45 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="dxp-nav-links">
+          <nav className="sdl-nav-links">
             <button
               type="button"
-              className={`dxp-nav-link ${activePage === 'home' ? 'active' : ''}`}
+              className={`sdl-nav-link ${activePage === 'home' ? 'active' : ''}`}
               onClick={() => handleNav('home')}
             >
               Home
             </button>
             <button
               type="button"
-              className={`dxp-nav-link ${activePage === 'about' ? 'active' : ''}`}
+              className={`sdl-nav-link ${activePage === 'about' ? 'active' : ''}`}
               onClick={() => handleNav('about')}
             >
               About Us
             </button>
             <button
               type="button"
-              className={`dxp-nav-link ${activePage === 'services' ? 'active' : ''}`}
+              className={`sdl-nav-link ${activePage === 'services' ? 'active' : ''}`}
               onClick={() => handleNav('services')}
             >
               Services
             </button>
             <button
               type="button"
-              className={`dxp-nav-link ${activePage === 'track' ? 'active' : ''}`}
+              className={`sdl-nav-link ${activePage === 'track' ? 'active' : ''}`}
               onClick={() => handleNav('track')}
             >
               Track Shipment
             </button>
             <button
               type="button"
-              className={`dxp-nav-link ${activePage === 'ship' ? 'active' : ''}`}
+              className={`sdl-nav-link ${activePage === 'ship' ? 'active' : ''}`}
               onClick={() => handleNav('ship')}
             >
               Ship Now
             </button>
             <button
               type="button"
-              className={`dxp-nav-link ${activePage === 'contact' ? 'active' : ''}`}
+              className={`sdl-nav-link ${activePage === 'contact' ? 'active' : ''}`}
               onClick={() => handleNav('contact')}
             >
               Contact
@@ -160,10 +160,10 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Header Primary Action Button */}
-          <div className="dxp-header-actions">
+          <div className="sdl-header-actions">
             <button
               type="button"
-              className="dxp-btn-top-quote"
+              className="sdl-btn-top-quote"
               onClick={() => handleNav('quote')}
             >
               <Calculator size={15} />
@@ -174,7 +174,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Mobile Hamburger Toggle Button */}
           <button
             type="button"
-            className={`dxp-mobile-toggle-btn ${mobileMenuOpen ? 'is-active' : ''}`}
+            className={`sdl-mobile-toggle-btn ${mobileMenuOpen ? 'is-active' : ''}`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle navigation menu"
           >
@@ -185,9 +185,9 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* 3. EXECUTIVE MOBILE DRAWER OVERLAY */}
       {mobileMenuOpen && (
-        <div className="dxp-drawer-backdrop" onClick={() => setMobileMenuOpen(false)}>
+        <div className="sdl-drawer-backdrop" onClick={() => setMobileMenuOpen(false)}>
           <div
-            className="dxp-mobile-drawer-sheet animate-slide-left"
+            className="sdl-mobile-drawer-sheet animate-slide-left"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header with Logo and Close */}

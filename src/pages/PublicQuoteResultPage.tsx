@@ -68,14 +68,14 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   const specialHandling = quote.pricing?.specialHandling || (finalPrice - baseShipping - oversizeHandling > 0 ? finalPrice - baseShipping - oversizeHandling : 42.5);
 
   return (
-    <div className="dxp-quote-result-page animate-fade-in">
+    <div className="sdl-quote-result-page animate-fade-in">
       {/* =========================================================================
           SCREEN-ONLY VIEW
           ========================================================================= */}
       <div className="screen-only-quotation-view">
         {/* Top Banner */}
         <div className="quote-res-hero">
-          <div className="dxp-container-wide hero-content-flex">
+          <div className="sdl-container-wide hero-content-flex">
             <div>
               <div className="quote-badge-pill">
                 <FileText size={14} />
@@ -101,7 +101,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
         </div>
 
         {/* Main Content Body */}
-        <div className="dxp-container-wide quote-res-body">
+        <div className="sdl-container-wide quote-res-body">
           {/* STATUS BAR */}
           <div className={`quote-status-alert-strip ${isPublished ? 'status-ready' : 'status-review'}`}>
             <div className="alert-left">

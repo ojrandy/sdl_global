@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SETTINGS VIEW CSS (Duolingo Express Super Admin)
+   SETTINGS VIEW CSS (SDL Global Logistics Admin)
    Light-mode, clean, professional operational configuration workspace.
    ========================================================================== */
 
@@ -64,7 +64,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   color: #ffffff;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -72,13 +72,13 @@
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 8px rgba(var(--sdl-accent-rgb), 0.25);
   transition: all 0.15s ease;
 }
 
 .btn-save-settings-primary:hover {
-  background: #c2410c;
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  background: var(--sdl-accent-600);
+  box-shadow: 0 4px 14px rgba(var(--sdl-accent-rgb), 0.35);
   transform: translateY(-1px);
 }
 
@@ -114,8 +114,8 @@
 }
 
 .settings-tab-btn.active {
-  color: #ea580c;
-  border-bottom-color: #ea580c;
+  color: var(--sdl-accent-500);
+  border-bottom-color: var(--sdl-accent-500);
 }
 
 /* ==========================================================================
@@ -211,8 +211,8 @@
 }
 
 .settings-input:focus {
-  border-color: #ea580c;
-  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.12);
+  border-color: var(--sdl-accent-500);
+  box-shadow: 0 0 0 2px rgba(var(--sdl-accent-rgb), 0.12);
 }
 
 .settings-input.disabled-bg {
@@ -269,7 +269,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   color: #ffffff;
   border: none;
   padding: 0.5rem 1rem;
@@ -281,7 +281,7 @@
 }
 
 .btn-upload-stamp:hover {
-  background: #c2410c;
+  background: var(--sdl-accent-600);
 }
 
 .btn-remove-stamp {
@@ -403,7 +403,7 @@
 }
 
 input:checked + .slider-round {
-  background-color: #ea580c;
+  background-color: var(--sdl-accent-500);
 }
 
 input:checked + .slider-round:before {
@@ -431,7 +431,7 @@ input:checked + .slider-round:before {
 
 .radio-card input {
   margin-top: 0.2rem;
-  accent-color: #ea580c;
+  accent-color: var(--sdl-accent-500);
 }
 
 .radio-card:hover {
@@ -440,9 +440,9 @@ input:checked + .slider-round:before {
 }
 
 .radio-card.selected {
-  background: #fff7ed;
-  border-color: #ea580c;
-  box-shadow: 0 0 0 1px #ea580c;
+  background: var(--sdl-accent-50);
+  border-color: var(--sdl-accent-500);
+  box-shadow: 0 0 0 1px var(--sdl-accent-500);
 }
 
 .radio-card div {
@@ -531,8 +531,8 @@ input:checked + .slider-round:before {
 }
 
 .hub-status-select:focus {
-  border-color: #ea580c;
-  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15);
+  border-color: var(--sdl-accent-500);
+  box-shadow: 0 0 0 2px rgba(var(--sdl-accent-rgb), 0.15);
 }
 
 .hub-name {

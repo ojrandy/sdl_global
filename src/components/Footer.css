@@ -3,7 +3,7 @@
    Deep Midnight Navy · Orange Swoosh · Custom Dark Logo · 5-Col
    ============================================================ */
 
-.dxp-pro-footer-wrapper {
+.sdl-pro-footer-wrapper {
   margin-top: auto;
   width: 100%;
 }
@@ -11,48 +11,48 @@
 /* ============================================================
    1. TRUST FEATURE STRIP
    ============================================================ */
-.dxp-footer-trust-strip {
-  background-color: var(--dxp-white);
-  border-top: 1.5px solid var(--dxp-slate-200);
-  border-bottom: 1.5px solid var(--dxp-slate-200);
+.sdl-footer-trust-strip {
+  background-color: var(--sdl-white);
+  border-top: 1.5px solid var(--sdl-slate-200);
+  border-bottom: 1.5px solid var(--sdl-slate-200);
   padding: 2.25rem 0;
 }
 
-.dxp-trust-grid {
+.sdl-trust-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 2rem;
 }
 
-.dxp-trust-card {
+.sdl-trust-card {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
 }
 
-.dxp-trust-icon {
+.sdl-trust-icon {
   width: 46px;
   height: 46px;
-  border-radius: var(--dxp-radius-lg);
-  background-color: var(--dxp-orange-50);
-  color: var(--dxp-orange-600);
-  border: 1px solid var(--dxp-orange-200);
+  border-radius: var(--sdl-radius-lg);
+  background-color: var(--sdl-accent-50);
+  color: var(--sdl-accent-500);
+  border: 1px solid var(--sdl-accent-200);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.dxp-trust-info h4 {
+.sdl-trust-info h4 {
   font-size: 0.9375rem;
   font-weight: 800;
-  color: var(--dxp-navy-900);
+  color: var(--sdl-ink-900);
   margin-bottom: 0.25rem;
 }
 
-.dxp-trust-info p {
+.sdl-trust-info p {
   font-size: 0.8125rem;
-  color: var(--dxp-slate-600);
+  color: var(--sdl-slate-600);
   line-height: 1.45;
   margin: 0;
 }
@@ -60,7 +60,7 @@
 /* ============================================================
    2. MAIN EXECUTIVE FOOTER
    ============================================================ */
-.dxp-pro-footer-main {
+.sdl-pro-footer-main {
   position: relative;
   background: #08101d;
   color: #94a3b8;
@@ -90,10 +90,10 @@
   bottom: -40px;
   width: 320px;
   height: 140px;
-  background: radial-gradient(ellipse at center, rgba(234, 88, 12, 0.45) 0%, rgba(249, 115, 22, 0.2) 45%, transparent 75%);
+  background: radial-gradient(ellipse at center, rgba(var(--sdl-accent-rgb), 0.45) 0%, rgba(var(--sdl-accent-rgb), 0.2) 45%, transparent 75%);
   border-top-left-radius: 200px 100px;
-  border-top: 3px solid rgba(234, 88, 12, 0.85);
-  box-shadow: 0 -10px 40px rgba(234, 88, 12, 0.25);
+  border-top: 3px solid rgba(var(--sdl-accent-rgb), 0.85);
+  box-shadow: 0 -10px 40px rgba(var(--sdl-accent-rgb), 0.25);
   pointer-events: none;
   z-index: 1;
   transform: rotate(-4deg);
@@ -105,7 +105,7 @@
 }
 
 /* 5-Column Grid */
-.dxp-pro-footer-grid {
+.sdl-pro-footer-grid {
   display: grid;
   grid-template-columns: 2.2fr 1.1fr 1.3fr 1.2fr 2fr;
   gap: 2.75rem;
@@ -113,12 +113,12 @@
 }
 
 /* Column 1: Brand */
-.dxp-pro-brand-col {
+.sdl-pro-brand-col {
   display: flex;
   flex-direction: column;
 }
 
-.dxp-pro-footer-logo {
+.sdl-pro-footer-logo {
   display: inline-block;
   cursor: pointer;
   margin-bottom: 1.25rem;
@@ -126,7 +126,7 @@
   width: fit-content;
 }
 
-.dxp-pro-footer-logo-img {
+.sdl-pro-footer-logo-img {
   height: 56px;
   width: auto;
   max-width: 270px;
@@ -135,7 +135,7 @@
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
 }
 
-.dxp-pro-brand-desc {
+.sdl-pro-brand-desc {
   font-size: 0.875rem;
   color: #94a3b8;
   line-height: 1.65;
@@ -143,7 +143,7 @@
   max-width: 340px;
 }
 
-.dxp-pro-socials {
+.sdl-pro-socials {
   display: flex;
   align-items: center;
   gap: 0.625rem;
@@ -159,19 +159,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ea580c;
+  color: var(--sdl-accent-500);
   transition: all 0.2s ease;
 }
 
 .pro-social-btn:hover {
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   color: #ffffff;
-  border-color: #ea580c;
+  border-color: var(--sdl-accent-500);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--sdl-accent-rgb), 0.3);
 }
 
-.dxp-pro-faster-tagline {
+.sdl-pro-faster-tagline {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -184,17 +184,17 @@
 .tagline-bar {
   width: 32px;
   height: 3px;
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   border-radius: 2px;
 }
 
 /* Link Columns (Quick Links, Our Services, Support) */
-.dxp-pro-links-col {
+.sdl-pro-links-col {
   display: flex;
   flex-direction: column;
 }
 
-.dxp-pro-col-title {
+.sdl-pro-col-title {
   font-size: 0.9375rem;
   font-weight: 800;
   color: #ffffff;
@@ -209,11 +209,11 @@
   display: block;
   width: 24px;
   height: 2.5px;
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   border-radius: 2px;
 }
 
-.dxp-pro-links-list {
+.sdl-pro-links-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -222,7 +222,7 @@
   margin: 0;
 }
 
-.dxp-pro-links-list button {
+.sdl-pro-links-list button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -237,34 +237,34 @@
 }
 
 .link-chevron {
-  color: #ea580c;
+  color: var(--sdl-accent-500);
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
 
-.dxp-pro-links-list button:hover {
+.sdl-pro-links-list button:hover {
   color: #ffffff;
   transform: translateX(4px);
 }
 
-.dxp-pro-links-list button:hover .link-chevron {
+.sdl-pro-links-list button:hover .link-chevron {
   transform: translateX(2px);
 }
 
 /* Column 5: Stay Updated */
-.dxp-pro-newsletter-col {
+.sdl-pro-newsletter-col {
   display: flex;
   flex-direction: column;
 }
 
-.dxp-pro-newsletter-desc {
+.sdl-pro-newsletter-desc {
   font-size: 0.875rem;
   color: #94a3b8;
   line-height: 1.55;
   margin-bottom: 1.25rem;
 }
 
-.dxp-pro-subscribe-form {
+.sdl-pro-subscribe-form {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -299,7 +299,7 @@
 }
 
 .pro-newsletter-input:focus {
-  border-color: #ea580c;
+  border-color: var(--sdl-accent-500);
   background: rgba(255, 255, 255, 0.09);
 }
 
@@ -310,7 +310,7 @@
 .pro-subscribe-btn {
   height: 44px;
   padding: 0 1.25rem;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, var(--sdl-accent-500) 0%, var(--sdl-accent-500) 100%);
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -322,7 +322,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 4px 12px rgba(var(--sdl-accent-rgb), 0.25);
 }
 
 .pro-subscribe-btn:hover {
@@ -337,7 +337,7 @@
 }
 
 /* Worldwide Callout Pill */
-.dxp-pro-global-pill {
+.sdl-pro-global-pill {
   display: flex;
   align-items: flex-start;
   gap: 0.875rem;
@@ -385,15 +385,15 @@
 }
 
 .pro-admin-link:hover {
-  color: #fb923c;
-  border-color: #ea580c;
-  background: rgba(234, 88, 12, 0.08);
+  color: var(--sdl-accent-400);
+  border-color: var(--sdl-accent-500);
+  background: rgba(var(--sdl-accent-rgb), 0.08);
 }
 
 /* ============================================================
    3. BOTTOM BAR
    ============================================================ */
-.dxp-pro-footer-bottom {
+.sdl-pro-footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 1.75rem;
   display: flex;
@@ -435,7 +435,7 @@
 }
 
 .pro-dot {
-  color: #ea580c;
+  color: var(--sdl-accent-500);
 }
 
 .pro-slogan {
@@ -447,52 +447,52 @@
    RESPONSIVE DESIGN & MOBILE BREAKPOINTS
    ============================================================ */
 @media (max-width: 1200px) {
-  .dxp-pro-footer-grid {
+  .sdl-pro-footer-grid {
     grid-template-columns: 2fr 1fr 1.2fr 1fr 1.8fr;
     gap: 2rem;
   }
 }
 
 @media (max-width: 1024px) {
-  .dxp-trust-grid {
+  .sdl-trust-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .dxp-pro-footer-grid {
+  .sdl-pro-footer-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 2.5rem;
   }
-  .dxp-pro-brand-col {
+  .sdl-pro-brand-col {
     grid-column: span 2;
   }
-  .dxp-pro-newsletter-col {
+  .sdl-pro-newsletter-col {
     grid-column: span 2;
   }
 }
 
 @media (max-width: 640px) {
-  .dxp-trust-grid {
+  .sdl-trust-grid {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
-  .dxp-pro-footer-main {
+  .sdl-pro-footer-main {
     padding: 3.5rem 0 2rem;
   }
-  .dxp-pro-footer-grid {
+  .sdl-pro-footer-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  .dxp-pro-brand-col,
-  .dxp-pro-newsletter-col {
+  .sdl-pro-brand-col,
+  .sdl-pro-newsletter-col {
     grid-column: span 1;
   }
-  .dxp-pro-subscribe-form {
+  .sdl-pro-subscribe-form {
     flex-direction: column;
   }
   .pro-subscribe-btn {
     width: 100%;
     justify-content: center;
   }
-  .dxp-pro-footer-bottom {
+  .sdl-pro-footer-bottom {
     flex-direction: column;
     align-items: center;
     text-align: center;

@@ -131,7 +131,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
     const isActuallyMoving = shipmentStatus === 'IN_TRANSIT';
 
     return L.divIcon({
-      className: 'dxp-clean-map-marker',
+      className: 'sdl-clean-map-marker',
       html: `
         <div class="map-pin-container ${colorClass} ${isActuallyMoving ? 'is-simulating' : ''}">
           ${isCurrent && !isDelivered ? `<div class="radar-glow-ring ${isActuallyMoving ? 'active-pulse' : ''}"></div>` : ''}
@@ -525,7 +525,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
     : `${destPt.name}, ${destPt.state}`;
 
   return (
-    <div className={`dxp-journey-map-card ${className}`}>
+    <div className={`sdl-journey-map-card ${className}`}>
       {/* 1. Gorgeous 3-Column Route Stages Header */}
       <div className="map-route-stages-header">
         {/* Origin Node */}

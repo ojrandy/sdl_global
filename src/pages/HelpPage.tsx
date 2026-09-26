@@ -146,13 +146,13 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="dxp-page-help">
+    <div className="sdl-page-help">
       {/* =========================================================================
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
-      <section className="dxp-help-hero">
+      <section className="sdl-help-hero">
         <div className="help-hero-bg-overlay" />
-        <div className="dxp-container-wide help-hero-inner">
+        <div className="sdl-container-wide help-hero-inner">
           <div className="help-hero-pill animate-fade-in">
             <span className="help-pulse-dot" />
             <span>{dotNumber ? `${dotNumber} · ` : ''}24/7 CLIENT OPERATIONS DESK</span>
@@ -194,8 +194,8 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       {/* =========================================================================
           2. NETWORK OPERATIONAL STATUS BAR
           ========================================================================= */}
-      <section className="dxp-help-network-strip">
-        <div className="dxp-container-wide">
+      <section className="sdl-help-network-strip">
+        <div className="sdl-container-wide">
           <div className="network-strip-inner">
             <div className="network-status-label">
               <span className="live-radar-dot" />
@@ -226,7 +226,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       {/* =========================================================================
           3. CORE ASSISTANCE PILLARS
           ========================================================================= */}
-      <div className="dxp-container-wide dxp-help-body">
+      <div className="sdl-container-wide sdl-help-body">
         <div className="help-pillars-grid">
           <div className="help-pillar-card" onClick={() => onNavigate('track')}>
             <div className="pillar-icon icon-orange"><MapPin size={24} /></div>
@@ -260,7 +260,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         {/* =========================================================================
             4. KNOWLEDGE BASE ACCORDION & TOPIC FILTER
             ========================================================================= */}
-        <section className="dxp-help-faq-section">
+        <section className="sdl-help-faq-section">
           <div className="section-center-header">
             <span className="section-eyebrow">FREQUENTLY ASKED QUESTIONS</span>
             <h2>Operational Knowledge Base</h2>
@@ -334,14 +334,14 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                     onClick={() => toggleFaq(faq.id)}
                   >
                     <div className="faq-q-text">
-                      <HelpCircle size={18} className="text-orange flex-shrink-0" />
+                      <HelpCircle size={18} className="text-accent flex-shrink-0" />
                       <span>{faq.question}</span>
                       {faq.badge && (
                         <span className="faq-topic-badge font-mono">{faq.badge}</span>
                       )}
                     </div>
                     {openFaqId === faq.id ? (
-                      <ChevronUp size={18} className="text-orange flex-shrink-0" />
+                      <ChevronUp size={18} className="text-accent flex-shrink-0" />
                     ) : (
                       <ChevronDown size={18} className="text-slate-400 flex-shrink-0" />
                     )}
@@ -361,7 +361,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         {/* =========================================================================
             5. NEED IMMEDIATE ASSISTANCE CALLOUT
             ========================================================================= */}
-        <section className="dxp-help-cta-box">
+        <section className="sdl-help-cta-box">
           <div className="help-cta-content">
             <div className="help-cta-badge font-mono">24/7 CENTRAL DISPATCH DESK</div>
             <h2>Still need assistance with an active consignment?</h2>

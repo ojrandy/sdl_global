@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DUOLINGO EXPRESS — EDIT SHIPMENT MODAL
+   SDL GLOBAL LOGISTICS — EDIT SHIPMENT MODAL
    Light Executive Theme · Crisp Ergonomics
    ========================================================================== */
 
@@ -63,9 +63,9 @@
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #ea580c;
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
+  color: var(--sdl-accent-500);
+  background: var(--sdl-accent-50);
+  border: 1px solid var(--sdl-accent-100);
   padding: 0.12rem 0.45rem;
   border-radius: 4px;
   width: fit-content;
@@ -228,8 +228,8 @@
 .edit-field input:focus,
 .edit-field select:focus,
 .edit-field textarea:focus {
-  border-color: #ea580c;
-  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15);
+  border-color: var(--sdl-accent-500);
+  box-shadow: 0 0 0 2px rgba(var(--sdl-accent-rgb), 0.15);
 }
 
 .edit-field.checkbox-field {
@@ -248,7 +248,7 @@
 .edit-field.checkbox-field input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: #ea580c;
+  accent-color: var(--sdl-accent-500);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -286,21 +286,21 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 1.35rem;
-  background: #ea580c;
+  background: var(--sdl-accent-500);
   border: none;
   border-radius: 6px;
   font-size: 0.8125rem;
   font-weight: 700;
   color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 2px 6px rgba(var(--sdl-accent-rgb), 0.25);
   transition: all 0.15s ease;
 }
 
 .edit-btn-save:hover {
-  background: #c2410c;
+  background: var(--sdl-accent-600);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+  box-shadow: 0 4px 12px rgba(var(--sdl-accent-rgb), 0.35);
 }
 
 
