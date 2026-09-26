@@ -13,9 +13,9 @@
 ---
 
 ## Phase 0 — Take over the existing system & record a baseline
-- [ ] 0.1 Create a new GitHub repo for SDL (don't keep pushing to the old `duolingo-express` repo). Copy the code across without the old git history.
-- [ ] 0.2 Copy `CLAUDE.md` to the repo root and all other docs into `/docs`.
-- [~] 0.3 Run `npm install` and `npm run dev`; confirm the existing site, tracking, admin login, shipment creation, documents and quotes all work (this is the baseline that must never regress). *API + build verified; the browser-only checks are pending (see Baseline below).*
+- [~] 0.1 Create a new GitHub repo for SDL (don't keep pushing to the old `duolingo-express` repo). Copy the code across without the old git history. *Repo `ojrandy/sdl_global` exists (remote `sdl`), but it still has the old history; fresh-history step pending.*
+- [x] 0.2 Copy `CLAUDE.md` to the repo root and all other docs into `/docs`.
+- [x] 0.3 Run `npm install` and `npm run dev`; confirm the existing site, tracking, admin login, shipment creation, documents and quotes all work (this is the baseline that must never regress). *API + build verified by Claude; browser checks confirmed by owner 2026-09-26.*
 - [x] 0.3b Codebase walkthrough: read App.tsx, the main pages, server routes and db.ts; write a short "system notes" summary at the bottom of this tracker so future sessions start with context.
 
 ### Baseline (re-run 2026-09-26 on commit `6b8185f`, Node 22.14.0, npm 11.6.2)
@@ -39,7 +39,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | Stats (admin) | PASS | 200 |
 | `/api/diag/storage` | responds, **unauthenticated** | returns the server's data path; see System notes |
 
-**Owner to confirm in a browser** (then tick 0.3): pages render; `#/admin` login UI; admin Create Shipment wizard; a document PDF download; the quote form UI.
+**Browser checks (owner, 2026-09-26): PASS.** Pages render; `#/admin` login UI; admin Create Shipment wizard; document PDF download; quote form UI.
 - [ ] 0.4 Take "before" screenshots of every page → `screens/before/`.
 - [ ] 0.5 Owner drops SDL images into `Public/images/sdl/` using the names in `BRAND_GUIDE.md §8`.
 - [ ] 0.6 Owner supplies logo files (full-colour, white/reversed, icon-only) → `Public/brand/`.
@@ -153,6 +153,8 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | 0.3b | Codebase walkthrough; System notes added at the bottom of this file. |
 | 2026-09-26 | 0.3 | Baseline recorded: install/build pass (2 warnings), all API flows pass; browser-only checks pending owner. No code changed. |
 | 2026-09-26 | 0.3 / 0.3b | Re-ran the baseline and rewrote the System notes for `6b8185f` (11 upstream commits landed after the first pass). Local branch `sdl-rebrand` created. |
+| 2026-09-26 | 0.3 | Owner confirmed the browser checks. Baseline complete. |
+| 2026-09-26 | 0.2 | Docs are in the repo (`CLAUDE.md` at the root, the rest in `/docs`). |
 ---
 
 ## System notes (codebase walkthrough, updated 2026-09-26 for commit `6b8185f`)
