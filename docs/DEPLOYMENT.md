@@ -104,6 +104,10 @@ then call it again. If `markerFirstSeen` stays the same, storage persists. **Aft
 - [ ] Contact and callback forms submit and show an `SDL-TKT-` reference.
 - [ ] Redeploy once, then confirm the shipment above still exists (persistence).
 - [ ] View source + `robots.txt` + `sitemap.xml` + OG preview (e.g. paste the link in WhatsApp): all SDL.
+- [ ] **OG image is live:** `https://sdlgloballogistics.com/brand/og-image.jpg` returns 200 (`image/jpeg`). `index.html` points `og:image`,
+  `twitter:image`, `og:url` and `canonical` at that exact domain, so if the site is served on `www.` instead, update all four
+  first. Then run the home URL through the Facebook Sharing Debugger and LinkedIn Post Inspector ("Scrape again") so they
+  drop any cached preview from before launch.
 - [ ] Final old-brand sweep on the live HTML/JS bundle (REBRAND_MAP §7).
 - [ ] Lighthouse mobile on Home meets the MOTION_3D_SPEC §2 targets.
 

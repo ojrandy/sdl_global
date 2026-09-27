@@ -48,8 +48,8 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [~] 1.1 Create `src/config/brand.ts` with every value from `CLAUDE.md §2`; replace hard-coded brand strings with imports. *brand.ts created; admin host, admin title and all public contact/social/licence values now read from it. The remaining old-brand strings are replaced in their own tasks (1.4–1.7, Phase 3).*
 - [x] 1.2 Extract the colour palette from the SDL logo (BRAND_GUIDE §4), then write the tokens into `src/styles/tokens.css`.
 - [x] 1.3 Rename token prefix `--dxp-*` → `--sdl-*` and class prefix `dxp-` → `sdl-` across `src/` (~59 files, 63 tokens).
-- [ ] 1.4 Replace `logo.png`, footer logo, favicon, apple-touch-icon; add `site.webmanifest` and OG image.
-- [ ] 1.5 Update `index.html`: title, description, Open Graph/Twitter tags, theme-color, canonical (CONTENT.md §1).
+- [x] 1.4 Replace `logo.png`, footer logo, favicon, apple-touch-icon; add `site.webmanifest` and OG image.
+- [x] 1.5 Update `index.html`: title, description, Open Graph/Twitter tags, theme-color, canonical (CONTENT.md §1).
 - [ ] 1.6 Update `package.json` name → `sdl-global-logistics`; rename DB file default `duolingo_express.db` → `sdl_global.db` (server/db.ts, server/index.ts, .env.example).
 - [ ] 1.7 Replace all emails with `info@sdlgloballogistics.com` (defaults in `server/db.ts` settings, Header, Contact, PublicQuoteResult, Admin Settings).
 - [ ] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3).
@@ -103,7 +103,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [ ] 6.1 Old-brand sweep = zero (REBRAND_MAP §6).
 - [ ] 6.2 Functional test: create shipment in admin → track it publicly → documents download → quote flow → contact form.
 - [ ] 6.3 Cross-browser: Chrome, Safari (iOS), Firefox, Samsung Internet; low-end Android test.
-- [ ] 6.4 SEO: per-page titles/descriptions, `robots.txt`, `sitemap.xml`, OG image, structured data (Organization).
+- [ ] 6.4 SEO: per-page titles/descriptions, `robots.txt`, `sitemap.xml`, OG image, structured data (Organization). **Blocker for go-live:** the OG image URL is absolute (`https://sdlgloballogistics.com/brand/og-image.jpg`) and only works once the domain serves the site; verify it with DEPLOYMENT.md §7 before announcing the launch.
 - [ ] 6.5 Accessibility: keyboard nav, focus states, alt text, contrast, reduced motion.
 - [ ] 6.6 Take "after" screenshots → `screens/after/`.
 - [ ] 6.7 Remove the demo shipments from the public site: turn off the mock-shipment fallback in `App.tsx`/`AdminDataContext.tsx`, and set `SEED_DEMO_DATA=false` in production.
