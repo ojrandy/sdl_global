@@ -16,15 +16,21 @@ const PIECE_LABEL_PATTERN = new RegExp(`^(${TRACKING_PREFIX}[2-9A-HJ-NP-Z]{${SUF
 // Any dash punctuation (hyphen, en/em dash, ...), since IDs get pasted from documents and emails.
 const DASHES = /\p{Pd}/gu;
 
-// A random ID from the platform CSPRNG (Web Crypto, available in browsers and Node ≥ 19).
-// The alphabet has exactly 32 characters, so `byte & 31` picks each one with equal
-// probability. The server is the authority: it checks uniqueness and retries
-// (server/trackingIds.ts); anything generated in the browser is a preview at most.
-export function generateTrackingId(): string {
-  const bytes = new Uint8Array(SUFFIX_LENGTH);
-  globalThis.crypto.getRandomValues(bytes);
+/** Returns a uniformly random integer in [0, max). */
+export type RandomIndex = (max: number) => number;
+
+// Browser default: crypto.getRandomValues. The alphabet has exactly 32 characters, so
+// `byte & 31` picks each one with equal probability.
+const webCryptoIndex: RandomIndex = (max) => {
+  const byte = globalThis.crypto.getRandomValues(new Uint8Array(1))[0];
+  return byte & (max - 1);
+};
+
+// A random ID. The server passes Node's crypto.randomInt (BRAND_GUIDE §7) and is the only
+// caller that allocates real IDs: it checks uniqueness and retries (server/trackingIds.ts).
+export function generateTrackingId(randomIndex: RandomIndex = webCryptoIndex): string {
   let suffix = '';
-  for (const b of bytes) suffix += TRACKING_ALPHABET[b & 31];
+  for (let i = 0; i < SUFFIX_LENGTH; i++) suffix += TRACKING_ALPHABET[randomIndex(TRACKING_ALPHABET.length)];
   return TRACKING_PREFIX + suffix;
 }
 

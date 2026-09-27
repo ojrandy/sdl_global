@@ -134,6 +134,8 @@ function formatShipment(row: any) {
     handlingRequirements: row.handling_requirements_json ? JSON.parse(row.handling_requirements_json) : undefined,
     pickupWindow: row.pickup_window || undefined,
     internalPricingNote: row.internal_pricing_note || undefined,
+    returnLeg: row.return_leg_json ? JSON.parse(row.return_leg_json) : undefined,
+    returnOf: row.return_of_tracking || undefined,
     pieces,
     events
   };
@@ -472,6 +474,143 @@ shipmentsRouter.patch('/:trackingNumber/status', requireAdminAuth, (req: Request
     const updatedRow = db.prepare('SELECT * FROM shipments WHERE tracking_number = ?').get(tracking);
     res.json({ success: true, data: formatShipment(updatedRow) });
   } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/shipments/:trackingNumber/return (Return to origin)
+//
+// A return gets its own new DLS ID, linked to the original (BRAND_GUIDE §7). It's created here
+// as a real shipment row so the return is stored, trackable publicly and covered by the same
+// uniqueness check as every other ID: origin/destination and sender/recipient are swapped,
+// pieces are relabelled, and each side records the link (return_leg_json / return_of_tracking).
+shipmentsRouter.post('/:trackingNumber/return', requireAdminAuth, (req: Request, res: Response) => {
+  const tracking = (req.params.trackingNumber as string).trim().toUpperCase();
+  const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 200) : '';
+  const operator = typeof req.body?.operator === 'string' && req.body.operator.trim() ? req.body.operator.trim().slice(0, 80) : 'Administrator';
+  if (!reason) {
+    return res.status(400).json({ success: false, error: 'A return reason is required.' });
+  }
+
+  let inTransaction = false;
+  try {
+    const row = db.prepare('SELECT * FROM shipments WHERE tracking_number = ? AND deleted_at_ts IS NULL').get(tracking) as any;
+    if (!row) {
+      return res.status(404).json({ success: false, error: `Shipment ${tracking} not found` });
+    }
+    if (row.return_leg_json) {
+      const existing = JSON.parse(row.return_leg_json);
+      return res.status(409).json({ success: false, error: `Shipment ${tracking} already has a return (${existing.returnTrackingNumber}).` });
+    }
+    if (row.return_of_tracking) {
+      return res.status(409).json({ success: false, error: `${tracking} is itself a return of ${row.return_of_tracking}.` });
+    }
+
+    const now = Date.now();
+    const nowDate = new Date(now);
+    const timestamp = `${nowDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${nowDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    const currentLabel = [row.current_location_city, row.current_location_state].filter(Boolean).join(', ') || `${row.destination_city}, ${row.destination_state}`;
+
+    db.exec('BEGIN');
+    inTransaction = true;
+
+    const returnId = generateUniqueTrackingId();
+
+    // The return starts where the parcel is now and heads back to the original origin.
+    db.prepare(`
+      INSERT INTO shipments (
+        tracking_number, barcode_code, status, status_text, progress_percent,
+        last_updated, created_at, estimated_delivery_date, estimated_delivery_time,
+        service, shipment_type, cargo_description, total_weight_lbs, total_pieces,
+        declared_value, origin_city, origin_state, origin_lat, origin_lng,
+        destination_city, destination_state, destination_lat, destination_lng,
+        current_location_city, current_location_state, current_location_lat, current_location_lng,
+        current_facility, sender_json, recipient_json, dimensions_json,
+        vehicle_json, pet_json, pallet_json, container_json, freight_json, document_json,
+        references_json, cargo_category, handling_requirements_json,
+        return_of_tracking, progress_updated_at_ts, created_at_ts
+      )
+      SELECT
+        ?, ?, 'RECEIVED', ?, 5,
+        'Just now', ?, 'To be confirmed', '',
+        service, shipment_type, cargo_description, total_weight_lbs, total_pieces,
+        declared_value, destination_city, destination_state, destination_lat, destination_lng,
+        origin_city, origin_state, origin_lat, origin_lng,
+        current_location_city, current_location_state, current_location_lat, current_location_lng,
+        current_facility, recipient_json, sender_json, dimensions_json,
+        vehicle_json, pet_json, pallet_json, container_json, freight_json, document_json,
+        references_json, cargo_category, handling_requirements_json,
+        tracking_number, ?, ?
+      FROM shipments WHERE tracking_number = ?
+    `).run(
+      returnId, `*${returnId}*`, `Return registered (${reason})`,
+      nowDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      now, now, tracking
+    );
+
+    const pieces = db.prepare('SELECT * FROM shipment_pieces WHERE parent_tracking = ? ORDER BY piece_number ASC').all(tracking) as any[];
+    const insertPiece = db.prepare(`
+      INSERT INTO shipment_pieces (
+        id, tracking_number, parent_tracking, piece_number, total_pieces,
+        status, status_text, current_location, weight_lbs, dimensions_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const p of pieces) {
+      insertPiece.run(
+        `${returnId}-P${p.piece_number}`, pieceLabel(returnId, p.piece_number), returnId,
+        p.piece_number, p.total_pieces, 'RECEIVED', 'Return registered', currentLabel,
+        p.weight_lbs, p.dimensions_json
+      );
+    }
+
+    const insertEvent = db.prepare(`
+      INSERT INTO tracking_events (
+        id, shipment_tracking, status, title, location, facility,
+        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order, recorded_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    insertEvent.run(
+      `e-${now}-r`, returnId, 'RECEIVED', 'Return Shipment Registered', currentLabel,
+      row.current_facility || `${COMPANY_SHORT} Facility`, timestamp,
+      `Return of ${tracking} to the sender at ${row.origin_city}, ${row.origin_state} (${reason}).`,
+      null, 0, 1, 1, 1, operator
+    );
+
+    const returnLeg = {
+      returnTrackingNumber: returnId,
+      originalTrackingNumber: tracking,
+      returnInitiatedDate: timestamp,
+      reason,
+      origin: { city: row.destination_city, state: row.destination_state, country: '' },
+      destination: { city: row.origin_city, state: row.origin_state, country: '' },
+      status: 'RECEIVED',
+      timeline: []
+    };
+
+    db.prepare(`
+      UPDATE shipments SET status = 'EXCEPTION', status_text = ?, last_updated = 'Just now',
+        return_leg_json = ?, progress_updated_at_ts = ?
+      WHERE tracking_number = ?
+    `).run(`Returning to Origin (${reason})`, JSON.stringify(returnLeg), now, tracking);
+
+    db.prepare('UPDATE tracking_events SET current_flag = 0 WHERE shipment_tracking = ?').run(tracking);
+    const eventCount = (db.prepare('SELECT COUNT(*) as count FROM tracking_events WHERE shipment_tracking = ?').get(tracking) as any).count;
+    insertEvent.run(
+      `e-${now}`, tracking, 'EXCEPTION', `Return to Origin Initiated: ${reason}`, currentLabel,
+      row.current_facility || `${COMPANY_SHORT} Facility`, timestamp,
+      `Original journey concluded (${reason}). Returning to the sender at ${row.origin_city}, ${row.origin_state} under tracking ID ${returnId}.`,
+      null, 1, 1, 1, eventCount + 1, operator
+    );
+
+    db.exec('COMMIT');
+    inTransaction = false;
+
+    const original = formatShipment(db.prepare('SELECT * FROM shipments WHERE tracking_number = ?').get(tracking));
+    const returnShipment = formatShipment(db.prepare('SELECT * FROM shipments WHERE tracking_number = ?').get(returnId));
+    res.status(201).json({ success: true, data: { original, returnShipment } });
+  } catch (err: any) {
+    if (inTransaction) db.exec('ROLLBACK');
     res.status(500).json({ success: false, error: err.message });
   }
 });

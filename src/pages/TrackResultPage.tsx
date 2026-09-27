@@ -737,6 +737,17 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           </div>
         )}
 
+        {/* Return shipment: link back to the original */}
+        {shipment?.returnOf && (
+          <div className="rto-active-advisory-banner animate-fade-in">
+            <RotateCcw size={18} className="text-amber" />
+            <div>
+              <strong>Return Shipment</strong>
+              <p>This is the return of consignment <span className="font-mono">{shipment.returnOf}</span> to its sender.</p>
+            </div>
+          </div>
+        )}
+
         {/* =========================================================================
             1. WHITE CONSIGNMENT SUMMARY CARD (3 COLUMNS + CORRIDOR RAIL)
             ========================================================================= */}

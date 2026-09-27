@@ -16,10 +16,10 @@ import {
   applyHoldState,
   applyResumeState,
   applyDelayState,
-  applyReturnToOrigin,
   createAuditLogEntry
 } from '../../services/planningEngine';
 import { simulationEngine } from '../../services/simulationEngine';
+import { useAdminData } from '../../context/AdminDataContext';
 import { resolveLocation } from '../../services/geocodingService';
 import './ShipmentControlModal.css';
 
@@ -83,6 +83,8 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
     typeof shipment.recipient === 'object' ? (shipment.recipient?.name || 'Authorized Recipient') : 'Authorized Recipient'
   );
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+  const { initiateReturn } = useAdminData();
 
   // Sync scrub value when shipment updates
   useEffect(() => {
@@ -107,8 +109,25 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
     simulationEngine.scrubProgress(shipment, val, (updated) => liveUpdate(updated));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // A return is created server-side as its own shipment with a new DLS ID (BRAND_GUIDE §7),
+    // so both records are persisted; local state is updated from the server's response.
+    if (targetAction === 'RETURN') {
+      if (isSubmittingReturn) return;
+      setIsSubmittingReturn(true);
+      const result = await initiateReturn(shipment.trackingNumber, returnReason);
+      setIsSubmittingReturn(false);
+      if (!result.success) {
+        setToastMsg(`Return not saved: ${result.error}`);
+        return;
+      }
+      setToastMsg(`Return registered as ${result.returnTrackingNumber}`);
+      setTimeout(() => onClose(), 1200);
+      return;
+    }
+
     let updated = { ...shipment };
     const now = new Date();
     const timestampStr =
@@ -279,9 +298,6 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
       updated = res.updatedShipment;
     } else if (targetAction === 'DELAY') {
       const res = applyDelayState(updated, delayReason, delayHours, 'Super Admin');
-      updated = res.updatedShipment;
-    } else if (targetAction === 'RETURN') {
-      const res = applyReturnToOrigin(updated, returnReason, 'Super Admin');
       updated = res.updatedShipment;
     }
 

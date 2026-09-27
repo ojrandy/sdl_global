@@ -273,6 +273,10 @@ export function initDatabase() {
   try { db.exec(`ALTER TABLE shipments ADD COLUMN handling_requirements_json TEXT;`); } catch (e) {}
   try { db.exec(`ALTER TABLE shipments ADD COLUMN pickup_window TEXT;`); } catch (e) {}
   try { db.exec(`ALTER TABLE shipments ADD COLUMN internal_pricing_note TEXT;`); } catch (e) {}
+  // Returns (BRAND_GUIDE §7): a return is its own shipment row with its own DLS ID.
+  // return_leg_json on the original points at it; return_of_tracking on the return points back.
+  try { db.exec(`ALTER TABLE shipments ADD COLUMN return_leg_json TEXT;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE shipments ADD COLUMN return_of_tracking TEXT;`); } catch (e) {}
   // "Delete" no longer removes a shipment's row at all (see server/routes/shipments.ts) — it
   // sets this timestamp instead, so a deleted shipment can always be restored. A real
   // shipment was permanently, unrecoverably lost to a hard DELETE earlier, with no backup

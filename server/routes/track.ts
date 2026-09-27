@@ -190,6 +190,10 @@ trackRouter.get('/:trackingNumber', (req: Request, res: Response) => {
       recipient,
       dimensions: JSON.parse(row.dimensions_json || '{}'),
       handlingRequirements: row.handling_requirements_json ? JSON.parse(row.handling_requirements_json) : undefined,
+      // Return linkage (both directions) so either ID leads to the other on the public page.
+      returnLeg: row.return_leg_json ? (({ returnTrackingNumber, originalTrackingNumber, returnInitiatedDate, reason, origin, destination, status }) =>
+        ({ returnTrackingNumber, originalTrackingNumber, returnInitiatedDate, reason, origin, destination, status, timeline: [] }))(JSON.parse(row.return_leg_json)) : undefined,
+      returnOf: row.return_of_tracking || undefined,
       pieces,
       events,
       timeline: events,

@@ -288,6 +288,8 @@ export interface Shipment {
   
   auditLog?: ShipmentAuditEntry[];
   returnLeg?: ReturnJourneyLeg;
+  /** Set on a return shipment: the tracking ID of the shipment it returns. */
+  returnOf?: string;
   
   exception?: {
     type: string;

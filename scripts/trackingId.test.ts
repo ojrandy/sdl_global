@@ -85,3 +85,12 @@ test('pieceLabel round-trips through parsePieceLabel', () => {
     assert.deepEqual(parsePieceLabel(label), { parentId: id, piece: n });
   }
 });
+
+test('generateTrackingId uses the random source it is given (server passes crypto.randomInt)', async () => {
+  const picks: number[] = [];
+  const id = generateTrackingId((max) => { assert.equal(max, 32); picks.push(max); return picks.length - 1; });
+  assert.equal(id, 'DLS23456');
+  assert.equal(picks.length, 5);
+  const { randomInt } = await import('node:crypto');
+  for (let i = 0; i < 1000; i++) assert.ok(isValidTrackingId(generateTrackingId((max) => randomInt(max))));
+});

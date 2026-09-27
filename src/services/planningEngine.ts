@@ -10,12 +10,10 @@ import {
   ShipmentStatus,
   MilestoneState,
   Shipment,
-  ShipmentAuditEntry,
-  ReturnJourneyLeg
+  ShipmentAuditEntry
 } from '../types/shipment.js';
 import { findIntermediateHub } from './routingEngine.js';
 import { resolveLocation } from './geocodingService.js';
-import { generateTrackingId } from '../shared/trackingId.js';
 
 /**
  * Shipment.currentLocation is typed as a string, but the simulation engine (in motion)
@@ -624,71 +622,6 @@ export function applyDelayState(
 
   updatedShipment.timeline = [event, ...(shipment.timeline || []).map(e => ({ ...e, isCurrent: false }))];
   updatedShipment.auditLog = [auditEntry, ...(shipment.auditLog || [])];
-
-  return { updatedShipment, auditEntry, event };
-}
-
-/**
- * 4. RETURN TO ORIGIN (RTO) Handler: Preserves original journey leg and appends return journey
- */
-export function applyReturnToOrigin(
-  shipment: Shipment,
-  returnReason: string,
-  operator = 'Super Admin'
-): { updatedShipment: Shipment; auditEntry: ShipmentAuditEntry; event: TrackingEvent } {
-  // A return gets its own new tracking ID, linked to the original (BRAND_GUIDE §7).
-  const returnTrackingNumber = generateTrackingId();
-
-  const now = new Date();
-  const timestampStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
-    ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-  const event: TrackingEvent = {
-    id: `ev-${Date.now()}`,
-    status: 'EXCEPTION',
-    milestoneState: 'CONFIRMED',
-    title: `Return to Origin Initiated: ${returnReason}`,
-    location: formatLocationString(shipment.currentLocation),
-    facility: 'Regional Transit Sort Center',
-    city: getLocationCityState(shipment.currentLocation).city || shipment.destination.city,
-    state: getLocationCityState(shipment.currentLocation).state || shipment.destination.state,
-    timestamp: timestampStr,
-    displayDate: timestampStr.split(' · ')[0],
-    displayTime: timestampStr.split(' · ')[1],
-    description: `Original journey concluded (Exception: ${returnReason}). Return leg initialized back to sender at ${shipment.origin.city}, ${shipment.origin.state}.`,
-    isCompleted: true,
-    isCurrent: true,
-    recordedBy: operator
-  };
-
-  const returnLeg: ReturnJourneyLeg = {
-    returnTrackingNumber,
-    originalTrackingNumber: shipment.trackingNumber,
-    returnInitiatedDate: timestampStr,
-    reason: returnReason,
-    origin: { ...shipment.destination },
-    destination: { ...shipment.origin },
-    status: 'IN_TRANSIT',
-    timeline: [event]
-  };
-
-  const auditEntry = createAuditLogEntry(
-    operator,
-    'RETURN_INITIATED',
-    `Return journey initiated due to "${returnReason}". Original route history preserved. Return leg ${returnTrackingNumber} registered.`,
-    { reason: returnReason }
-  );
-
-  const updatedShipment: Shipment = {
-    ...shipment,
-    status: 'EXCEPTION',
-    statusText: `Returning to Origin (${returnReason})`,
-    statusMessage: `Consignment is being returned to sender at ${shipment.origin.city}, ${shipment.origin.state}.`,
-    returnLeg,
-    timeline: [event, ...(shipment.timeline || []).map(e => ({ ...e, isCurrent: false }))],
-    auditLog: [auditEntry, ...(shipment.auditLog || [])],
-    lastUpdated: 'Just now'
-  };
 
   return { updatedShipment, auditEntry, event };
 }

@@ -70,7 +70,7 @@ Shared module: `src/shared/trackingId.ts` (generate, normalise, validate, `parse
 - [x] `src/context/AdminDataContext.tsx:528` and `:752`. *No longer generate: they send a draft and adopt the ID the server returns.*
 - [x] `src/admin/pages/CreateShipmentView.tsx:337`. *Shows `DLS·····` until the server assigns the ID.*
 - [x] `src/pages/ShipPage.tsx:181`. *Uses the server-assigned ID.*
-- [x] `src/services/planningEngine.ts:638`: return-to-origin → a new DLS ID linked to the original (BRAND_GUIDE §7). *`RTO-` gone; see tracker Blocked #12 (the return leg is never persisted).*
+- [x] `src/services/planningEngine.ts:638`: return-to-origin → a new DLS ID linked to the original (BRAND_GUIDE §7). *`RTO-` gone; the server creates the return as its own linked shipment (`POST /api/shipments/:id/return`).*
 
 ### 3.2 Lookup and matching
 - [x] `src/App.tsx:308`: sample/alias matching (`DXP-SAMPLE`, `7K2M9QRX`) → normalise input (BRAND_GUIDE §7) and match `DLS` IDs and child labels

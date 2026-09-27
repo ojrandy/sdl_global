@@ -53,6 +53,8 @@ interface AdminDataContextType {
   convertQuoteToShipment: (quoteId: string) => Promise<Shipment | undefined>;
   /** Persists a new shipment; resolves with the server-assigned tracking ID applied. Rejects if the server refuses it. */
   createShipment: (shipmentData: Partial<Shipment>) => Promise<Shipment>;
+  /** Return to origin, persisted server-side: the return is its own shipment with a server-assigned DLS ID. */
+  initiateReturn: (trackingNumber: string, reason: string) => Promise<{ success: boolean; error?: string; returnTrackingNumber?: string }>;
   updateSettings: (newSettings: Partial<AdminSettings>) => Promise<{ success: boolean; error?: string }>;
   markNotificationRead: (id: string) => void;
   getShipment: (trackingNumber: string) => Shipment | undefined;
@@ -236,6 +238,22 @@ const normalizeShipment = (s: any): Shipment => {
       await api.updateShipment(updated.trackingNumber, updated);
     } catch (err) {
       console.error('[API] Failed to save shipment edit:', err);
+    }
+  };
+
+  const initiateReturn = async (trackingNumber: string, reason: string): Promise<{ success: boolean; error?: string; returnTrackingNumber?: string }> => {
+    try {
+      const { original, returnShipment } = await api.initiateReturn(trackingNumber, reason, 'Administrator');
+      const updatedOriginal = normalizeShipment(original);
+      const created = normalizeShipment(returnShipment);
+      setShipments(prev => [
+        created,
+        ...prev.map(s => s.trackingNumber.toUpperCase() === updatedOriginal.trackingNumber.toUpperCase() ? updatedOriginal : s)
+      ]);
+      return { success: true, returnTrackingNumber: created.trackingNumber };
+    } catch (err: any) {
+      console.error('[API] Failed to initiate return:', err);
+      return { success: false, error: err?.message || 'the server did not respond' };
     }
   };
 
@@ -1041,6 +1059,7 @@ const normalizeShipment = (s: any): Shipment => {
       createQuoteRequest,
       convertQuoteToShipment,
       createShipment,
+      initiateReturn,
       updateSettings,
       markNotificationRead,
       getShipment,

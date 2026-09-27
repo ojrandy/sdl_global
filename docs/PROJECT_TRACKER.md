@@ -131,7 +131,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 9 | Social media links | 3.1 |
 | 10 | ~~Admin subdomain name~~ **Resolved: `private.sdlgloballogistics.com`** | 7.3 |
 | 11 | Lawyer review of legal pages | 3.11 |
-| 12 | Returns: a return's DLS ID lives only in browser state (`returnLeg` has no DB column or route), so it's lost on refresh, can't be tracked publicly and isn't checked for uniqueness. Decide: store the return as its own linked shipment row (recommended: trackable, server-assigned ID) or add a `return_leg_json` column. | 1.8 follow-up |
+| 12 | ~~Returns kept only in browser state~~ **Resolved 2026-09-28: a return is its own linked shipment row (`POST /api/shipments/:id/return`).** Still browser-only after a control action: `statusMessage`, the audit log and the hold "frozen" flag (no columns). Decide whether to persist them. | 1.8 follow-up |
 
 ## Decisions log
 | Date | Decision |
@@ -141,6 +141,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-27 | Demo shipments keep their current routes until Phase 2: position labels come from `US_METRO_DATABASE`, so intercontinental demo routes would show US city names. Revisit in 1.10 once 2.2/2.3 land. |
 | 2026-09-27 | Public `/api/track` only accepts DLS IDs (400 for anything else). Records created before the DLS format stay reachable in the admin console. |
 | 2026-09-27 | The server assigns every tracking ID: `POST /api/shipments` and quote conversion ignore any `trackingNumber` in the body (the public route must not let callers pick IDs). Admin create, quick create, the Ship page and quote conversion now wait for the server and use its ID. If the server fails, nothing is added locally and an error is shown (previously a local-only shipment appeared with an ID the server never saved). |
+| 2026-09-28 | Returns are real shipments: each return gets its own shipment row and server-assigned DLS ID, linked both ways (`return_leg_json` on the original, `return_of_tracking` on the return). One return per shipment; a return can't itself be returned (409). Columns added, none renamed. |
 | 2026-09-26 | Keep the four existing service lines (Priority Express, Scheduled Linehaul/Freight, Vehicle Transport, Secure Vault). |
 | 2026-09-26 | Palette to be derived from the SDL logo. |
 | 2026-09-26 | Tracking ID = `DLS` + 5 characters, 8 total. |
@@ -170,6 +171,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | 1.2 / 1.3 | Prompt 07: new `tokens.css` (--sdl-* per BRAND_GUIDE §4.1 + rgb triplets + role aliases); 1,258 token refs remapped, 500 hard-coded brand hexes and 197 rgba values moved to the palette (CSS via var(), TS/TSX via literal hex for Leaflet/SVG/jsPDF), 610 `dxp-`/orange class renames across 71 files, 19 CSS header comments rebranded. Build passes; Home / Track Result / Admin checked at 375 and 1440 against before screenshots. |
 | 2026-09-26 | 0.2 | Docs are in the repo (`CLAUDE.md` at the root, the rest in `/docs`). |
 | 2026-09-27 | 1.8 / 1.9 | Server-authoritative IDs (see Decisions); normaliser keeps a `-NN` piece suffix and accepts Unicode dashes; `parsePieceLabel()`; `src/shared` in `tsconfig.server.json`; `npm test` (8 tests); Track page tells "bad format" apart from "not found". Verified on a scratch DB: 15 API checks, forced-collision retry, admin wizard → public track by `dls xxx-xx - 01`, Ship page booking. |
+| 2026-09-28 | 1.8 follow-up | Server IDs now use `crypto.randomInt` (BRAND_GUIDE §7; the shared generator takes a random source). Returns are stored: `POST /api/shipments/:id/return` creates the return as its own shipment (new DLS ID, route and parties swapped, pieces relabelled) in one transaction; new columns `return_leg_json` / `return_of_tracking`; public page links both ways; `applyReturnToOrigin` removed from planningEngine. Verified: 15 API checks incl. 401/400/404/409, public lookup of the return's piece label, return from the admin control modal on a DB created before the migration. |
 ---
 
 ## System notes (codebase walkthrough, updated 2026-09-26 for commit `6b8185f`)

@@ -181,6 +181,16 @@ export const api = {
     return handleResponse<Shipment>(res);
   },
 
+  // Return to origin: the server creates the return as its own shipment with a new DLS ID.
+  async initiateReturn(trackingNumber: string, reason: string, operator?: string): Promise<{ original: Shipment; returnShipment: Shipment }> {
+    const res = await fetch(`${API_BASE}/shipments/${encodeURIComponent(trackingNumber)}/return`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason, operator })
+    });
+    return handleResponse<{ original: Shipment; returnShipment: Shipment }>(res);
+  },
+
   async deleteShipment(trackingNumber: string): Promise<{ success: boolean; message: string }> {
     const res = await fetch(`${API_BASE}/shipments/${encodeURIComponent(trackingNumber)}`, {
       method: 'DELETE'
