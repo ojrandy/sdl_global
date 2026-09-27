@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
+import { SESSION_COOKIE } from '../middleware/auth.js';
 
 export const authRouter = Router();
 
@@ -54,7 +55,7 @@ authRouter.post('/login', loginLimiter, async (req: Request, res: Response) => {
 // POST /api/auth/logout
 authRouter.post('/logout', (req: Request, res: Response) => {
   req.session.destroy(() => {
-    res.clearCookie('dxp.sid');
+    res.clearCookie(SESSION_COOKIE);
     res.json({ success: true });
   });
 });

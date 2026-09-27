@@ -14,7 +14,7 @@ import { settingsRouter } from './routes/settings.js';
 import { trackRouter } from './routes/track.js';
 import { statsRouter } from './routes/stats.js';
 import { authRouter } from './routes/auth.js';
-import { requireAdminAuth } from './middleware/auth.js';
+import { requireAdminAuth, SESSION_COOKIE } from './middleware/auth.js';
 
 dotenv.config(); // reload trigger for tsx watch after .env changes
 
@@ -90,7 +90,7 @@ if (ADMIN_PROXY_TARGET) {
   }
 
   app.use(session({
-    name: 'dxp.sid',
+    name: SESSION_COOKIE,
     secret: process.env.SESSION_SECRET || 'dev-only-insecure-fallback-secret',
     resave: false,
     saveUninitialized: false,
