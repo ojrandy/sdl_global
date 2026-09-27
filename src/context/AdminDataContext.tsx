@@ -6,8 +6,23 @@ import { simulationEngine } from '../services/simulationEngine';
 import { resolveLocation, resolveLocationPrecise } from '../services/geocodingService';
 import { MOCK_SHIPMENTS } from '../data/mockShipments';
 import { applyForwardOnlyShipmentUpdate } from '../utils/shipmentSync';
-import { generateTrackingId, parseTrackingInput, pieceLabel } from '../shared/trackingId';
+import { parseTrackingInput, pieceLabel } from '../shared/trackingId';
 import { COMPANY_SHORT } from '../config/brand';
+
+// The server assigns every tracking ID (BRAND_GUIDE §7). Shipments are built here as drafts
+// without one, and this stamps the ID the server returned onto the draft: the ID, the barcode,
+// and each piece's id and child label (DLS7K2M9-01).
+function withTrackingId<T extends Partial<Shipment>>(draft: T, trackingNumber: string): T {
+  return {
+    ...draft,
+    trackingNumber,
+    barcodeCode: `*${trackingNumber}*`,
+    pieces: (draft.pieces || []).map((p, idx) => {
+      const n = p.pieceNumber || idx + 1;
+      return { ...p, id: `${trackingNumber}-P${n}`, trackingNumber: pieceLabel(trackingNumber, n) };
+    })
+  };
+}
 
 // Deduped by object identity so a shipment listed under more than one key in MOCK_SHIPMENTS
 // can never produce duplicate React keys (and duplicate rows) where this list is rendered.
@@ -36,7 +51,8 @@ interface AdminDataContextType {
   updateQuoteStatus: (quoteId: string, status: QuoteRequestStatus) => void;
   createQuoteRequest: (quoteData: Partial<QuoteRequest>) => QuoteRequest;
   convertQuoteToShipment: (quoteId: string) => Promise<Shipment | undefined>;
-  createShipment: (shipmentData: Partial<Shipment>) => Shipment;
+  /** Persists a new shipment; resolves with the server-assigned tracking ID applied. Rejects if the server refuses it. */
+  createShipment: (shipmentData: Partial<Shipment>) => Promise<Shipment>;
   updateSettings: (newSettings: Partial<AdminSettings>) => Promise<{ success: boolean; error?: string }>;
   markNotificationRead: (id: string) => void;
   getShipment: (trackingNumber: string) => Shipment | undefined;
@@ -526,8 +542,6 @@ const normalizeShipment = (s: any): Shipment => {
     const targetQuote = quoteRequests.find(q => q.id === quoteId);
     if (!targetQuote) return undefined;
 
-    const trackingNumber = generateTrackingId();
-
     const tq = targetQuote as any;
     const originCity = tq.originCity || tq.origin?.city || 'New York';
     const originState = tq.originState || tq.origin?.state || 'NY';
@@ -539,10 +553,9 @@ const normalizeShipment = (s: any): Shipment => {
     const originGeo = await resolveLocationPrecise(tq.originZip || `${originCity}, ${originState}`);
     const destGeo = await resolveLocationPrecise(tq.destZip || `${destCity}, ${destState}`);
 
-    const newShipment: any = {
+    // Draft: the tracking ID, barcode and piece labels come from the server (withTrackingId).
+    const draft: any = {
       id: `shp-${Date.now()}`,
-      trackingNumber,
-      barcodeCode: `*${trackingNumber}*`,
       status: 'RECEIVED',
       statusText: 'Consignment Registered',
       statusMessage: 'Shipment registered in verified linehaul network.',
@@ -598,10 +611,8 @@ const normalizeShipment = (s: any): Shipment => {
       estimatedDeliveryDetail: 'by 5:00 PM',
       pieces: [
         {
-          id: `${trackingNumber}-P1`,
           pieceNumber: 1,
           totalPieces: 1,
-          trackingNumber: pieceLabel(trackingNumber, 1),
           status: 'RECEIVED',
           statusText: 'Consignment Registered',
           currentLocation: `${originCity}, ${originState}`,
@@ -662,6 +673,17 @@ const normalizeShipment = (s: any): Shipment => {
         }
       ]
     };
+
+    // Persist first: the server assigns the tracking ID, and the shipment and its documents
+    // only appear once it has. On failure nothing is added locally, so no unconfirmed ID is shown.
+    let trackingNumber: string;
+    try {
+      ({ trackingNumber } = await api.convertQuoteToShipment(quoteId, draft));
+    } catch (err) {
+      console.error('[API] Failed to convert quote:', err);
+      return undefined;
+    }
+    const newShipment = withTrackingId(draft, trackingNumber);
 
     const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const bolDoc: AdminDocument = {
@@ -734,12 +756,6 @@ const normalizeShipment = (s: any): Shipment => {
     setDocuments(prev => [bolDoc, lblDoc, ...prev]);
     setQuoteRequests(prev => prev.map(q => q.id === quoteId ? { ...q, status: 'CONVERTED', convertedShipmentId: trackingNumber } : q));
 
-    // Send the full shipment this function just built (tracking number included) so the
-    // server persists exactly what the admin is shown — see server/routes/quotes.ts for why
-    // it previously generated its own independent tracking number instead of using this one.
-    api.convertQuoteToShipment(quoteId, newShipment).catch(err => {
-      console.error('[API] Failed to convert quote:', err);
-    });
     // The BOL/Label built above were only ever added to local state — persist them for real
     // so they survive a refresh, the same way DocumentCenterView's generateDocument() does.
     api.generateDocument(bolDoc).catch(err => console.error('[API] Failed to persist auto-generated BOL:', err));
@@ -748,8 +764,7 @@ const normalizeShipment = (s: any): Shipment => {
     return newShipment;
   };
 
-  const createShipment = (shipmentData: Partial<Shipment>): Shipment => {
-    const trackingNumber = shipmentData.trackingNumber || generateTrackingId();
+  const createShipment = async (shipmentData: Partial<Shipment>): Promise<Shipment> => {
 
     const originCity = typeof shipmentData.origin === 'object' ? shipmentData.origin.city : (shipmentData.origin || 'New York');
     const originState = typeof shipmentData.origin === 'object' ? shipmentData.origin.state : 'NY';
@@ -768,9 +783,9 @@ const normalizeShipment = (s: any): Shipment => {
           ? (shipmentData.estimatedDelivery as any).date
           : '3-5 Business Days');
 
-    const newShipment: any = {
-      trackingNumber,
-      barcodeCode: `*${trackingNumber}*`,
+    // Draft: the tracking ID, barcode and piece labels come from the server (withTrackingId).
+    // Any trackingNumber the caller passed is only a preview and is not sent.
+    const draft: any = {
       status: shipmentData.status || 'RECEIVED',
       statusText: shipmentData.statusText || 'Consignment Registered',
       statusMessage: shipmentData.statusMessage || 'Shipment registered in verified linehaul network.',
@@ -837,10 +852,8 @@ const normalizeShipment = (s: any): Shipment => {
         ? shipmentData.pieces
         : [
             {
-              id: `${trackingNumber}-P1`,
               pieceNumber: 1,
               totalPieces: shipmentData.totalPieces || 1,
-              trackingNumber: pieceLabel(trackingNumber, 1),
               status: 'RECEIVED',
               statusText: 'Consignment Registered',
               currentLocation: `${originCity}, ${originState}`,
@@ -867,8 +880,11 @@ const normalizeShipment = (s: any): Shipment => {
       internalPricingNote: shipmentData.internalPricingNote
     };
 
+    // Persist first so the shipment only appears locally with the ID the server assigned.
+    // Errors propagate to the caller, which reports them in its own UI.
+    const saved = await api.createShipment(draft);
+    const newShipment = withTrackingId(draft, saved.trackingNumber);
     setShipments(prev => [newShipment, ...prev]);
-    api.createShipment(newShipment).catch(err => console.error('[API] Failed to create shipment:', err));
     return newShipment;
   };
 

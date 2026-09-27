@@ -64,21 +64,22 @@ Audit taken from the `duolingo-express` repo on 2026-09-26. When you work throug
 ## 3. Identifier prefixes (`DXP-`), 64 occurrences in 19 files
 
 ### 3.1 Tracking-ID generators: replace them all with the ONE shared `generateTrackingId()`
-- [ ] `server/routes/shipments.ts:216`: `DXP-2026-${Math.random()…}` (the **server** generator is the authority; add a uniqueness check)
-- [ ] `server/routes/quotes.ts:258`: quote → shipment conversion
-- [ ] `src/context/AdminDataContext.tsx:528` and `:752`
-- [ ] `src/admin/pages/CreateShipmentView.tsx:337`
-- [ ] `src/pages/ShipPage.tsx:181`
-- [ ] `src/services/planningEngine.ts:638`: return-to-origin → a new DLS ID linked to the original (BRAND_GUIDE §7)
+Shared module: `src/shared/trackingId.ts` (generate, normalise, validate, `parsePieceLabel`, `pieceLabel`); server allocator with DB uniqueness check + retry: `server/trackingIds.ts`. Tests: `npm test` (`scripts/trackingId.test.ts`).
+- [x] `server/routes/shipments.ts:216`: `DXP-2026-${Math.random()…}` (the **server** generator is the authority; add a uniqueness check). *Always generates; a client-sent ID is ignored.*
+- [x] `server/routes/quotes.ts:258`: quote → shipment conversion. *Always generates; a client-sent ID is ignored.*
+- [x] `src/context/AdminDataContext.tsx:528` and `:752`. *No longer generate: they send a draft and adopt the ID the server returns.*
+- [x] `src/admin/pages/CreateShipmentView.tsx:337`. *Shows `DLS·····` until the server assigns the ID.*
+- [x] `src/pages/ShipPage.tsx:181`. *Uses the server-assigned ID.*
+- [x] `src/services/planningEngine.ts:638`: return-to-origin → a new DLS ID linked to the original (BRAND_GUIDE §7). *`RTO-` gone; see tracker Blocked #12 (the return leg is never persisted).*
 
 ### 3.2 Lookup and matching
-- [ ] `src/App.tsx:308`: sample/alias matching (`DXP-SAMPLE`, `7K2M9QRX`) → normalise input (BRAND_GUIDE §7) and match `DLS` IDs and child labels
-- [ ] `src/data/mockShipments.ts:304–409`: alias map keys
-- [ ] `server/routes/track.ts`: add the normaliser + regex validation before the DB lookup (return 400 for a malformed ID, 404 for not found)
+- [x] `src/App.tsx:308`: sample/alias matching (`DXP-SAMPLE`, `7K2M9QRX`) → normalise input (BRAND_GUIDE §7) and match `DLS` IDs and child labels
+- [x] `src/data/mockShipments.ts:304–409`: alias map keys
+- [x] `server/routes/track.ts`: add the normaliser + regex validation before the DB lookup (return 400 for a malformed ID, 404 for not found)
 
 ### 3.3 Display, placeholders, help text
-- [ ] `src/pages/TrackPage.tsx` (2), `HomePage.tsx:1040/1044` (barcode demo), `HelpPage.tsx:52/59` (the "16-character" text → "8-character"), `ContactPage.tsx:80/268`, `SupportModal.tsx:71`, `TrackResultPage.tsx:141` (fallback), `TrackingEventsView.tsx:130–132` (default selection → first shipment)
-- [ ] Type comments: `src/types/shipment.ts:62`, `src/types/admin.ts:71/98`
+- [x] `src/pages/TrackPage.tsx` (2), `HomePage.tsx:1040/1044` (barcode demo), `HelpPage.tsx:52/59` (the "16-character" text → "8-character"), `ContactPage.tsx:80/268`, `SupportModal.tsx:71`, `TrackResultPage.tsx:141` (fallback), `TrackingEventsView.tsx:130–132` (default selection → first shipment). *TrackPage also separates "not a tracking ID" (format help) from "not found".*
+- [x] Type comments: `src/types/shipment.ts:62`, `src/types/admin.ts:71/98`
 
 ### 3.4 Other references
 - [ ] Seals `DXP-SEAL-892401` → `SDL-SL-######`: CreateShipmentView.tsx:173, 615, 2631, 2667

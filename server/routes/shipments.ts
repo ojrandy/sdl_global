@@ -4,7 +4,7 @@ import { syncTimeBasedProgress } from '../progress.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
 import { generateUniqueTrackingId } from '../trackingIds.js';
-import { parseTrackingInput, isValidTrackingId, normalizeTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
+import { parseTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
 import { COMPANY_SHORT } from '../../src/config/brand.js';
 
 export const shipmentsRouter = Router();
@@ -203,23 +203,10 @@ shipmentsRouter.get('/:trackingNumber', requireAdminAuth, (req: Request, res: Re
 shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
   try {
     const s = req.body;
-    let trackingNumber: string = s.trackingNumber ? normalizeTrackingInput(s.trackingNumber) : '';
-    if (trackingNumber) {
-      if (!isValidTrackingId(trackingNumber)) {
-        return res.status(400).json({ success: false, error: `"${s.trackingNumber}" is not a valid tracking ID.` });
-      }
-      // The client (CreateShipmentView) generates its own tracking number up front and
-      // shows it to the admin before this request is even sent — if it happens to collide
-      // with an existing one (vanishingly rare, but possible), fail with a clean, specific
-      // error instead of letting a raw SQLite UNIQUE constraint violation surface as an
-      // opaque 500.
-      const collision = db.prepare('SELECT 1 FROM shipments WHERE tracking_number = ?').get(trackingNumber);
-      if (collision) {
-        return res.status(409).json({ success: false, error: `Tracking number ${trackingNumber} is already in use. Please retry — a new number will be generated.` });
-      }
-    } else {
-      trackingNumber = generateUniqueTrackingId();
-    }
+    // The server is the authority on tracking IDs (BRAND_GUIDE §7): any trackingNumber in the
+    // body is ignored and the ID comes back in the response for the client to adopt. This
+    // route is public, so a caller must never be able to choose its own ID.
+    const trackingNumber = generateUniqueTrackingId();
     const barcodeCode = `*${trackingNumber}*`;
     const createdAt = s.createdAt || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const lastUpdated = 'Just now';

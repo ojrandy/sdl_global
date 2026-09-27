@@ -21,6 +21,7 @@ import { PRIMARY_SHIPMENT, getShipmentByTrackingNumber } from '../data/mockShipm
 import { Shipment } from '../types/shipment';
 import { api } from '../services/api';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { parseTrackingInput } from '../shared/trackingId';
 import './TrackPage.css';
 
 interface TrackPageProps {
@@ -154,14 +155,25 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
 
           {/* Not Found Alert Banner */}
           {notFoundQuery && (
-            <div className="track-not-found-banner animate-fade-in">
+            <div className="track-not-found-banner animate-fade-in" role="alert">
               <AlertTriangle size={20} className="text-red-500 flex-shrink-0" />
-              <div>
-                <strong>Consignment Reference Not Found</strong>
-                <p>
-                  No active shipment or rate inquiry matches <span className="font-mono font-bold">"{notFoundQuery}"</span>. Please check the tracking number printed on your physical label or dispatch manifest.
-                </p>
-              </div>
+              {/* Malformed input (neither a tracking ID nor a quote reference) gets format help;
+                  a well-formed ID that isn't on file gets "not found" (same split as /api/track 400/404). */}
+              {!parseTrackingInput(notFoundQuery) && !notFoundQuery.trim().toUpperCase().startsWith('QR') ? (
+                <div>
+                  <strong>That doesn't look like a tracking ID</strong>
+                  <p>
+                    <span className="font-mono font-bold">"{notFoundQuery}"</span> isn't in the right format. Enter your 8-character tracking ID, e.g. <span className="font-mono">DLS7K2M9</span> (piece labels such as <span className="font-mono">DLS7K2M9-01</span> work too), or a quote reference starting with QR.
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <strong>Consignment Reference Not Found</strong>
+                  <p>
+                    No active shipment or rate inquiry matches <span className="font-mono font-bold">"{notFoundQuery}"</span>. Please check the tracking number printed on your physical label or dispatch manifest.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

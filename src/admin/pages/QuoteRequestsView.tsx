@@ -122,10 +122,10 @@ export const QuoteRequestsView: React.FC = () => {
     setIsConverting(true);
     try {
       const createdShipment = await convertQuoteToShipment(quoteId);
-      if (createdShipment) {
-        setSuccessToast(`Accepted quote ${quoteId} converted directly to master shipment ${createdShipment.trackingNumber}!`);
-        setTimeout(() => setSuccessToast(null), 5000);
-      }
+      setSuccessToast(createdShipment
+        ? `Accepted quote ${quoteId} converted directly to master shipment ${createdShipment.trackingNumber}!`
+        : `Quote ${quoteId} could not be converted: the server did not confirm a tracking ID. Nothing was created; please try again.`);
+      setTimeout(() => setSuccessToast(null), 5000);
     } finally {
       setIsConverting(false);
     }

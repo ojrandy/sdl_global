@@ -3,7 +3,7 @@ import { db } from '../db.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
 import { generateUniqueTrackingId } from '../trackingIds.js';
-import { isValidTrackingId, normalizeTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
+import { pieceLabel } from '../../src/shared/trackingId.js';
 
 export const quotesRouter = Router();
 
@@ -240,12 +240,10 @@ quotesRouter.patch('/:id/status', (req: Request, res: Response) => {
 
 // POST /api/quotes/:id/convert (Convert quote to live active shipment)
 //
-// The client (AdminDataContext.convertQuoteToShipment) already builds a full, richer
-// shipment object client-side — including its own tracking number — and shows it to the
-// admin immediately. It's passed here as the request body and treated as authoritative
-// (same "client generates it, server respects it" pattern used for documents), so the
-// tracking number and details the admin sees are exactly what gets persisted, instead of
-// this route silently generating its own different tracking number in parallel.
+// The client (AdminDataContext.convertQuoteToShipment) sends the richer shipment details it
+// built (geocoded origin/destination, sender, recipient, cargo), which are persisted as sent.
+// The tracking ID is always generated here, since the server is the authority
+// (BRAND_GUIDE §7), and returned for the client to adopt.
 quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
@@ -256,14 +254,7 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
 
     const q = formatQuote(quoteRow)!;
     const s = req.body && typeof req.body === 'object' ? req.body : {};
-    const requested = s.trackingNumber ? normalizeTrackingInput(s.trackingNumber) : '';
-    if (requested && !isValidTrackingId(requested)) {
-      return res.status(400).json({ success: false, error: `"${s.trackingNumber}" is not a valid tracking ID.` });
-    }
-    if (requested && db.prepare('SELECT 1 FROM shipments WHERE tracking_number = ?').get(requested)) {
-      return res.status(409).json({ success: false, error: `Tracking number ${requested} is already in use.` });
-    }
-    const trackingNumber = requested || generateUniqueTrackingId();
+    const trackingNumber = generateUniqueTrackingId();
     const createdAt = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     // The quote's raw stored dimensions (an object, e.g. {length,width,height}) — formatQuote()

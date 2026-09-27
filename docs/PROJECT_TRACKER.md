@@ -52,7 +52,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [x] 1.5 Update `index.html`: title, description, Open Graph/Twitter tags, theme-color, canonical (CONTENT.md §1).
 - [x] 1.6 Update `package.json` name → `sdl-global-logistics`; rename DB file default `duolingo_express.db` → `sdl_global.db` (server/db.ts, server/index.ts, .env.example).
 - [x] 1.7 Replace all emails with `info@sdlgloballogistics.com` (defaults in `server/db.ts` settings, Header, Contact, PublicQuoteResult, Admin Settings).
-- [x] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3).
+- [x] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3). *The server assigns every ID; clients adopt it. Tests: `npm test`.*
 - [x] 1.9 Update tracking input validation, placeholders and help text to the new 8-character format.
 - [~] 1.10 Replace demo data (`src/data/mockShipments.ts`, `server/seed.ts`) with SDL-branded, worldwide demo shipments using DLS IDs. *DLS IDs, SDL names and fictional people done; the routes stay domestic until Phase 2 (2.2/2.3) can geocode and draw worldwide legs.*
 - [ ] 1.11 Replace the other ID prefixes: seals, support tickets, invoices, returns (REBRAND_MAP §3).
@@ -131,6 +131,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 9 | Social media links | 3.1 |
 | 10 | ~~Admin subdomain name~~ **Resolved: `private.sdlgloballogistics.com`** | 7.3 |
 | 11 | Lawyer review of legal pages | 3.11 |
+| 12 | Returns: a return's DLS ID lives only in browser state (`returnLeg` has no DB column or route), so it's lost on refresh, can't be tracked publicly and isn't checked for uniqueness. Decide: store the return as its own linked shipment row (recommended: trackable, server-assigned ID) or add a `return_leg_json` column. | 1.8 follow-up |
 
 ## Decisions log
 | Date | Decision |
@@ -139,6 +140,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-27 | Admin session cookie renamed `dxp.sid` → `sdl.sid` (owner approved signing everyone out once). |
 | 2026-09-27 | Demo shipments keep their current routes until Phase 2: position labels come from `US_METRO_DATABASE`, so intercontinental demo routes would show US city names. Revisit in 1.10 once 2.2/2.3 land. |
 | 2026-09-27 | Public `/api/track` only accepts DLS IDs (400 for anything else). Records created before the DLS format stay reachable in the admin console. |
+| 2026-09-27 | The server assigns every tracking ID: `POST /api/shipments` and quote conversion ignore any `trackingNumber` in the body (the public route must not let callers pick IDs). Admin create, quick create, the Ship page and quote conversion now wait for the server and use its ID. If the server fails, nothing is added locally and an error is shown (previously a local-only shipment appeared with an ID the server never saved). |
 | 2026-09-26 | Keep the four existing service lines (Priority Express, Scheduled Linehaul/Freight, Vehicle Transport, Secure Vault). |
 | 2026-09-26 | Palette to be derived from the SDL logo. |
 | 2026-09-26 | Tracking ID = `DLS` + 5 characters, 8 total. |
@@ -167,6 +169,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | 1.1 (partial) + admin host | Prompt 05: `src/config/brand.ts`, `useCompanyContact`; `isAdminHost()` reads `ADMIN_HOST`; robots noindex + console title on admin; fake phones/addresses/USDOT/social links removed or hidden across Header, Footer, Home, Contact, Help, Quote, PublicQuoteResult, Track, TrackResult, About, Legal, Locations, Services. Build passes; login + host-only Secure cookie verified on a `private.` Host header (production mode). |
 | 2026-09-26 | 1.2 / 1.3 | Prompt 07: new `tokens.css` (--sdl-* per BRAND_GUIDE §4.1 + rgb triplets + role aliases); 1,258 token refs remapped, 500 hard-coded brand hexes and 197 rgba values moved to the palette (CSS via var(), TS/TSX via literal hex for Leaflet/SVG/jsPDF), 610 `dxp-`/orange class renames across 71 files, 19 CSS header comments rebranded. Build passes; Home / Track Result / Admin checked at 375 and 1440 against before screenshots. |
 | 2026-09-26 | 0.2 | Docs are in the repo (`CLAUDE.md` at the root, the rest in `/docs`). |
+| 2026-09-27 | 1.8 / 1.9 | Server-authoritative IDs (see Decisions); normaliser keeps a `-NN` piece suffix and accepts Unicode dashes; `parsePieceLabel()`; `src/shared` in `tsconfig.server.json`; `npm test` (8 tests); Track page tells "bad format" apart from "not found". Verified on a scratch DB: 15 API checks, forced-collision retry, admin wizard → public track by `dls xxx-xx - 01`, Ship page booking. |
 ---
 
 ## System notes (codebase walkthrough, updated 2026-09-26 for commit `6b8185f`)
@@ -179,7 +182,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 
 **Server progress.** `server/progress.ts` advances progress and the map position on every read. It imports `src/services/{routingEngine,planningEngine,geocodingService}.ts`, so those files are **shared with Node** and must stay DOM-free.
 
-**Where tracking IDs are created.** Six places, each making its own ID: `server/routes/shipments.ts:216` (fallback only), `server/routes/quotes.ts:258`, `AdminDataContext.tsx:528` & `:752`, `CreateShipmentView.tsx:337` (`DXP-2026-` + 8 chars), `ShipPage.tsx:181`, and `planningEngine.ts:638` (`DXP-RTO-…`). **The client usually generates the ID and the server accepts it** (`POST /api/shipments` takes `body.trackingNumber`, returns 409 on collision, even on the public, unauthenticated route). Piece suffixes are inconsistent (`-01`, `-PL01`, `-CTR01`, `-FR01`, `-DOC01`, `-PET01`; piece ids `-P1`). `/api/track` does exact matching (case-insensitive) with no child→parent resolution.
+**Where tracking IDs are created.** *(Updated 2026-09-27, tasks 1.8/1.9: IDs are now allocated only by `server/trackingIds.ts` via `src/shared/trackingId.ts`; the clients adopt the server's ID; piece labels are always `DLSxxxxx-NN`; `/api/track` normalises input and resolves child labels. The rest of this note describes the state before that.)* Six places, each making its own ID: `server/routes/shipments.ts:216` (fallback only), `server/routes/quotes.ts:258`, `AdminDataContext.tsx:528` & `:752`, `CreateShipmentView.tsx:337` (`DXP-2026-` + 8 chars), `ShipPage.tsx:181`, and `planningEngine.ts:638` (`DXP-RTO-…`). **The client usually generates the ID and the server accepts it** (`POST /api/shipments` takes `body.trackingNumber`, returns 409 on collision, even on the public, unauthenticated route). Piece suffixes are inconsistent (`-01`, `-PL01`, `-CTR01`, `-FR01`, `-DOC01`, `-PET01`; piece ids `-P1`). `/api/track` does exact matching (case-insensitive) with no child→parent resolution.
 
 **Admin auth.** A single shared password, checked with `bcrypt.compare` against `ADMIN_PASSWORD_HASH` (rate-limited to 20 per 15 min). It sets `req.session.isAdmin`. Session store is in memory: cookie `dxp.sid`, httpOnly, sameSite=lax, secure in production, 12 h, trust proxy 1. **Every restart or redeploy logs everyone out.** `requireAdminAuth` is now a plain session check; the Origin/CSRF check was removed (`dd47754`), so CSRF protection relies on SameSite=lax alone. Shipments, quotes, documents and settings gate per route; stats is gated at the mount.
 

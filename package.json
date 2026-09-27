@@ -14,7 +14,8 @@
     "build": "tsc && vite build && tsc -p tsconfig.server.json",
     "postinstall": "npm run build",
     "start": "node dist-server/server/index.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --import tsx --test scripts/*.test.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

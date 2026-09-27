@@ -25,7 +25,7 @@ import { Barcode } from '../components/Barcode';
 import { useAdminData } from '../context/AdminDataContext';
 import { resolveLocation } from '../services/geocodingService';
 import './ShipPage.css';
-import { generateTrackingId, pieceLabel } from '../shared/trackingId';
+import { pieceLabel } from '../shared/trackingId';
 import { COMPANY_SHORT } from '../config/brand';
 
 interface ShipPageProps {
@@ -171,7 +171,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
       return;
@@ -179,14 +179,12 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
     setIsSubmitting(true);
 
-    const newTrackingId = generateTrackingId();
-    setGeneratedTracking(newTrackingId);
-
+    // Piece ids and labels (DLSxxxxx-NN) are stamped from the server-assigned ID in createShipment.
     const piecesFormatted = piecesList.map((p, idx) => ({
-      id: `${newTrackingId}-P${idx + 1}`,
+      id: '',
       pieceNumber: idx + 1,
       totalPieces: piecesList.length,
-      trackingNumber: pieceLabel(newTrackingId, idx + 1),
+      trackingNumber: '',
       status: 'AWAITING_PICKUP' as const,
       statusText: 'Consignment Tender Staged for Intake',
       currentLocation: `${senderCity}, ${senderState}`,
@@ -201,87 +199,95 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     const originGeo = resolveLocation([senderCity.trim(), senderState.trim()].filter(Boolean).join(', ')) || resolveLocation(senderCity.trim()) || resolveLocation(senderState.trim());
     const destGeo = resolveLocation([recipientCity.trim(), recipientState.trim()].filter(Boolean).join(', ')) || resolveLocation(recipientCity.trim()) || resolveLocation(recipientState.trim());
 
-    // Register into persistent application state & backend database
-    createShipment({
-      trackingNumber: newTrackingId,
-      barcodeCode: `*${newTrackingId}*`,
-      status: 'AWAITING_PICKUP',
-      statusText: 'Consignment Tender Registered · Awaiting Intake Scan',
-      statusMessage: `Consignment registered in the ${COMPANY_SHORT} intake system. Linear Code 128 piece barcodes assigned.`,
-      health: 'ON_TRACK',
-      progressPercent: 10,
-      lastUpdated: 'Just now',
-      createdAt: 'Today',
-      service: getServiceName(),
-      shipmentType: 'Parcel',
-      cargoCategory: 'Commercial Goods',
-      cargoDescription: piecesList[0]?.description || 'Commercial Express Consignment',
-      totalWeightLbs: totalWeight,
-      totalPieces: totalPieces,
-      declaredValue: parseFloat(declaredValue) || 1000,
-      dimensions: {
-        length: parseFloat(piecesList[0]?.length) || 18,
-        width: parseFloat(piecesList[0]?.width) || 14,
-        height: parseFloat(piecesList[0]?.height) || 10
-      },
-      origin: {
-        city: senderCity,
-        state: senderState,
-        country: 'United States',
-        lat: originGeo?.lat || 31.9686,
-        lng: originGeo?.lng || -99.9018
-      },
-      destination: {
-        city: recipientCity,
-        state: recipientState,
-        country: 'United States',
-        lat: destGeo?.lat || 38.9072,
-        lng: destGeo?.lng || -77.0369
-      },
-      currentLocation: `${senderCity}, ${senderState}`,
-      currentFacility: `${senderCity} Regional Gateway`,
-      sender: {
-        company: senderCompany,
-        name: senderContact,
-        phone: senderPhone,
-        addressLine: senderAddress,
-        city: senderCity,
-        state: senderState,
-        postalCode: senderZip,
-        country: 'United States'
-      },
-      recipient: {
-        company: recipientCompany,
-        name: recipientContact,
-        phone: recipientPhone,
-        addressLine: recipientAddress,
-        city: recipientCity,
-        state: recipientState,
-        postalCode: recipientZip,
-        country: 'United States'
-      },
-      estimatedDelivery: '2-3 Business Days',
-      estimatedDeliveryDetail: 'by 5:00 PM',
-      pieces: piecesFormatted,
-      events: [
-        {
-          id: `ev-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          displayDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          displayTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          status: 'AWAITING_PICKUP',
-          title: 'Consignment Tender Registered & Barcodes Provisioned',
-          location: `${senderCity}, ${senderState}`,
-          facility: `${senderCity} Intake Hub`,
+    // Register into persistent application state & backend database. The server assigns the
+    // tracking ID; the confirmation and the BOL below use the one it returned.
+    let newTrackingId: string;
+    try {
+      const created = await createShipment({
+        status: 'AWAITING_PICKUP',
+        statusText: 'Consignment Tender Registered · Awaiting Intake Scan',
+        statusMessage: `Consignment registered in the ${COMPANY_SHORT} intake system. Linear Code 128 piece barcodes assigned.`,
+        health: 'ON_TRACK',
+        progressPercent: 10,
+        lastUpdated: 'Just now',
+        createdAt: 'Today',
+        service: getServiceName(),
+        shipmentType: 'Parcel',
+        cargoCategory: 'Commercial Goods',
+        cargoDescription: piecesList[0]?.description || 'Commercial Express Consignment',
+        totalWeightLbs: totalWeight,
+        totalPieces: totalPieces,
+        declaredValue: parseFloat(declaredValue) || 1000,
+        dimensions: {
+          length: parseFloat(piecesList[0]?.length) || 18,
+          width: parseFloat(piecesList[0]?.width) || 14,
+          height: parseFloat(piecesList[0]?.height) || 10
+        },
+        origin: {
           city: senderCity,
           state: senderState,
-          description: `Shipment tendered via customer intake portal. Courier scheduled for pickup: ${pickupWindow}. Official BOL manifest and labels will be issued by agency dispatch.`,
-          isCompleted: true,
-          isCurrent: true,
-          recordedBy: 'Customer Portal Intake'
-        }
-      ]
-    });
+          country: 'United States',
+          lat: originGeo?.lat || 31.9686,
+          lng: originGeo?.lng || -99.9018
+        },
+        destination: {
+          city: recipientCity,
+          state: recipientState,
+          country: 'United States',
+          lat: destGeo?.lat || 38.9072,
+          lng: destGeo?.lng || -77.0369
+        },
+        currentLocation: `${senderCity}, ${senderState}`,
+        currentFacility: `${senderCity} Regional Gateway`,
+        sender: {
+          company: senderCompany,
+          name: senderContact,
+          phone: senderPhone,
+          addressLine: senderAddress,
+          city: senderCity,
+          state: senderState,
+          postalCode: senderZip,
+          country: 'United States'
+        },
+        recipient: {
+          company: recipientCompany,
+          name: recipientContact,
+          phone: recipientPhone,
+          addressLine: recipientAddress,
+          city: recipientCity,
+          state: recipientState,
+          postalCode: recipientZip,
+          country: 'United States'
+        },
+        estimatedDelivery: '2-3 Business Days',
+        estimatedDeliveryDetail: 'by 5:00 PM',
+        pieces: piecesFormatted,
+        events: [
+          {
+            id: `ev-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            displayDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            displayTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            status: 'AWAITING_PICKUP',
+            title: 'Consignment Tender Registered & Barcodes Provisioned',
+            location: `${senderCity}, ${senderState}`,
+            facility: `${senderCity} Intake Hub`,
+            city: senderCity,
+            state: senderState,
+            description: `Shipment tendered via customer intake portal. Courier scheduled for pickup: ${pickupWindow}. Official BOL manifest and labels will be issued by agency dispatch.`,
+            isCompleted: true,
+            isCurrent: true,
+            recordedBy: 'Customer Portal Intake'
+          }
+        ]
+      });
+      newTrackingId = created.trackingNumber;
+    } catch (err: any) {
+      setFormError(`We couldn't register your shipment: ${err?.message || 'the server did not respond'}. Nothing was saved; please try again.`);
+      setIsSubmitting(false);
+      return;
+    }
+    setGeneratedTracking(newTrackingId);
 
     // Auto-generate Master Record in Document Center
     generateDocument({
@@ -424,7 +430,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
             {/* Piece Barcodes List */}
             <div className="confirm-pieces-grid">
-              {piecesList.map((piece) => (
+              {piecesList.map((piece, idx) => (
                 <div key={piece.id} className="confirm-piece-card">
                   <div className="piece-card-header">
                     <span className="font-bold">PIECE {piece.id} of {piecesList.length.toString().padStart(2, '0')}</span>
@@ -432,7 +438,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   </div>
                   <div className="piece-barcode-render">
                     <Barcode
-                      value={`${generatedTracking}-${piece.id}`}
+                      value={pieceLabel(generatedTracking, idx + 1)}
                       height={32}
                       width={1.1}
                       fontSize={10}

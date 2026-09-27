@@ -52,7 +52,6 @@ import { AdminViewType } from '../AdminLayout';
 import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
 import { COMPANY, COMPANY_SHORT, LEGAL_NAME, TRACKING_PREFIX } from '../../config/brand';
 import './CreateShipmentView.css';
-import { generateTrackingId, pieceLabel } from '../../shared/trackingId';
 
 interface CreateShipmentViewProps {
   onSelectView: (view: AdminViewType) => void;
@@ -323,18 +322,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // ----------------------------------------------------
   // STEP 7 / Creation State
   // ----------------------------------------------------
+  // Set from the server's response on create: the server assigns every tracking ID
+  // (BRAND_GUIDE §7). Until then the UI shows the DLS····· placeholder.
   const [generatedTrackingNumber, setGeneratedTrackingNumber] = useState<string>('');
   const [createdShipmentRecord, setCreatedShipmentRecord] = useState<Shipment | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isCreatingShipment, setIsCreatingShipment] = useState(false);
-
-  // Generate tracking identity on mount or when reaching review
-  useEffect(() => {
-    if (!generatedTrackingNumber) {
-      setGeneratedTrackingNumber(generateTrackingId());
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generatedTrackingNumber]);
 
   // Live preview of the actual computed delivery plan (same engine used at final submit),
   // so the "Expected Delivery Date (ETA)" field shown to the admin reflects a real,
@@ -731,13 +724,14 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   const handleFinalCreateShipment = async () => {
     if (isCreatingShipment) return;
     setIsCreatingShipment(true);
+    // Piece labels (DLSxxxxx-NN) are stamped from the server-assigned ID in createShipment.
     const formattedPieces = shipmentType === 'Vehicle'
       ? [
           {
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
+            trackingNumber: '',
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Vehicle Manifest Created' : 'Vehicle Ingested & Inspected',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -754,7 +748,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           id: String(idx + 1).padStart(2, '0'),
           pieceNumber: idx + 1,
           totalPieces: palletCount,
-          trackingNumber: pieceLabel(generatedTrackingNumber, idx + 1),
+          trackingNumber: '',
           status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
           statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Skid Manifested' : 'Skid Received & Scanned',
           currentLocation: `${senderCity}, ${senderState}`,
@@ -771,7 +765,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
+            trackingNumber: '',
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Container Booked' : 'Container Ingested at Terminal',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -788,7 +782,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           id: String(idx + 1).padStart(2, '0'),
           pieceNumber: idx + 1,
           totalPieces: freightPiecesCount,
-          trackingNumber: pieceLabel(generatedTrackingNumber, idx + 1),
+          trackingNumber: '',
           status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
           statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Freight Linehaul Manifested' : 'Freight Ingested at Raised Dock',
           currentLocation: `${senderCity}, ${senderState}`,
@@ -805,7 +799,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
+            trackingNumber: '',
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Document Pouch Registered' : 'Document Pouch Sealed & Logged',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -823,7 +817,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
+            trackingNumber: '',
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Pet Relocation Manifest Created' : 'Live Pet Health Ingested & Staged',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -839,7 +833,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           id: String(idx + 1).padStart(2, '0'),
           pieceNumber: idx + 1,
           totalPieces: packagesList.length,
-          trackingNumber: pieceLabel(generatedTrackingNumber, idx + 1),
+          trackingNumber: '',
           status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
           statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Shipment Created' : 'Shipment Received at Origin',
           currentLocation: `${senderCity}, ${senderState}`,
@@ -938,7 +932,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     ];
 
     const newShipmentRecord: Shipment = {
-      trackingNumber: generatedTrackingNumber,
+      trackingNumber: '',
       status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
       statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Manifest Created' : 'Received at Origin Facility',
       statusMessage: shipmentType === 'Vehicle'
@@ -1119,8 +1113,18 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       internalPricingNote: internalPricingNotes || undefined
     };
 
-    // 1. Save into central Admin Context & persistent database
-    createShipment(newShipmentRecord);
+    // 1. Save into central Admin Context & persistent database. The server assigns the
+    // tracking ID; everything below uses the one it returned.
+    let created: Shipment;
+    try {
+      created = await createShipment(newShipmentRecord);
+    } catch (err: any) {
+      setErrors({ submit: `Could not register the shipment: ${err?.message || 'the server did not respond'}. Nothing was saved; please try again.` });
+      setIsCreatingShipment(false);
+      return;
+    }
+    const trackingNumber = created.trackingNumber;
+    setGeneratedTrackingNumber(trackingNumber);
 
     // 2. Automatically generate official Bill of Lading (BOL) in Document Center.
     // Trailer/seal/instructions are randomized the same way DocumentCenterView's manual
@@ -1142,8 +1146,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     try {
       generateDocument({
         docType: 'BOL',
-        title: `Uniform Straight Bill of Lading (${generatedTrackingNumber})`,
-        shipmentTracking: generatedTrackingNumber,
+        title: `Uniform Straight Bill of Lading (${trackingNumber})`,
+        shipmentTracking: trackingNumber,
         senderName: senderName || 'Origin Consignor',
         senderCompany: senderCompany || `${COMPANY_SHORT} Intake`,
         senderAddress: senderAddress,
@@ -1187,7 +1191,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       console.warn('Auto BOL document creation:', e);
     }
 
-    setCreatedShipmentRecord(newShipmentRecord);
+    setCreatedShipmentRecord(created);
     setIsCreatingShipment(false);
   };
 
@@ -3827,8 +3831,9 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
 
                 {/* Generated Tracking Identity Display */}
                 <div className="review-identity-card">
-                  <span className="identity-pre-title">GENERATED TRACKING IDENTITY</span>
-                  <strong className="identity-tracking font-mono">{generatedTrackingNumber}</strong>
+                  <span className="identity-pre-title">TRACKING IDENTITY · ASSIGNED ON REGISTRATION</span>
+                  <strong className="identity-tracking font-mono">{generatedTrackingNumber || `${TRACKING_PREFIX}·····`}</strong>
+                  {errors.submit && <span className="field-error-msg" role="alert">{errors.submit}</span>}
                   <div className="review-barcode-svg">
                     <svg className="code128-mini-svg" viewBox="0 0 280 40">
                       <rect x="5" y="2" width="3" height="36" fill="#000000" />
@@ -4015,7 +4020,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                 <div className="b-bar w-4" /><div className="b-bar w-1" /><div className="b-bar w-3" />
               </div>
               <span className="barcode-tracking-text font-mono">
-                {currentStep === 6 ? generatedTrackingNumber : `${TRACKING_PREFIX}·····`}
+                {generatedTrackingNumber || `${TRACKING_PREFIX}·····`}
               </span>
             </div>
           </div>

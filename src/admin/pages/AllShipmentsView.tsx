@@ -154,34 +154,42 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newShip = createShipment({
-      shipmentType,
-      service,
-      totalWeightLbs: parseFloat(weight) || 10,
-      totalPieces: parseInt(pieces) || 1,
-      origin: { city: senderCity, state: senderState, country: 'United States' },
-      destination: { city: recipientCity, state: recipientState, country: 'United States' },
-      sender: {
-        name: senderName,
-        city: senderCity,
-        state: senderState,
-        addressLine: senderAddress,
-        country: 'United States'
-      },
-      recipient: {
-        name: recipientName,
-        city: recipientCity,
-        state: recipientState,
-        addressLine: recipientAddress,
-        country: 'United States'
-      },
-      currentLocation: `${senderCity}, ${senderState}`,
-      currentFacility: `${senderCity} Regional Gateway`,
-      status: 'BOOKED',
-      statusText: 'Consignment Registered'
-    });
+    // The server assigns the tracking ID; on failure nothing is added and the modal stays open.
+    let newShip: Shipment;
+    try {
+      newShip = await createShipment({
+        shipmentType,
+        service,
+        totalWeightLbs: parseFloat(weight) || 10,
+        totalPieces: parseInt(pieces) || 1,
+        origin: { city: senderCity, state: senderState, country: 'United States' },
+        destination: { city: recipientCity, state: recipientState, country: 'United States' },
+        sender: {
+          name: senderName,
+          city: senderCity,
+          state: senderState,
+          addressLine: senderAddress,
+          country: 'United States'
+        },
+        recipient: {
+          name: recipientName,
+          city: recipientCity,
+          state: recipientState,
+          addressLine: recipientAddress,
+          country: 'United States'
+        },
+        currentLocation: `${senderCity}, ${senderState}`,
+        currentFacility: `${senderCity} Regional Gateway`,
+        status: 'BOOKED',
+        statusText: 'Consignment Registered'
+      });
+    } catch (err: any) {
+      setSuccessToast(`Could not register the shipment: ${err?.message || 'the server did not respond'}. Nothing was saved.`);
+      setTimeout(() => setSuccessToast(null), 6000);
+      return;
+    }
 
     setSuccessToast(`Master Consignment ${newShip.trackingNumber} registered successfully!`);
     setShowCreateModal(false);
