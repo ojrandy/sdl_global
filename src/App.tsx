@@ -22,7 +22,7 @@ import { Shipment } from './types/shipment';
 import { QuoteRequest } from './types/admin';
 import { api } from './services/api';
 import { simulationEngine } from './services/simulationEngine';
-import { ADMIN_HOST, ADMIN_CONSOLE_NAME } from './config/brand';
+import { ADMIN_HOST, ADMIN_CONSOLE_NAME, COMPANY } from './config/brand';
 import './styles/global.css';
 
 const KNOWN_PAGES = ['home', 'track', 'services', 'quote', 'ship', 'about', 'help', 'contact', 'legal', 'locations', 'admin'];
@@ -50,6 +50,40 @@ function setRobotsNoIndex(enabled: boolean) {
   } else if (!enabled && tag) {
     tag.remove();
   }
+}
+
+// Page titles and meta descriptions (CONTENT.md §1.1). The defaults also live in index.html,
+// which is what crawlers and link previews see before the app runs.
+interface PageMeta {
+  title: string;
+  description: string;
+}
+
+const DEFAULT_DESCRIPTION =
+  'SDL Global Logistics moves express parcels, freight, vehicles and high-value cargo worldwide, with one tracking ID, live milestones and signed proof of delivery.';
+
+const PAGE_META: Record<string, PageMeta> = {
+  home: { title: `${COMPANY} | Worldwide Express, Freight & Secure Cargo`, description: DEFAULT_DESCRIPTION },
+  track: { title: `Track a Shipment | ${COMPANY}`, description: 'Enter your 8-character SDL tracking ID to see live milestones, location and delivery status.' },
+  services: { title: `Logistics Services | ${COMPANY}`, description: 'Priority express, scheduled air, ocean and road freight, vehicle shipping and secure high-value transport, worldwide.' },
+  quote: { title: `Get a Rate Quote | ${COMPANY}`, description: "Tell us what you're moving and where. A logistics coordinator will send your rate." },
+  ship: { title: `Book a Shipment | ${COMPANY}`, description: 'Book a pickup, build a multi-piece shipment and get your tracking ID in minutes.' },
+  about: { title: `About Us | ${COMPANY}`, description: 'Who we are, how we work and why shippers around the world trust SDL with cargo that matters.' },
+  locations: { title: `Global Network | ${COMPANY}`, description: 'The gateways and trade lanes that connect SDL shipments across Africa, Europe, the Middle East, Asia and the Americas.' },
+  help: { title: `Help Centre | ${COMPANY}`, description: 'Answers on tracking, booking, customs, documents and deliveries.' },
+  contact: { title: `Contact Us | ${COMPANY}`, description: 'Talk to an SDL coordinator, any time zone, any day.' },
+  legal: { title: `Policies | ${COMPANY}`, description: 'Privacy, terms of service, shipping terms and accessibility.' },
+};
+
+function setPageMeta({ title, description }: PageMeta) {
+  document.title = title;
+  let tag = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.name = 'description';
+    document.head.appendChild(tag);
+  }
+  tag.content = description;
 }
 
 function isLocalDevHost(): boolean {
@@ -125,23 +159,21 @@ function MainAppContent() {
     ? (shipments.find(s => s.trackingNumber.toUpperCase() === currentShipment.trackingNumber.toUpperCase()) || currentShipment)
     : null;
 
-  // Dynamic document title update for enhanced UX and B2B professionalism
+  // Per-page <title> and meta description (CONTENT.md §1.1)
   useEffect(() => {
-    const titles: Record<string, string> = {
-      home: 'Duolingo Express | Nationwide Priority Courier & Linehaul Logistics',
-      track: 'Duolingo Express | Live Shipment Tracking & Highway Radar',
-      'track-result': liveShipment ? `Tracking #${liveShipment.trackingNumber} | Duolingo Express` : 'Shipment Details | Duolingo Express',
-      'quote-result': currentQuote ? `Quote #${currentQuote.id} | Duolingo Express` : 'Quote Details | Duolingo Express',
-      services: 'Duolingo Express | Commercial Courier Services & Linehaul Portfolio',
-      quote: 'Duolingo Express | Instant Rate Quote & Tariff Calculator',
-      ship: 'Duolingo Express | Schedule Courier Pickup & Tender',
-      about: 'Duolingo Express | Corporate Provenance, Compliance & Fleet Standards',
-      contact: 'Duolingo Express | 24/7 Logistics Dispatch & Support Desk',
-      help: 'Duolingo Express | Client Support & Help Center',
-      legal: 'Duolingo Express | Carrier Terms of Service & Tariffs',
-      admin: ADMIN_CONSOLE_NAME,
+    const meta: Record<string, PageMeta> = {
+      ...PAGE_META,
+      'track-result': {
+        title: liveShipment ? `Tracking ${liveShipment.trackingNumber} | ${COMPANY}` : PAGE_META.track.title,
+        description: PAGE_META.track.description,
+      },
+      'quote-result': {
+        title: currentQuote ? `Quote ${currentQuote.id} | ${COMPANY}` : PAGE_META.quote.title,
+        description: PAGE_META.quote.description,
+      },
+      admin: { title: ADMIN_CONSOLE_NAME, description: DEFAULT_DESCRIPTION },
     };
-    document.title = titles[currentPage] || 'Duolingo Express | Priority Courier Logistics';
+    setPageMeta(meta[currentPage] || PAGE_META.home);
     setRobotsNoIndex(currentPage === 'admin' || isAdminHost());
   }, [currentPage, liveShipment, currentQuote]);
 

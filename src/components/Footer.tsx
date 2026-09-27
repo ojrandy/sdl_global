@@ -13,7 +13,7 @@ import {
   ChevronRight,
   Mail
 } from 'lucide-react';
-import { SOCIAL, SocialNetwork } from '../config/brand';
+import { LOGO_ALT, LOGO_WHITE, SOCIAL, SocialNetwork } from '../config/brand';
 import './Footer.css';
 
 // Only networks with a real URL in brand.ts are rendered.
@@ -109,8 +109,8 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="sdl-pro-brand-col">
               <div className="sdl-pro-footer-logo" onClick={() => onNavigate('home')}>
                 <img
-                  src="/logo-for-footer-or-any-area-having-thesame-color-as-the-footer.png"
-                  alt="Duolingo Express"
+                  src={LOGO_WHITE}
+                  alt={LOGO_ALT}
                   className="sdl-pro-footer-logo-img"
                 />
               </div>

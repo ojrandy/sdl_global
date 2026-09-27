@@ -132,7 +132,6 @@
   max-width: 270px;
   object-fit: contain;
   display: block;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
 }
 
 .sdl-pro-brand-desc {

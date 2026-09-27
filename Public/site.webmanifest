@@ -1,0 +1,13 @@
+{
+  "name": "SDL Global Logistics",
+  "short_name": "SDL",
+  "description": "SDL Global Logistics moves express parcels, freight, vehicles and high-value cargo worldwide, with one tracking ID, live milestones and signed proof of delivery.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#181818",
+  "icons": [
+    { "src": "/brand/favicon.png?v=3", "sizes": "552x552", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/apple-touch-icon.png?v=3", "sizes": "224x224", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -23,7 +23,7 @@ import {
 import { QuoteRequest } from '../types/admin';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
-import { LEGAL_NAME } from '../config/brand';
+import { LEGAL_NAME, LOGO, LOGO_ALT } from '../config/brand';
 import './PublicQuoteResultPage.css';
 
 interface PublicQuoteResultPageProps {
@@ -383,7 +383,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
         {/* Document Top Bar */}
         <div className="print-doc-header">
           <div className="print-header-left">
-            <img src="/logo.png" alt="Duolingo Express" className="print-doc-logo" />
+            <img src={LOGO} alt={LOGO_ALT} className="print-doc-logo" />
             <div className="print-company-info">
               <strong>{companyName}</strong>
               {headquartersAddress && <span>{headquartersAddress}</span>}

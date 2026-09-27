@@ -38,6 +38,7 @@ import {
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminDocument, DocumentType, DocumentStatus } from '../../types/admin';
 import { Barcode } from '../../components/Barcode';
+import { LOGO, LOGO_ALT } from '../../config/brand';
 import './DocumentCenterView.css';
 
 interface DocumentCenterViewProps {
@@ -1016,7 +1017,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* Label Top Bar */}
                   <div className="lbl-top-row">
                     <div className="lbl-brand-block">
-                      <img src="/logo.png" alt="Duolingo Express" className="doc-preview-logo-img" />
+                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
                       <span className="lbl-brand-sub font-mono">PRIORITY AIR & GROUND COURIER NETWORK</span>
                     </div>
                     <div className="lbl-service-stamp font-mono">
@@ -1116,7 +1117,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* Receipt Header */}
                   <div className="rec-header">
                     <div className="rec-brand">
-                      <img src="/logo.png" alt="Duolingo Express" className="doc-preview-logo-img" />
+                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
                       <p>Official Shipment Receipt & Intake Manifest</p>
                     </div>
                     <div className="rec-meta font-mono">
@@ -1229,7 +1230,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* Invoice Header */}
                   <div className="inv-top-bar">
                     <div className="inv-brand">
-                      <img src="/logo.png" alt="Duolingo Express" className="doc-preview-logo-img" />
+                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
                       <p>Freight & Logistics Financial Services</p>
                       <small className="font-mono">100 Logistics Blvd, Suite 500, New York, NY 10001</small>
                     </div>
@@ -1379,7 +1380,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* BOL Header Grid */}
                   <div className="bol-top-header">
                     <div className="bol-carrier-brand">
-                      <img src="/logo.png" alt="Duolingo Express" className="doc-preview-logo-img" />
+                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
                       <span className="font-mono font-bold text-xs">UNIFORM STRAIGHT BILL OF LADING · ORIGINAL - NOT NEGOTIABLE</span>
                     </div>
                     <div className="bol-id-box font-mono">
@@ -1528,7 +1529,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* Certificate Header */}
                   <div className="ins-top-header">
                     <div className="ins-brand">
-                      <img src="/logo.png" alt="Duolingo Express" className="doc-preview-logo-img" />
+                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
                       <p>Cargo Insurance Arranged Through Duolingo Express Freight Services</p>
                     </div>
                     <div className="ins-id-box font-mono">

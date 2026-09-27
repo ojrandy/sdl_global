@@ -17,6 +17,7 @@ import {
   Headphones,
   FileText
 } from 'lucide-react';
+import { COMPANY, LOGO, LOGO_ALT } from '../config/brand';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import './Header.css';
 
@@ -96,8 +97,8 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Brand Logo */}
           <div className="sdl-logo-wrap" onClick={() => handleNav('home')}>
             <img
-              src="/logo.png"
-              alt="Duolingo Express"
+              src={LOGO}
+              alt={LOGO_ALT}
               className="sdl-brand-logo-img"
               onError={(e) => {
                 const target = e.currentTarget;
@@ -106,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
                 if (parent && !parent.querySelector('.sdl-fallback-logo')) {
                   const fallback = document.createElement('div');
                   fallback.className = 'sdl-fallback-logo';
-                  fallback.innerHTML = '<span class="sdl-brand-name">DUOLINGO<span class="text-accent">EXPRESS</span></span>';
+                  fallback.textContent = COMPANY;
                   parent.appendChild(fallback);
                 }
               }}
@@ -193,7 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Drawer Header with Logo and Close */}
             <div className="drawer-header">
               <div className="drawer-logo" onClick={() => handleNav('home')}>
-                <img src="/logo.png" alt="Duolingo Express" className="drawer-logo-img" />
+                <img src={LOGO} alt={LOGO_ALT} className="drawer-logo-img" />
               </div>
               <button
                 type="button"

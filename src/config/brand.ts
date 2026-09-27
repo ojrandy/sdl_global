@@ -13,6 +13,11 @@ export const EMAIL = 'info@sdlgloballogistics.com';
 export const DOMAIN = 'sdlgloballogistics.com';
 export const SITE_URL = `https://${DOMAIN}`;
 
+// Logo files in Public/brand (BRAND_GUIDE §6). Full colour on light surfaces, white on Ink.
+export const LOGO = '/brand/sdl-logo.png';
+export const LOGO_WHITE = '/brand/sdl-logo-white.png';
+export const LOGO_ALT = COMPANY;
+
 // The admin console only opens on <ADMIN_SUBDOMAIN>.<DOMAIN> (plus localhost for development).
 export const ADMIN_SUBDOMAIN = 'private';
 export const ADMIN_HOST = `${ADMIN_SUBDOMAIN}.${DOMAIN}`;

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { api } from '../services/api';
+import { LOGO_ALT, LOGO_WHITE } from '../config/brand';
 import './AdminLayout.css';
 
 export type AdminViewType =
@@ -125,8 +126,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         <div className="admin-sidebar-header">
           <div className="admin-brand-card" onClick={() => onSelectView('operations-center')}>
             <img
-              src="/logo-for-footer-or-any-area-having-thesame-color-as-the-footer.png"
-              alt="Duolingo Express"
+              src={LOGO_WHITE}
+              alt={LOGO_ALT}
               className="admin-brand-logo"
               onError={(e) => {
                 // Fallback if image fails to load
