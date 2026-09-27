@@ -43,7 +43,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             </div>
 
           <h1 className="about-hero-title animate-fade-in">
-            Pioneering Speed, Precision, & Integrity in <span className="about-highlight-orange">American Courier Logistics.</span>
+            Pioneering Speed, Precision, & Integrity in <span className="about-highlight-accent">American Courier Logistics.</span>
           </h1>
 
           <p className="about-hero-lead animate-fade-in">
@@ -124,7 +124,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
               <div className="about-pillars-grid">
                 <div className="pillar-item">
-                  <div className="pillar-icon-box orange">
+                  <div className="pillar-icon-box accent">
                     <Eye size={22} />
                   </div>
                   <div>
@@ -203,7 +203,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           <div className="about-divisions-grid">
             {/* Division 1 */}
             <div className="division-card">
-              <div className="division-icon-wrap orange">
+              <div className="division-icon-wrap accent">
                 <Zap size={26} />
               </div>
               <h3>Priority Express Courier</h3>
@@ -289,7 +289,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               {/* Step 1 */}
               <div className="timeline-card">
                 <div className="timeline-year-badge font-mono">2018</div>
-                <div className="timeline-icon-bubble orange">
+                <div className="timeline-icon-bubble accent">
                   <Compass size={22} />
                 </div>
                 <span className="timeline-stage-tag font-mono">FOUNDATION</span>

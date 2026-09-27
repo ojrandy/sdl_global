@@ -30,7 +30,7 @@ export const CLIENT_LOGOS: ClientBrandLogo[] = [
           kroma
         </text>
         <circle cx="118" cy="29" r="6" fill="#D3070B"/>
-        <circle cx="118" cy="29" r="3" fill="#FFA699"/>
+        <circle cx="118" cy="29" r="3" fill="#FFA598"/>
       </svg>
     )
   },

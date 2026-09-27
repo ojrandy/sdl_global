@@ -1,6 +1,6 @@
 /* ============================================================
    EXECUTIVE CORPORATE FOOTER (MATCHING OFFICIAL DESIGN)
-   Deep Midnight Navy · Orange Swoosh · Custom Dark Logo · 5-Col
+   Ink surface · Accent swoosh · White logo · 5-col
    ============================================================ */
 
 .sdl-pro-footer-wrapper {
@@ -83,8 +83,8 @@
   z-index: 1;
 }
 
-/* Glowing Orange Swoosh Wave in Bottom-Right */
-.footer-orange-swoosh {
+/* Glowing Accent Swoosh Wave in Bottom-Right */
+.footer-accent-swoosh {
   position: absolute;
   right: -50px;
   bottom: -40px;
@@ -205,7 +205,7 @@
   gap: 0.5rem;
 }
 
-.title-orange-dash {
+.title-accent-dash {
   display: block;
   width: 24px;
   height: 2.5px;
@@ -502,7 +502,7 @@
     flex-wrap: wrap;
     justify-content: center;
   }
-  .footer-orange-swoosh {
+  .footer-accent-swoosh {
     display: none;
   }
 }

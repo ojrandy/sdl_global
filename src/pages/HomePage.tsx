@@ -574,7 +574,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <p className="section-desc-sub text-slate-300">
               High-velocity transport options engineered for time-sensitive commercial consignments and private shipments.
             </p>
-            <div className="section-header-line orange" />
+            <div className="section-header-line accent" />
           </div>
 
           <div className="services-showcase-grid">

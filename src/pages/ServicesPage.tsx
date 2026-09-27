@@ -222,7 +222,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           </div>
 
           <h1 className="services-hero-title animate-fade-in">
-            Precision Delivery Speeds for Every <span className="services-highlight-orange">Commercial Consignment.</span>
+            Precision Delivery Speeds for Every <span className="services-highlight-accent">Commercial Consignment.</span>
           </h1>
           <p className="services-hero-sub animate-fade-in">
             From urgent next-morning express courier deliveries to scheduled interstate linehauls and specialized auto transport, Duolingo Express operates a transparent, verified domestic logistics network.
@@ -295,7 +295,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
                 <div className="showcase-time-box">
                   <div className="time-box-item">
-                    <div className="time-icon-box orange">
+                    <div className="time-icon-box accent">
                       <Clock size={20} />
                     </div>
                     <div>
@@ -625,10 +625,10 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
 
             {/* Card 2 */}
             <div className="addon-card-cool">
-              <div className="addon-card-glow-bar glow-orange" />
+              <div className="addon-card-glow-bar glow-accent" />
               <div className="addon-top-meta">
-                <div className="addon-icon-box icon-orange"><Calendar size={26} /></div>
-                <span className="addon-category-tag tag-orange font-mono">EXPEDITED TIMING</span>
+                <div className="addon-icon-box icon-accent"><Calendar size={26} /></div>
+                <span className="addon-category-tag tag-accent font-mono">EXPEDITED TIMING</span>
               </div>
               <h3 className="addon-title-cool">Saturday Priority Delivery</h3>
               <p className="addon-desc-cool">

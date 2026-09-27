@@ -218,7 +218,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
           </div>
 
           <h1 className="quote-hero-title animate-fade-in">
-            Calculate & Request <span className="quote-highlight-orange">Custom Consignment Rates.</span>
+            Calculate & Request <span className="quote-highlight-accent">Custom Consignment Rates.</span>
           </h1>
 
           <p className="quote-hero-lead animate-fade-in">
@@ -237,7 +237,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
              ========================================================================= */
           <div className="quote-confirmation-card animate-fade-in">
             <div className="confirm-top-pill">
-              <span className="pulse-orange-dot" />
+              <span className="pulse-accent-dot" />
               <span>APPLICATION SUBMITTED · PENDING DISPATCH DESK CERTIFICATION</span>
             </div>
 

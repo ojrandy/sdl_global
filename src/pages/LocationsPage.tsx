@@ -70,7 +70,7 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ onNavigate }) => {
           </div>
 
           <h1 className="locations-hero-title animate-fade-in">
-            U.S. Regional Gateways & <span className="locations-highlight-orange">Sortation Hubs.</span>
+            U.S. Regional Gateways & <span className="locations-highlight-accent">Sortation Hubs.</span>
           </h1>
 
           <p className="locations-hero-lead animate-fade-in">

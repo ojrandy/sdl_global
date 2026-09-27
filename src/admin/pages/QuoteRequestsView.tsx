@@ -503,7 +503,7 @@ export const QuoteRequestsView: React.FC = () => {
           <div className="qr-kpi-row">
             <div className="qr-kpi-card">
               <div className="qr-card-header">
-                <div className="qr-circle-icon orange">
+                <div className="qr-circle-icon accent">
                   <Package size={15} />
                 </div>
                 <span className="qr-card-label">TOTAL REQUESTS</span>

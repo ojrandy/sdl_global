@@ -105,7 +105,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
       case 'OUT_FOR_DELIVERY':
         return (
           <span className="ship-status-chip out-delivery">
-            <span className="chip-dot orange" /> Out for Delivery
+            <span className="chip-dot amber" /> Out for Delivery
           </span>
         );
       case 'DELIVERED':
@@ -245,7 +245,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
           tabIndex={0}
         >
           <div className="stat-card-header">
-            <div className="stat-circle-icon orange">
+            <div className="stat-circle-icon accent">
               <Package size={15} />
             </div>
             <span className="stat-label">TOTAL CONSIGNMENTS</span>
@@ -256,14 +256,14 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
           <div className="stat-sparkline-wrap">
             <svg viewBox="0 0 160 48" preserveAspectRatio="none" className="kpi-sparkline-svg">
               <defs>
-                <linearGradient id="spark-grad-orange" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="spark-grad-accent" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#D3070B" stopOpacity="0.32" />
                   <stop offset="100%" stopColor="#D3070B" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path
                 d="M0,36 C25,36 40,24 60,30 C80,36 100,26 120,32 C135,36 145,18 160,32 L160,48 L0,48 Z"
-                fill="url(#spark-grad-orange)"
+                fill="url(#spark-grad-accent)"
               />
               <path
                 d="M0,36 C25,36 40,24 60,30 C80,36 100,26 120,32 C135,36 145,18 160,32"

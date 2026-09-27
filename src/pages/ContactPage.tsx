@@ -115,7 +115,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
           </div>
 
           <h1 className="contact-hero-title animate-fade-in">
-            Connect with Our <span className="contact-highlight-orange">Logistics Operations Team.</span>
+            Connect with Our <span className="contact-highlight-accent">Logistics Operations Team.</span>
           </h1>
 
           <p className="contact-hero-lead animate-fade-in">
@@ -316,7 +316,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
 
               {supportPhone && (
                 <div className="contact-channel-item">
-                  <div className="channel-icon icon-orange"><Phone size={22} /></div>
+                  <div className="channel-icon icon-accent"><Phone size={22} /></div>
                   <div>
                     <small>Toll-Free 24/7 Operations Hotline</small>
                     <strong>{supportPhone}</strong>

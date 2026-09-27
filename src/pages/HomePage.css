@@ -1,6 +1,6 @@
 /* ============================================================
    SDL GLOBAL LOGISTICS — COMPLETE CORPORATE HOMEPAGE STYLESHEET
-   Harmonious Royal Blue, Midnight Slate & Warm Ochre/Orange Accents
+   Graphite primary, Ink surfaces & SDL red accent (tokens.css)
    ============================================================ */
 
 .sdl-homepage-container {
@@ -107,7 +107,7 @@
   margin-top: 0.5rem;
 }
 
-/* Primary Button (Warm Orange Gradient) */
+/* Primary Button (accent gradient) */
 .btn-corp-primary {
   display: inline-flex;
   align-items: center;
@@ -334,7 +334,7 @@
   margin: 1.25rem auto 0 auto;
 }
 
-.section-header-line.orange {
+.section-header-line.accent {
   background: var(--sdl-accent-500);
 }
 

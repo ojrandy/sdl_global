@@ -76,7 +76,7 @@
   margin-bottom: 1rem;
 }
 
-.help-highlight-orange {
+.help-highlight-accent {
   color: var(--sdl-accent-500);
   font-weight: 800;
 }
@@ -253,7 +253,7 @@
   margin-bottom: 1.25rem;
 }
 
-.pillar-icon.icon-orange {
+.pillar-icon.icon-accent {
   background: var(--sdl-accent-50);
   color: var(--sdl-accent-500);
   border: 1px solid var(--sdl-accent-200);

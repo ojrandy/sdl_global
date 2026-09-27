@@ -76,7 +76,7 @@
   margin-bottom: 1rem;
 }
 
-.locations-highlight-orange {
+.locations-highlight-accent {
   color: var(--sdl-accent-500);
   font-weight: 800;
 }

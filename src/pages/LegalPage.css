@@ -76,7 +76,7 @@
   margin-bottom: 1rem;
 }
 
-.legal-highlight-orange {
+.legal-highlight-accent {
   color: var(--sdl-accent-500);
   font-weight: 800;
 }

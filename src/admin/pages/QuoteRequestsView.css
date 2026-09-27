@@ -124,7 +124,7 @@
   flex-shrink: 0;
 }
 
-.qr-circle-icon.orange { background-color: var(--sdl-accent-500); }
+.qr-circle-icon.accent { background-color: var(--sdl-accent-500); }
 .qr-circle-icon.blue { background-color: #2563eb; }
 .qr-circle-icon.emerald { background-color: #059669; }
 .qr-circle-icon.green { background-color: #10b981; }

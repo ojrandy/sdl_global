@@ -1,6 +1,6 @@
 /* ==========================================================================
    SDL GLOBAL LOGISTICS — GUIDED MULTI-STEP CREATE SHIPMENT WORKSPACE
-   Brand Tokens: Deep Navy (var(--sdl-ink-950)), Carrier Orange (var(--sdl-accent-500)),
+   Palette: Ink (--sdl-ink-950) · SDL red accent (--sdl-accent-500),
    Crisp White (#ffffff), Slate (#1e293b, #64748b, #94a3b8)
    ========================================================================== */
 
@@ -496,7 +496,7 @@
   flex-shrink: 0;
 }
 
-.tile-circle-icon.orange { background-color: var(--sdl-accent-500); }
+.tile-circle-icon.accent { background-color: var(--sdl-accent-500); }
 .tile-circle-icon.blue { background-color: #2563eb; }
 .tile-circle-icon.green { background-color: #10b981; }
 .tile-circle-icon.purple { background-color: #7c3aed; }

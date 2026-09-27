@@ -145,7 +145,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
             </div>
 
             <h1 className="track-hero-headline animate-fade-in">
-              Track Your Shipment with <span className="track-highlight-orange">Piece-Level Precision.</span>
+              Track Your Shipment with <span className="track-highlight-accent">Piece-Level Precision.</span>
             </h1>
             <p className="track-hero-subtext animate-fade-in">
               Enter your tracking identifier or Bill of Lading (BOL) reference to inspect real-time linehaul progress, verified scan milestones, and dynamic arrival estimates.
@@ -306,7 +306,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
 
           <div className="track-reference-grid">
             <div className="reference-card">
-              <div className="ref-icon-box orange">
+              <div className="ref-icon-box accent">
                 <FileText size={24} />
               </div>
               <h3>Direct Dispatch Confirmation</h3>

@@ -212,7 +212,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="drawer-action-card track-card"
                 onClick={() => handleNav('track')}
               >
-                <div className="action-icon-wrap orange">
+                <div className="action-icon-wrap accent">
                   <Package size={20} />
                 </div>
                 <div className="action-text">

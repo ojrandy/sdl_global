@@ -1484,7 +1484,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                 <label className="section-field-label">Cargo Handling Category</label>
                 <div className="shipment-type-tiles-grid">
                   {[
-                    { id: 'Parcel', label: 'Parcel', icon: <Package size={19} />, colorClass: 'orange', desc: 'Boxed goods & parts' },
+                    { id: 'Parcel', label: 'Parcel', icon: <Package size={19} />, colorClass: 'accent', desc: 'Boxed goods & parts' },
                     { id: 'Vehicle', label: 'Vehicle', icon: <Car size={19} />, colorClass: 'blue', desc: 'Cars, trucks & autos' },
                     { id: 'Pets', label: 'Live Pets', icon: <PawPrint size={19} />, colorClass: 'rose', desc: 'Live animal transport' },
                     { id: 'Document', label: 'Document', icon: <FileText size={19} />, colorClass: 'green', desc: 'Envelopes & contracts' },

@@ -79,7 +79,7 @@
   flex-shrink: 0;
 }
 
-.tev-circle-icon.orange { background-color: var(--sdl-accent-500); }
+.tev-circle-icon.accent { background-color: var(--sdl-accent-500); }
 .tev-circle-icon.blue { background-color: #2563eb; }
 .tev-circle-icon.emerald { background-color: #059669; }
 .tev-circle-icon.green { background-color: #10b981; }

@@ -157,7 +157,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
           tabIndex={0}
         >
           <div className="ops-card-header">
-            <div className="ops-circle-icon orange">
+            <div className="ops-circle-icon accent">
               <Package size={15} />
             </div>
             <span className="ops-card-label">TOTAL CONSIGNMENTS</span>
@@ -168,14 +168,14 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
           <div className="ops-sparkline-wrap">
             <svg viewBox="0 0 160 48" preserveAspectRatio="none" className="kpi-sparkline-svg">
               <defs>
-                <linearGradient id="ops-spark-orange" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="ops-spark-accent" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#D3070B" stopOpacity="0.32" />
                   <stop offset="100%" stopColor="#D3070B" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path
                 d="M0,36 C25,36 40,24 60,30 C80,36 100,26 120,32 C135,36 145,18 160,32 L160,48 L0,48 Z"
-                fill="url(#ops-spark-orange)"
+                fill="url(#ops-spark-accent)"
               />
               <path
                 d="M0,36 C25,36 40,24 60,30 C80,36 100,26 120,32 C135,36 145,18 160,32"
@@ -240,7 +240,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             </div>
             <span className="ops-card-label">PENDING QUOTES</span>
           </div>
-          <strong className="ops-card-number" style={{ color: pendingQuotes.length > 0 ? '#D3070B' : '#141414' }}>
+          <strong className="ops-card-number" style={{ color: pendingQuotes.length > 0 ? '#D3070B' : '#181818' }}>
             {pendingQuotes.length}
           </strong>
           <span className="ops-card-subtext">
@@ -283,7 +283,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             </div>
             <span className="ops-card-label">EXCEPTIONS & HOLDS</span>
           </div>
-          <strong className="ops-card-number" style={{ color: exceptionCount > 0 ? '#dc2626' : '#141414' }}>
+          <strong className="ops-card-number" style={{ color: exceptionCount > 0 ? '#dc2626' : '#181818' }}>
             {exceptionCount}
           </strong>
           <span className="ops-card-subtext">

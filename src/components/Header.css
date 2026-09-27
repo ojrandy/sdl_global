@@ -346,7 +346,7 @@
   flex-shrink: 0;
 }
 
-.action-icon-wrap.orange {
+.action-icon-wrap.accent {
   background: var(--sdl-accent-50);
   color: var(--sdl-accent-500);
   border: 1px solid var(--sdl-accent-200);

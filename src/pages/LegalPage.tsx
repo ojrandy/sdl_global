@@ -36,7 +36,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
           </div>
 
           <h1 className="legal-hero-title animate-fade-in">
-            Legal, Compliance & <span className="legal-highlight-orange">Carrier Tariffs.</span>
+            Legal, Compliance & <span className="legal-highlight-accent">Carrier Tariffs.</span>
           </h1>
 
           <p className="legal-hero-lead animate-fade-in">

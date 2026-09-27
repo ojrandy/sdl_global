@@ -1449,7 +1449,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
 
           <div className="help-banner-actions">
             {supportPhone && (
-              <a href={phoneHref} className="help-btn phone-btn orange-dispatch-btn">
+              <a href={phoneHref} className="help-btn phone-btn accent-dispatch-btn">
                 <Phone size={15} />
                 <span>Call Dispatch {supportPhone}</span>
               </a>

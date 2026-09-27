@@ -100,8 +100,8 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Subtle Map Watermark Background */}
         <div className="footer-world-map-bg" />
         
-        {/* Glowing Orange Corner Swoosh */}
-        <div className="footer-orange-swoosh" />
+        {/* Glowing Accent Corner Swoosh */}
+        <div className="footer-accent-swoosh" />
 
         <div className="sdl-container-wide footer-content-relative">
           <div className="sdl-pro-footer-grid">
@@ -139,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="sdl-pro-links-col">
               <h4 className="sdl-pro-col-title">
                 Quick Links
-                <span className="title-orange-dash" />
+                <span className="title-accent-dash" />
               </h4>
               <ul className="sdl-pro-links-list">
                 <li>
@@ -185,7 +185,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="sdl-pro-links-col">
               <h4 className="sdl-pro-col-title">
                 Our Services
-                <span className="title-orange-dash" />
+                <span className="title-accent-dash" />
               </h4>
               <ul className="sdl-pro-links-list">
                 <li>
@@ -231,7 +231,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="sdl-pro-links-col">
               <h4 className="sdl-pro-col-title">
                 Support
-                <span className="title-orange-dash" />
+                <span className="title-accent-dash" />
               </h4>
               <ul className="sdl-pro-links-list">
                 <li>
@@ -277,7 +277,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="sdl-pro-newsletter-col">
               <h4 className="sdl-pro-col-title">
                 Stay Updated
-                <span className="title-orange-dash" />
+                <span className="title-accent-dash" />
               </h4>
               
               <p className="sdl-pro-newsletter-desc">

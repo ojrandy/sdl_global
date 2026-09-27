@@ -76,7 +76,7 @@
   margin-bottom: 1rem;
 }
 
-.contact-highlight-orange {
+.contact-highlight-accent {
   color: var(--sdl-accent-500);
   font-weight: 800;
 }
@@ -392,7 +392,7 @@
   flex-shrink: 0;
 }
 
-.channel-icon.icon-orange {
+.channel-icon.icon-accent {
   background: var(--sdl-accent-50);
   color: var(--sdl-accent-500);
   border: 1px solid var(--sdl-accent-200);

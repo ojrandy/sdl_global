@@ -159,7 +159,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
           </div>
 
           <h1 className="help-hero-title animate-fade-in">
-            How Can Our Operations Team <span className="help-highlight-orange">Assist You Today?</span>
+            How Can Our Operations Team <span className="help-highlight-accent">Assist You Today?</span>
           </h1>
 
           <p className="help-hero-lead animate-fade-in">
@@ -229,7 +229,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       <div className="sdl-container-wide sdl-help-body">
         <div className="help-pillars-grid">
           <div className="help-pillar-card" onClick={() => onNavigate('track')}>
-            <div className="pillar-icon icon-orange"><MapPin size={24} /></div>
+            <div className="pillar-icon icon-accent"><MapPin size={24} /></div>
             <h3>Track a Consignment</h3>
             <p>Monitor live 60 FPS highway telemetry and verified scan milestones across all regional intake gateways.</p>
             <span className="pillar-action-link">Open Tracking Radar <ArrowRight size={15} /></span>

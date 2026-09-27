@@ -76,7 +76,7 @@
   margin-bottom: 1rem;
 }
 
-.quote-highlight-orange {
+.quote-highlight-accent {
   color: var(--sdl-accent-500);
   font-weight: 800;
 }
@@ -374,7 +374,7 @@
   margin-bottom: 1.5rem;
 }
 
-.pulse-orange-dot {
+.pulse-accent-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;

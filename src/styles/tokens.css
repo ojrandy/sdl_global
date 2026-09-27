@@ -18,27 +18,27 @@
   --sdl-primary-900: #171717;
 
   /* Brand: Accent (SDL red; 500 is the exact logo red). On Ink backgrounds use 400 for
-     small text; 500 only for large text, icons and buttons (3.34:1 on Ink 950). */
-  --sdl-accent-50: #FEF2F0;
-  --sdl-accent-100: #FEE3DE;
-  --sdl-accent-200: #FECBC3;
-  --sdl-accent-300: #FFA699;
-  --sdl-accent-400: #FE7060;
+     small text; 500 only for large text, icons and buttons (3.21:1 on Ink 950). */
+  --sdl-accent-50: #FFF2F0;
+  --sdl-accent-100: #FFE2DE;
+  --sdl-accent-200: #FFCBC3;
+  --sdl-accent-300: #FFA598;
+  --sdl-accent-400: #FF6758;
   --sdl-accent-500: #D3070B;
-  --sdl-accent-600: #B50407;
-  --sdl-accent-700: #920204;
-  --sdl-accent-800: #720102;
-  --sdl-accent-900: #520102;
+  --sdl-accent-600: #B70005;
+  --sdl-accent-700: #950003;
+  --sdl-accent-800: #740002;
+  --sdl-accent-900: #540001;
 
   /* Brand: Ink (dark hero, footer, admin sidebar) */
-  --sdl-ink-950: #141414;
-  --sdl-ink-900: #1C1C1C;
-  --sdl-ink-800: #242424;
-  --sdl-ink-700: #303030;
+  --sdl-ink-950: #181818;
+  --sdl-ink-900: #1F1F1F;
+  --sdl-ink-800: #282828;
+  --sdl-ink-700: #333333;
 
   /* RGB triplets for translucent brand colours: rgba(var(--sdl-accent-rgb), 0.2) */
   --sdl-accent-rgb: 211, 7, 11;
-  --sdl-ink-rgb: 20, 20, 20;
+  --sdl-ink-rgb: 24, 24, 24;
   --sdl-primary-rgb: 23, 23, 23;
 
   /* Semantic status colours (shipment states) */
@@ -50,8 +50,10 @@
 
   --sdl-warning-50: #fffbeb;   /* Delayed / exception pending */
   --sdl-warning-100: #fef3c7;
+  --sdl-warning-200: #fde68a;
   --sdl-warning-500: #f59e0b;
   --sdl-warning-600: #d97706;
+  --sdl-warning-700: #b45309;
 
   --sdl-danger-50: #fef2f2;    /* Exception / held */
   --sdl-danger-100: #fee2e2;

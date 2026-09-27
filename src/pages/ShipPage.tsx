@@ -351,7 +351,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
           </div>
 
           <h1 className="ship-hero-title animate-fade-in">
-            Tender & Register Consignments with <span className="text-highlight-orange">Piece-Level Precision.</span>
+            Tender & Register Consignments with <span className="text-highlight-accent">Piece-Level Precision.</span>
           </h1>
 
           <p className="ship-hero-subtitle animate-fade-in">

@@ -78,7 +78,7 @@
   letter-spacing: -0.02em;
 }
 
-.services-highlight-orange {
+.services-highlight-accent {
   color: var(--sdl-accent-500);
   font-weight: 800;
 }
@@ -259,7 +259,7 @@
   flex-shrink: 0;
 }
 
-.time-icon-box.orange {
+.time-icon-box.accent {
   background: var(--sdl-accent-50);
   color: var(--sdl-accent-500);
   border: 1px solid var(--sdl-accent-200);
@@ -688,7 +688,7 @@
 }
 
 .glow-emerald { background: #10b981; }
-.glow-orange { background: var(--sdl-accent-500); }
+.glow-accent { background: var(--sdl-accent-500); }
 .glow-purple { background: #8b5cf6; }
 .glow-sky { background: #0284c7; }
 
@@ -709,7 +709,7 @@
 }
 
 .icon-emerald { background: rgba(16, 185, 129, 0.1); color: #059669; }
-.icon-orange { background: var(--sdl-accent-50); color: var(--sdl-accent-500); }
+.icon-accent { background: var(--sdl-accent-50); color: var(--sdl-accent-500); }
 .icon-purple { background: rgba(139, 92, 246, 0.1); color: #7c3aed; }
 .icon-sky { background: rgba(2, 132, 199, 0.1); color: #0284c7; }
 
@@ -720,7 +720,7 @@
 }
 
 .tag-emerald { color: #059669; }
-.tag-orange { color: var(--sdl-accent-500); }
+.tag-accent { color: var(--sdl-accent-500); }
 .tag-purple { color: #7c3aed; }
 .tag-sky { color: #0284c7; }
 

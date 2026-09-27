@@ -1393,8 +1393,8 @@
   color: #15803d;
 }
 
-/* ORANGE CALL DISPATCH BUTTON */
-.orange-dispatch-btn {
+/* ACCENT CALL DISPATCH BUTTON */
+.accent-dispatch-btn {
   background: var(--sdl-accent-500) !important;
   border-color: var(--sdl-accent-400) !important;
   color: #ffffff !important;
@@ -1402,7 +1402,7 @@
   box-shadow: 0 4px 14px rgba(var(--sdl-accent-rgb), 0.3);
 }
 
-.orange-dispatch-btn:hover {
+.accent-dispatch-btn:hover {
   background: var(--sdl-accent-500) !important;
 }
 

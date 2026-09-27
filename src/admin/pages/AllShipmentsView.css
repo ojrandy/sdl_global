@@ -1,6 +1,6 @@
 /* ==========================================================================
    SDL GLOBAL LOGISTICS — ALL SHIPMENTS MASTER DIRECTORY
-   Brand Tokens: Command Navy (var(--sdl-ink-950)), Carrier Orange (var(--sdl-accent-500))
+   Palette: Ink (--sdl-ink-950) · SDL red accent (--sdl-accent-500)
    ========================================================================== */
 
 .sdl-shipments-page {
@@ -166,7 +166,7 @@
   flex-shrink: 0;
 }
 
-.stat-circle-icon.orange { background-color: var(--sdl-accent-500); }
+.stat-circle-icon.accent { background-color: var(--sdl-accent-500); }
 .stat-circle-icon.blue { background-color: #2563eb; }
 .stat-circle-icon.green { background-color: #10b981; }
 .stat-circle-icon.red { background-color: #ef4444; }
@@ -614,11 +614,11 @@
 .chip-dot.teal { background: #64748b; }
 
 .ship-status-chip.out-delivery {
-  background: var(--sdl-accent-50);
-  color: var(--sdl-accent-600);
-  border: 1px solid var(--sdl-accent-200);
+  background: var(--sdl-warning-50);
+  color: var(--sdl-warning-700);
+  border: 1px solid var(--sdl-warning-200);
 }
-.chip-dot.orange { background: var(--sdl-accent-500); }
+.chip-dot.amber { background: var(--sdl-warning-500); }
 
 .ship-status-chip.delivered {
   background: #f0fdf4;
