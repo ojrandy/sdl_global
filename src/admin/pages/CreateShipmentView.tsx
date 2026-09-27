@@ -50,6 +50,7 @@ import { generateShipmentPlan } from '../../services/planningEngine';
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminViewType } from '../AdminLayout';
 import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
+import { LEGAL_NAME } from '../../config/brand';
 import './CreateShipmentView.css';
 
 interface CreateShipmentViewProps {
@@ -1180,7 +1181,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           totalAmount: Math.max(0, baseRate + additionalCharges + surcharges + manualAdjustment - discount),
           paymentStatus: 'PAID'
         },
-        bolCarrier: 'Duolingo Express Logistics LLC',
+        bolCarrier: LEGAL_NAME,
         bolTrailerNumber,
         bolSealNumber,
         bolSpecialInstructions,

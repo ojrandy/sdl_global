@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Home,
   Headphones,
-  FileText
+  HelpCircle
 } from 'lucide-react';
 import { COMPANY, LOGO, LOGO_ALT } from '../config/brand';
 import { useCompanyContact } from '../utils/useCompanyContact';
@@ -60,24 +60,24 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="sdl-topbar hide-mobile-topbar">
         <div className="sdl-container-wide sdl-topbar-inner">
           <div className="sdl-topbar-left">
-            {supportPhone && (
-              <>
-                <div className="topbar-item">
-                  <Phone size={13} className="text-accent" />
-                  <span>Priority Dispatch: <strong>{supportPhone}</strong></span>
-                </div>
-                <div className="topbar-divider" />
-              </>
-            )}
+            <div className="topbar-item">
+              <Clock size={13} className="text-emerald" />
+              <span>24/7 Global Support</span>
+            </div>
+            <div className="topbar-divider" />
             <div className="topbar-item">
               <Mail size={13} className="text-accent" />
               <span>{dispatchEmail}</span>
             </div>
-            <div className="topbar-divider" />
-            <div className="topbar-item">
-              <Clock size={13} className="text-emerald" />
-              <span>24/7 Continuous Highway Transit</span>
-            </div>
+            {supportPhone && (
+              <>
+                <div className="topbar-divider" />
+                <div className="topbar-item">
+                  <Phone size={13} className="text-accent" />
+                  <strong>{supportPhone}</strong>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="sdl-topbar-right">
@@ -118,17 +118,17 @@ export const Header: React.FC<HeaderProps> = ({
           <nav className="sdl-nav-links">
             <button
               type="button"
-              className={`sdl-nav-link ${activePage === 'home' ? 'active' : ''}`}
-              onClick={() => handleNav('home')}
+              className={`sdl-nav-link ${activePage === 'track' ? 'active' : ''}`}
+              onClick={() => handleNav('track')}
             >
-              Home
+              Track
             </button>
             <button
               type="button"
-              className={`sdl-nav-link ${activePage === 'about' ? 'active' : ''}`}
-              onClick={() => handleNav('about')}
+              className={`sdl-nav-link ${activePage === 'ship' ? 'active' : ''}`}
+              onClick={() => handleNav('ship')}
             >
-              About Us
+              Ship
             </button>
             <button
               type="button"
@@ -139,17 +139,24 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
             <button
               type="button"
-              className={`sdl-nav-link ${activePage === 'track' ? 'active' : ''}`}
-              onClick={() => handleNav('track')}
+              className={`sdl-nav-link ${activePage === 'locations' ? 'active' : ''}`}
+              onClick={() => handleNav('locations')}
             >
-              Track Shipment
+              Network
             </button>
             <button
               type="button"
-              className={`sdl-nav-link ${activePage === 'ship' ? 'active' : ''}`}
-              onClick={() => handleNav('ship')}
+              className={`sdl-nav-link ${activePage === 'about' ? 'active' : ''}`}
+              onClick={() => handleNav('about')}
             >
-              Ship Now
+              About
+            </button>
+            <button
+              type="button"
+              className={`sdl-nav-link ${activePage === 'help' ? 'active' : ''}`}
+              onClick={() => handleNav('help')}
+            >
+              Help
             </button>
             <button
               type="button"
@@ -168,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => handleNav('quote')}
             >
               <Calculator size={15} />
-              <span>Request a Quote</span>
+              <span>Get a Quote</span>
             </button>
           </div>
 
@@ -218,7 +225,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
                 <div className="action-text">
                   <strong>Track a Shipment</strong>
-                  <small>Live highway telemetry radar</small>
+                  <small>Live milestones for your tracking ID</small>
                 </div>
                 <ChevronRight size={16} className="action-arrow" />
               </button>
@@ -232,8 +239,8 @@ export const Header: React.FC<HeaderProps> = ({
                   <Calculator size={20} />
                 </div>
                 <div className="action-text">
-                  <strong>Get Tariff Quote</strong>
-                  <small>Instant corridor rate calculation</small>
+                  <strong>Get a Quote</strong>
+                  <small>A coordinator sends your rate</small>
                 </div>
                 <ChevronRight size={16} className="action-arrow" />
               </button>
@@ -255,21 +262,21 @@ export const Header: React.FC<HeaderProps> = ({
 
                 <button
                   type="button"
-                  className={`drawer-link ${activePage === 'services' ? 'active' : ''}`}
-                  onClick={() => handleNav('services')}
+                  className={`drawer-link ${activePage === 'ship' ? 'active' : ''}`}
+                  onClick={() => handleNav('ship')}
                 >
-                  <Truck size={18} className="link-icon" />
-                  <span>Our Courier Services</span>
+                  <Package size={18} className="link-icon" />
+                  <span>Ship</span>
                   <ChevronRight size={14} className="link-chevron" />
                 </button>
 
                 <button
                   type="button"
-                  className={`drawer-link ${activePage === 'ship' ? 'active' : ''}`}
-                  onClick={() => handleNav('ship')}
+                  className={`drawer-link ${activePage === 'services' ? 'active' : ''}`}
+                  onClick={() => handleNav('services')}
                 >
-                  <Package size={18} className="link-icon" />
-                  <span>Ship a Consignment</span>
+                  <Truck size={18} className="link-icon" />
+                  <span>Services</span>
                   <ChevronRight size={14} className="link-chevron" />
                 </button>
 
@@ -279,7 +286,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => handleNav('locations')}
                 >
                   <MapPin size={18} className="link-icon" />
-                  <span>Facility & Gateway Network</span>
+                  <span>Network</span>
                   <ChevronRight size={14} className="link-chevron" />
                 </button>
 
@@ -289,7 +296,17 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => handleNav('about')}
                 >
                   <Shield size={18} className="link-icon" />
-                  <span>About Duolingo Express</span>
+                  <span>About</span>
+                  <ChevronRight size={14} className="link-chevron" />
+                </button>
+
+                <button
+                  type="button"
+                  className={`drawer-link ${activePage === 'help' ? 'active' : ''}`}
+                  onClick={() => handleNav('help')}
+                >
+                  <HelpCircle size={18} className="link-icon" />
+                  <span>Help</span>
                   <ChevronRight size={14} className="link-chevron" />
                 </button>
 
@@ -299,22 +316,22 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => handleNav('contact')}
                 >
                   <Headphones size={18} className="link-icon" />
-                  <span>24/7 Operations Desk</span>
+                  <span>Contact</span>
                   <ChevronRight size={14} className="link-chevron" />
                 </button>
               </nav>
             </div>
 
-            {/* 24/7 Dispatch Hotline Bottom Box */}
+            {/* Drawer footer: Need help? + email (phone when set) */}
             <div className="drawer-footer-hotline">
               <div className="hotline-head">
                 <span className="live-status-dot" />
-                <span className="hotline-tag font-mono">24/7 OPERATIONS ACTIVE</span>
+                <span className="hotline-tag font-mono">NEED HELP?</span>
               </div>
               {supportPhone ? (
                 <a href={phoneHref} className="hotline-phone-btn">
                   <Phone size={15} />
-                  <span>Call Dispatch: {supportPhone}</span>
+                  <span>{supportPhone}</span>
                 </a>
               ) : (
                 <a href={`mailto:${dispatchEmail}`} className="hotline-phone-btn">

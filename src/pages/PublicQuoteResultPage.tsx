@@ -23,7 +23,7 @@ import {
 import { QuoteRequest } from '../types/admin';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
-import { LEGAL_NAME, LOGO, LOGO_ALT } from '../config/brand';
+import { COMPANY, DOMAIN, LEGAL_NAME, LOGO, LOGO_ALT } from '../config/brand';
 import './PublicQuoteResultPage.css';
 
 interface PublicQuoteResultPageProps {
@@ -520,8 +520,8 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
 
         {/* Footer info */}
         <div className="print-bottom-watermark">
-          <span>Official Duolingo Express Document · Quotation #{quote.id} · Generated on {new Date().toLocaleDateString()}</span>
-          <span>duolingoexpress.com · Public Ledger Visibility</span>
+          <span>Official {COMPANY} Document · Quotation #{quote.id} · Generated on {new Date().toLocaleDateString()}</span>
+          <span>{DOMAIN}</span>
         </div>
       </div>
     </div>

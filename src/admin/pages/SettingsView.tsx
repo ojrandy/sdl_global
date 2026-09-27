@@ -21,6 +21,7 @@ import {
   Mail,
   Truck
 } from 'lucide-react';
+import { COMPANY_SHORT, EMAIL, LEGAL_NAME } from '../../config/brand';
 import { useAdminData } from '../../context/AdminDataContext';
 import './SettingsView.css';
 
@@ -29,11 +30,11 @@ export const SettingsView: React.FC = () => {
 
   // Company Profile State — hydrated from persisted settings (falling back to the legacy
   // `headquarters` key for databases seeded before it was renamed to `headquartersAddress`)
-  const [companyName, setCompanyName] = useState(settings.companyName || 'Duolingo Express Logistics LLC');
-  const [supportPhone, setSupportPhone] = useState(settings.supportPhone || '(800) 555-DUO-EXP');
-  const [dispatchEmail, setDispatchEmail] = useState(settings.dispatchEmail || 'dispatch@duolingoexpress.com');
-  const [headquarters, setHeadquarters] = useState(settings.headquartersAddress || (settings as any).headquarters || 'JFK International Cargo Terminal, Jamaica, NY 11430');
-  const [dotNumber, setDotNumber] = useState(settings.dotNumber || 'USDOT #3894210 · MC-892401');
+  const [companyName, setCompanyName] = useState(settings.companyName || LEGAL_NAME);
+  const [supportPhone, setSupportPhone] = useState(settings.supportPhone || '');
+  const [dispatchEmail, setDispatchEmail] = useState(settings.dispatchEmail || EMAIL);
+  const [headquarters, setHeadquarters] = useState(settings.headquartersAddress || (settings as any).headquarters || '');
+  const [dotNumber, setDotNumber] = useState(settings.dotNumber || '');
 
   // Public Tracking & Privacy Controls (Consolidated from Tracking Control)
   const [piiMasking, setPiiMasking] = useState(settings.piiMaskingEnabled ?? true);
@@ -132,11 +133,11 @@ export const SettingsView: React.FC = () => {
   };
 
   const handleResetDefaults = () => {
-    setCompanyName('Duolingo Express Logistics LLC');
-    setSupportPhone('(800) 555-DUO-EXP');
-    setDispatchEmail('dispatch@duolingoexpress.com');
-    setHeadquarters('JFK International Cargo Terminal, Jamaica, NY 11430');
-    setDotNumber('USDOT #3894210 · MC-892401');
+    setCompanyName(LEGAL_NAME);
+    setSupportPhone('');
+    setDispatchEmail(EMAIL);
+    setHeadquarters('');
+    setDotNumber('');
     setPiiMasking(true);
     setMapVisibility('CITY');
     setCloakInternalNotes(true);
@@ -536,7 +537,7 @@ export const SettingsView: React.FC = () => {
                   value={barcodeStandard}
                   className="settings-input font-mono disabled-bg"
                 />
-                <small>Duolingo Express strictly enforces linear Code 128 barcodes across all Shipping Labels, Receipts, and BOLs.</small>
+                <small>{COMPANY_SHORT} uses linear Code 128 barcodes across all Shipping Labels, Receipts, and BOLs.</small>
               </div>
 
               <div className="toggle-setting-row">

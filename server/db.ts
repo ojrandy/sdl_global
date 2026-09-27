@@ -2,6 +2,16 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { seedDatabaseIfEmpty } from './seed.js';
+import { EMAIL, LEGAL_NAME } from '../src/config/brand.js';
+
+// Placeholder contact details the pre-rebrand seed wrote into settings, and what replaces them.
+const OLD_BRAND_SETTINGS: Record<string, { old: string; next: string }> = {
+  companyName: { old: 'Duolingo Express Logistics LLC', next: LEGAL_NAME },
+  supportPhone: { old: '(800) 555-DUO-EXP', next: '' },
+  dispatchEmail: { old: 'dispatch@duolingoexpress.com', next: EMAIL },
+  headquartersAddress: { old: 'JFK International Cargo Terminal, Jamaica, NY 11430', next: '' },
+  dotNumber: { old: 'USDOT #3894210 · MC-892401', next: '' },
+};
 
 // DB_PATH lets a real deployment point the database file somewhere OUTSIDE the directory
 // git/the deploy process manages, e.g. a persistent storage path a host provides separately
@@ -282,11 +292,13 @@ export function initDatabase() {
   const settingCheck = db.prepare('SELECT value_json FROM settings WHERE key = ?').get('general');
   if (!settingCheck) {
     db.prepare(`INSERT OR REPLACE INTO settings (key, value_json) VALUES (?, ?)`).run('general', JSON.stringify({
-      companyName: 'Duolingo Express Logistics LLC',
-      supportPhone: '(800) 555-DUO-EXP',
-      dispatchEmail: 'dispatch@duolingoexpress.com',
-      headquartersAddress: 'JFK International Cargo Terminal, Jamaica, NY 11430',
-      dotNumber: 'USDOT #3894210 · MC-892401',
+      // Phone, address and licence line stay empty until the owner supplies them (CLAUDE.md §2);
+      // the public site hides any element whose value is empty.
+      companyName: LEGAL_NAME,
+      supportPhone: '',
+      dispatchEmail: EMAIL,
+      headquartersAddress: '',
+      dotNumber: '',
       piiMaskingEnabled: true,
       mapVisibility: 'CITY',
       cloakInternalNotes: true,
@@ -302,11 +314,25 @@ export function initDatabase() {
     // up when the Settings page was fixed to read from the real persisted value. Rename it
     // in place, once.
     const existing = JSON.parse((settingCheck as any).value_json);
+    let changed = false;
     if (existing.headquarters !== undefined) {
       if (existing.headquartersAddress === undefined) {
         existing.headquartersAddress = existing.headquarters;
       }
       delete existing.headquarters;
+      changed = true;
+    }
+    // Migration: databases seeded before the SDL rebrand still carry the old brand's placeholder
+    // contact details, which override src/config/brand.ts on the public site. Replace a field
+    // only while it still holds that exact placeholder, so anything the owner has entered in
+    // admin Settings is never touched.
+    for (const [field, value] of Object.entries(OLD_BRAND_SETTINGS)) {
+      if (existing[field] === value.old) {
+        existing[field] = value.next;
+        changed = true;
+      }
+    }
+    if (changed) {
       db.prepare(`UPDATE settings SET value_json = ? WHERE key = ?`).run(JSON.stringify(existing), 'general');
     }
   }

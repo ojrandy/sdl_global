@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { api } from '../services/api';
-import { LOGO_ALT, LOGO_WHITE } from '../config/brand';
+import { EMAIL, LOGO_ALT, LOGO_WHITE, TAGLINE } from '../config/brand';
 import './AdminLayout.css';
 
 export type AdminViewType =
@@ -265,7 +265,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
 
           <div className="sidebar-brand-motto">
-            <span className="motto-text">FASTER TOGETHER</span>
+            <span className="motto-text">{TAGLINE.toUpperCase()}</span>
             <span className="motto-line" />
           </div>
         </div>
@@ -389,7 +389,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 <div className="user-menu-popover animate-scale-in">
                   <div className="menu-popover-header">
                     <strong>Super Admin (Console)</strong>
-                    <small>dispatch@duolingoexpress.com</small>
+                    <small>{EMAIL}</small>
                   </div>
                   <div className="menu-popover-links">
                     <button onClick={() => { onSelectView('settings'); setShowUserMenu(false); }}>

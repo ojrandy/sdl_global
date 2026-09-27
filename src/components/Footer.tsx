@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Mail
 } from 'lucide-react';
-import { LOGO_ALT, LOGO_WHITE, SOCIAL, SocialNetwork } from '../config/brand';
+import { COMPANY_SHORT, LEGAL_NAME, LOGO_ALT, LOGO_WHITE, SOCIAL, SocialNetwork, TAGLINE } from '../config/brand';
+import { useCompanyContact } from '../utils/useCompanyContact';
 import './Footer.css';
 
 // Only networks with a real URL in brand.ts are rendered.
@@ -36,6 +37,7 @@ export const Footer: React.FC<FooterProps> = ({
 }) => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const { address } = useCompanyContact();
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,11 +56,11 @@ export const Footer: React.FC<FooterProps> = ({
           <div className="sdl-container-wide sdl-trust-grid">
             <div className="sdl-trust-card">
               <div className="sdl-trust-icon">
-                <ShieldCheck size={24} />
+                <Globe size={24} />
               </div>
               <div className="sdl-trust-info">
-                <h4>Verified Carrier Custody</h4>
-                <p>Armored and monitored chain-of-custody across all linehaul corridors.</p>
+                <h4>Worldwide Coverage</h4>
+                <p>Air, ocean and road, connected.</p>
               </div>
             </div>
 
@@ -67,8 +69,8 @@ export const Footer: React.FC<FooterProps> = ({
                 <Clock size={24} />
               </div>
               <div className="sdl-trust-info">
-                <h4>Real-Time Highway Telemetry</h4>
-                <p>Continuous milestone scan updates and live highway transit tracking.</p>
+                <h4>Live Milestones</h4>
+                <p>Every hand-off scanned and time-stamped.</p>
               </div>
             </div>
 
@@ -77,18 +79,18 @@ export const Footer: React.FC<FooterProps> = ({
                 <Layers size={24} />
               </div>
               <div className="sdl-trust-info">
-                <h4>Piece-Level Barcodes</h4>
-                <p>Serialized Code 128 multi-piece tracking on every individual carton.</p>
+                <h4>Piece-Level Labels</h4>
+                <p>Every carton individually barcoded.</p>
               </div>
             </div>
 
             <div className="sdl-trust-card">
               <div className="sdl-trust-icon">
-                <Globe size={24} />
+                <ShieldCheck size={24} />
               </div>
               <div className="sdl-trust-info">
-                <h4>Nationwide Coverage</h4>
-                <p>Daily scheduled linehaul connections across all 50 states.</p>
+                <h4>Signed Delivery</h4>
+                <p>Digital proof of delivery on every shipment.</p>
               </div>
             </div>
           </div>
@@ -116,7 +118,7 @@ export const Footer: React.FC<FooterProps> = ({
               </div>
 
               <p className="sdl-pro-brand-desc">
-                Reliable shipping. Real-time tracking. Nationwide delivery. Duolingo Express connects people, businesses, and opportunities across the country.
+                Express, freight and secure cargo across borders, with one tracking ID and one accountable team from pickup to proof of delivery.
               </p>
 
               {SOCIAL_LINKS.some(s => SOCIAL[s.key]) && (
@@ -130,98 +132,74 @@ export const Footer: React.FC<FooterProps> = ({
               )}
 
               <div className="sdl-pro-faster-tagline font-mono">
-                <span>FASTER TOGETHER</span>
+                <span>{TAGLINE.toUpperCase()}.</span>
                 <div className="tagline-bar" />
               </div>
             </div>
 
-            {/* Column 2: Quick Links */}
+            {/* Column 2: Services */}
             <div className="sdl-pro-links-col">
               <h4 className="sdl-pro-col-title">
-                Quick Links
-                <span className="title-accent-dash" />
-              </h4>
-              <ul className="sdl-pro-links-list">
-                <li>
-                  <button type="button" onClick={() => onNavigate('home')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Home</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('track')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Track Shipment</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('services')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Our Services</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('locations')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Locations</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('about')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>About Us</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('contact')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Contact Us</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: Our Services */}
-            <div className="sdl-pro-links-col">
-              <h4 className="sdl-pro-col-title">
-                Our Services
+                Services
                 <span className="title-accent-dash" />
               </h4>
               <ul className="sdl-pro-links-list">
                 <li>
                   <button type="button" onClick={() => onNavigate('services')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Priority Express Courier</span>
+                    <span>Priority Express</span>
                   </button>
                 </li>
                 <li>
                   <button type="button" onClick={() => onNavigate('services')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Commercial Linehaul</span>
+                    <span>Freight & Linehaul</span>
                   </button>
                 </li>
                 <li>
                   <button type="button" onClick={() => onNavigate('services')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Auto & Vehicle Transport</span>
+                    <span>Vehicle Shipping</span>
                   </button>
                 </li>
                 <li>
                   <button type="button" onClick={() => onNavigate('services')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Time-Critical Secure Vault</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('ship')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Ship a Consignment</span>
+                    <span>Secure Vault</span>
                   </button>
                 </li>
                 <li>
                   <button type="button" onClick={() => onNavigate('quote')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Tariff Rate Calculator</span>
+                    <span>Get a Quote</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Company (Careers hidden until the page exists) */}
+            <div className="sdl-pro-links-col">
+              <h4 className="sdl-pro-col-title">
+                Company
+                <span className="title-accent-dash" />
+              </h4>
+              <ul className="sdl-pro-links-list">
+                <li>
+                  <button type="button" onClick={() => onNavigate('about')}>
+                    <ChevronRight size={14} className="link-chevron" />
+                    <span>About {COMPANY_SHORT}</span>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => onNavigate('locations')}>
+                    <ChevronRight size={14} className="link-chevron" />
+                    <span>Global Network</span>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" onClick={() => onNavigate('contact')}>
+                    <ChevronRight size={14} className="link-chevron" />
+                    <span>Contact</span>
                   </button>
                 </li>
               </ul>
@@ -235,33 +213,21 @@ export const Footer: React.FC<FooterProps> = ({
               </h4>
               <ul className="sdl-pro-links-list">
                 <li>
-                  <button type="button" onClick={() => onNavigate('help')}>
+                  <button type="button" onClick={() => onNavigate('track')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Help Center</span>
+                    <span>Track a Shipment</span>
                   </button>
                 </li>
                 <li>
                   <button type="button" onClick={() => onNavigate('help')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>FAQs</span>
+                    <span>Help Centre</span>
                   </button>
                 </li>
                 <li>
-                  <button type="button" onClick={() => onNavigate('legal', 'shipping-terms')}>
+                  <button type="button" onClick={() => onNavigate('ship')}>
                     <ChevronRight size={14} className="link-chevron" />
-                    <span>Shipping Terms</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('legal', 'privacy')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Privacy Policy</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('legal', 'terms')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Terms of Service</span>
+                    <span>Book a Shipment</span>
                   </button>
                 </li>
                 <li>
@@ -313,7 +279,7 @@ export const Footer: React.FC<FooterProps> = ({
                 </div>
                 <div className="global-pill-text">
                   <strong>We Deliver Worldwide</strong>
-                  <p>From local to global, Duolingo Express gets it there.</p>
+                  <p>Air, ocean and road, connected under one network.</p>
                 </div>
               </div>
 
@@ -323,19 +289,19 @@ export const Footer: React.FC<FooterProps> = ({
           {/* 3. BOTTOM BAR */}
           <div className="sdl-pro-footer-bottom">
             <div className="pro-copy-text">
-              © 2026 Duolingo Express. All rights reserved.
+              © {new Date().getFullYear()} {LEGAL_NAME}. All rights reserved.
+              {address && <> · {address}</>}
             </div>
 
-            <div className="pro-bottom-right-links">
-              <span className="pro-sep-bar">|</span>
-              <button type="button" onClick={() => onNavigate('ship')}>Ship</button>
+            <nav className="pro-bottom-right-links" aria-label="Legal">
+              <button type="button" onClick={() => onNavigate('legal', 'privacy')}>Privacy Policy</button>
               <span className="pro-dot">•</span>
-              <button type="button" onClick={() => onNavigate('track')}>Track</button>
+              <button type="button" onClick={() => onNavigate('legal', 'terms')}>Terms of Service</button>
               <span className="pro-dot">•</span>
-              <button type="button" onClick={() => onNavigate('services')}>Deliver</button>
+              <button type="button" onClick={() => onNavigate('legal', 'shipping-terms')}>Shipping Terms</button>
               <span className="pro-dot">•</span>
-              <span className="pro-slogan">A Better Tomorrow</span>
-            </div>
+              <button type="button" onClick={() => onNavigate('legal', 'accessibility')}>Accessibility</button>
+            </nav>
           </div>
         </div>
       </div>
