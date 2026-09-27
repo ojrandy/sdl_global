@@ -52,9 +52,9 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [x] 1.5 Update `index.html`: title, description, Open Graph/Twitter tags, theme-color, canonical (CONTENT.md §1).
 - [x] 1.6 Update `package.json` name → `sdl-global-logistics`; rename DB file default `duolingo_express.db` → `sdl_global.db` (server/db.ts, server/index.ts, .env.example).
 - [x] 1.7 Replace all emails with `info@sdlgloballogistics.com` (defaults in `server/db.ts` settings, Header, Contact, PublicQuoteResult, Admin Settings).
-- [ ] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3).
-- [ ] 1.9 Update tracking input validation, placeholders and help text to the new 8-character format.
-- [ ] 1.10 Replace demo data (`src/data/mockShipments.ts`, `server/seed.ts`) with SDL-branded, worldwide demo shipments using DLS IDs.
+- [x] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3).
+- [x] 1.9 Update tracking input validation, placeholders and help text to the new 8-character format.
+- [~] 1.10 Replace demo data (`src/data/mockShipments.ts`, `server/seed.ts`) with SDL-branded, worldwide demo shipments using DLS IDs. *DLS IDs, SDL names and fictional people done; the routes stay domestic until Phase 2 (2.2/2.3) can geocode and draw worldwide legs.*
 - [ ] 1.11 Replace the other ID prefixes: seals, support tickets, invoices, returns (REBRAND_MAP §3).
 - [ ] 1.12 Sweep: `grep -rniE "duolingo|dxp|dex\b" --exclude-dir=node_modules .` → only allowed hits remain (list them in REBRAND_MAP §6).
 
@@ -136,6 +136,9 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | Date | Decision |
 |---|---|
 | 2026-09-26 | Brand: SDL Global Logistics Ltd; email info@sdlgloballogistics.com; worldwide coverage. |
+| 2026-09-27 | Admin session cookie renamed `dxp.sid` → `sdl.sid` (owner approved signing everyone out once). |
+| 2026-09-27 | Demo shipments keep their current routes until Phase 2: position labels come from `US_METRO_DATABASE`, so intercontinental demo routes would show US city names. Revisit in 1.10 once 2.2/2.3 land. |
+| 2026-09-27 | Public `/api/track` only accepts DLS IDs (400 for anything else). Records created before the DLS format stay reachable in the admin console. |
 | 2026-09-26 | Keep the four existing service lines (Priority Express, Scheduled Linehaul/Freight, Vehicle Transport, Secure Vault). |
 | 2026-09-26 | Palette to be derived from the SDL logo. |
 | 2026-09-26 | Tracking ID = `DLS` + 5 characters, 8 total. |

@@ -1,5 +1,5 @@
 /**
- * Duolingo Express — Road Routing & Geometry Service
+ * SDL Global Logistics — Road Routing & Geometry Service
  * Queries the OSRM Driving Engine for true road geometry, real driving distance,
  * and calculated highway polyline with an in-memory cache and smooth curvature fallback.
  * Strictly separates physical road driving hours from commercial customer service SLAs.

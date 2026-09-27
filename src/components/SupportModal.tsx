@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Headphones, X, CheckCircle, Send, AlertCircle } from 'lucide-react';
 import './SupportModal.css';
+import { COMPANY_SHORT } from '../config/brand';
 
 interface SupportModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             </div>
             <div>
               <h3>Get Shipment Support</h3>
-              <p>Direct assistance from Duolingo Express operations</p>
+              <p>Direct assistance from the {COMPANY_SHORT} operations team</p>
             </div>
           </div>
           <button className="support-close-btn" onClick={onClose}>
@@ -56,7 +57,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             <CheckCircle size={44} className="text-emerald" />
             <h4>Support Request Received</h4>
             <p>
-              Your ticket <strong>#DXP-SPT-{Math.floor(10000 + Math.random() * 90000)}</strong> has been opened for tracking number <strong>{trackingNumber || 'General'}</strong>.
+              Your ticket <strong>#SDL-TKT-{Math.floor(100000 + Math.random() * 900000)}</strong> has been opened for tracking number <strong>{trackingNumber || 'General'}</strong>.
             </p>
             <span className="support-timeframe">Our operations specialist will respond within 2 business hours.</span>
           </div>
@@ -68,7 +69,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 type="text"
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder="e.g. DXP-2026-7K2M9QRX"
+                placeholder="e.g. DLS7K2M9"
                 className="sdl-input font-mono"
               />
             </div>

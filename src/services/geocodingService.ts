@@ -1,5 +1,5 @@
 /**
- * Duolingo Express — Hybrid Geocoding & Address Intelligence Service
+ * SDL Global Logistics — Hybrid Geocoding & Address Intelligence Service
  * Combines dynamic OpenStreetMap / Nominatim live address resolution with
  * an instant in-memory cache and resilient offline fallback table.
  * Resolves exact pickup/delivery coordinates, formatted addresses, and gateway facilities.

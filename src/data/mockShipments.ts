@@ -1,7 +1,9 @@
 import { Shipment } from '../types/shipment';
+import { parseTrackingInput } from '../shared/trackingId';
+import { COMPANY_SHORT } from '../config/brand';
 
 export const PRIMARY_SHIPMENT: Shipment = {
-  trackingNumber: 'DXP-2026-7K2M9QRX',
+  trackingNumber: 'DLS7K2M9',
   status: 'IN_TRANSIT',
   statusText: 'IN TRANSIT',
   statusMessage: 'Your shipment has arrived at our Chicago location and is continuing toward its destination.',
@@ -11,9 +13,9 @@ export const PRIMARY_SHIPMENT: Shipment = {
   // a jarring flash of "94%" that then snaps down to the real value a moment later.
   progressPercent: 60,
   health: 'ON_TRACK',
-  healthExplanation: 'Your shipment is progressing normally on the interstate linehaul corridor.',
+  healthExplanation: 'Your shipment is progressing normally on its scheduled route.',
   shipmentType: 'Parcel',
-  cargoDescription: 'Toyota Tacoma Bumper',
+  cargoDescription: 'Steel Bumper Assembly',
   cargoCategory: 'Automotive & Parts',
   service: 'Express',
   shipmentDate: 'August 19, 2026',
@@ -37,8 +39,8 @@ export const PRIMARY_SHIPMENT: Shipment = {
   },
 
   sender: {
-    name: 'Randy',
-    company: 'Apex Auto Design & Fabrication',
+    name: 'Demo Shipper',
+    company: 'Demo Auto Parts Co.',
     addressLine: '123 Main Street, Suite 400',
     city: 'New York',
     state: 'NY',
@@ -46,11 +48,11 @@ export const PRIMARY_SHIPMENT: Shipment = {
     country: 'USA',
     phone: '+1 (212) 555-0198',
     maskedPhone: '+1 (212) 555-0198',
-    email: 'randy@apexautodesign.com',
+    email: 'shipper@example.com',
   },
   recipient: {
-    name: 'Daniel',
-    company: 'West Coast Offroad Outfitters',
+    name: 'Demo Consignee',
+    company: 'Demo Offroad Outfitters',
     addressLine: '456 Sunset Boulevard',
     city: 'Los Angeles',
     state: 'CA',
@@ -58,7 +60,7 @@ export const PRIMARY_SHIPMENT: Shipment = {
     country: 'USA',
     phone: '+1 (310) 555-0144',
     maskedPhone: '+1 (310) 555-0144',
-    email: 'daniel@wcoffroad.com',
+    email: 'consignee@example.com',
     instructions: 'Direct signature required upon delivery.',
   },
 
@@ -150,7 +152,7 @@ export const PRIMARY_SHIPMENT: Shipment = {
       id: 'p1',
       pieceNumber: 1,
       totalPieces: 1,
-      trackingNumber: 'DXP-2026-7K2M9QRX-01',
+      trackingNumber: 'DLS7K2M9-01',
       status: 'IN_TRANSIT',
       statusText: 'IN TRANSIT',
       currentLocation: 'Chicago, IL',
@@ -227,8 +229,8 @@ export const PRIMARY_SHIPMENT: Shipment = {
       facility: 'Manhattan Origin Terminal',
       city: 'New York',
       state: 'NY',
-      description: 'Shipment received into the Duolingo Express network.',
-      internalNote: 'Received from sender Randy. Factory packaging intact.',
+      description: `Shipment received into the ${COMPANY_SHORT} network.`,
+      internalNote: 'Received from the shipper. Factory packaging intact.',
       recordedBy: 'Super Admin',
       operatorId: 'Super Admin',
       isCompleted: true,
@@ -301,13 +303,10 @@ export const PRIMARY_SHIPMENT: Shipment = {
 };
 
 export const MOCK_SHIPMENTS: Record<string, Shipment> = {
-  'DXP-2026-7K2M9QRX': PRIMARY_SHIPMENT,
-  'DXP-7K2M9QRX': PRIMARY_SHIPMENT, // short alias
-  'DXP-2026-7KZM9QRX': PRIMARY_SHIPMENT, // mockup variant alias
-  'DXP-7KZM9QRX': PRIMARY_SHIPMENT,
-  'DXP-8M4P2LQA': {
+  DLS7K2M9: PRIMARY_SHIPMENT,
+  DLS8M4PQ: {
     ...PRIMARY_SHIPMENT,
-    trackingNumber: 'DXP-2026-8M4P2LQA',
+    trackingNumber: 'DLS8M4PQ',
     status: 'DELIVERED',
     statusText: 'DELIVERED',
     statusMessage: 'Shipment was delivered successfully in San Francisco, CA on August 14, 2026.',
@@ -340,9 +339,9 @@ export const MOCK_SHIPMENTS: Record<string, Shipment> = {
       deliveryNotes: 'Received at front lobby desk.',
     },
   },
-  'DXP-3J7N6KRB': {
+  DLS3J7NK: {
     ...PRIMARY_SHIPMENT,
-    trackingNumber: 'DXP-2026-3J7N6KRB',
+    trackingNumber: 'DLS3J7NK',
     status: 'DELAYED',
     statusText: 'DELAYED',
     statusMessage: 'Shipment experienced a weather-related transportation delay in Dallas, TX.',
@@ -376,9 +375,9 @@ export const MOCK_SHIPMENTS: Record<string, Shipment> = {
       date: 'August 17, 2026',
     },
   },
-  'DXP-2026-5P6T2LNM': {
+  DLS5P6TL: {
     ...PRIMARY_SHIPMENT,
-    trackingNumber: 'DXP-2026-5P6T2LNM',
+    trackingNumber: 'DLS5P6TL',
     status: 'AT_FACILITY',
     statusText: 'AT FACILITY',
     statusMessage: 'Shipment processed and staged at Denver Regional Gateway Hub.',
@@ -404,12 +403,12 @@ export const MOCK_SHIPMENTS: Record<string, Shipment> = {
     currentFacility: 'Denver Regional Gateway',
     lastUpdated: 'Aug 20, 2026 · 8:15 AM MT',
   },
-  'DXP-2026-U2JMH7WU': {
+  DLSU2JMH: {
     ...PRIMARY_SHIPMENT,
-    trackingNumber: 'DXP-2026-U2JMH7WU',
+    trackingNumber: 'DLSU2JMH',
     status: 'IN_TRANSIT',
     statusText: 'IN LINEHAUL TRANSIT',
-    statusMessage: 'Vehicle in active linehaul transit along verified interstate corridor.',
+    statusMessage: 'Vehicle in transit on its scheduled route.',
     health: 'ON_TRACK',
     progressPercent: 38,
     origin: {
@@ -434,16 +433,8 @@ export const MOCK_SHIPMENTS: Record<string, Shipment> = {
   },
 };
 
+// Accepts "dls 7k2-m9" and child labels such as DLS7K2M9-01 (BRAND_GUIDE §7).
 export function getShipmentByTrackingNumber(trackingNumber: string): Shipment | null {
-  const clean = trackingNumber.trim().toUpperCase();
-  if (MOCK_SHIPMENTS[clean]) {
-    return MOCK_SHIPMENTS[clean];
-  }
-  // If user searched a variation like 7K2M9QRX without prefix
-  for (const key of Object.keys(MOCK_SHIPMENTS)) {
-    if (key.includes(clean) || clean.includes(key)) {
-      return MOCK_SHIPMENTS[key];
-    }
-  }
-  return null;
+  const parsed = parseTrackingInput(trackingNumber);
+  return parsed ? MOCK_SHIPMENTS[parsed.trackingId] ?? null : null;
 }

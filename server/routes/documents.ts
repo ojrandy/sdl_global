@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
+import { LEGAL_NAME } from '../../src/config/brand.js';
 
 export const documentsRouter = Router();
 
@@ -175,7 +176,7 @@ documentsRouter.post('/generate', publicWriteLimiter, (req: Request, res: Respon
       d.dimensions || '72 × 24 × 18 in',
       d.declaredValue || 0,
       d.charges ? JSON.stringify(d.charges) : null,
-      d.bolCarrier || 'Duolingo Express Dedicated Linehaul Division',
+      d.bolCarrier || LEGAL_NAME,
       d.bolTrailerNumber || 'TR-4091-E',
       d.bolSealNumber || 'SL-99420',
       d.bolSpecialInstructions || null,

@@ -169,7 +169,7 @@ export function syncTimeBasedProgress(row: ProgressRow): number {
       row.tracking_number,
       nextStatus,
       'Departed Facility — Linehaul Transit Underway',
-      nearestMetro ? `${nearestMetro.city}, ${nearestMetro.state}` : 'Interstate Transit Corridor',
+      nearestMetro ? `${nearestMetro.city}, ${nearestMetro.state}` : 'In transit',
       'Automated Schedule-Based Checkpoint',
       `${nowDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${nowDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
       'Consignment departed origin facility and is proceeding along the scheduled linehaul corridor.',

@@ -47,14 +47,14 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
       id: 'trk-1',
       category: 'tracking',
       question: 'How do I locate and track an active consignment?',
-      answer: 'Enter your 16-character tracking identifier (e.g. DXP-2026-7K2M9QRX or DXP-7K2M9QRX) in the search bar on our Track page. You will immediately access verified checkpoint scan events, regional hub transfers, and live interstate telemetry.',
+      answer: "Enter your 8-character tracking ID (e.g. DLS7K2M9) in the search bar on our Track page. You'll see verified checkpoint scans, hub transfers and live milestones.",
       badge: 'Core Telemetry'
     },
     {
       id: 'trk-2',
       category: 'tracking',
       question: 'What are piece-level child barcodes (Code 128)?',
-      answer: 'For multi-piece shipments, each individual carton receives its own serialized Code 128 child barcode (e.g. DXP-7K2M9QRX-01, -02). This ensures that every individual piece is independently scanned and accounted for at every intake gateway.',
+      answer: 'For multi-piece shipments, each individual carton receives its own serialized Code 128 child barcode (e.g. DLS7K2M9-01, -02). This ensures that every individual piece is independently scanned and accounted for at every intake gateway.',
       badge: 'Multi-Piece'
     },
     {

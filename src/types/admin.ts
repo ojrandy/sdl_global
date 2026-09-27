@@ -68,7 +68,7 @@ export interface QuoteRequest {
   // Internal Admin Area
   internalNotes?: string;
   pricing?: QuoteRequestPricing;
-  convertedShipmentId?: string; // Linked shipment e.g. DXP-2026-7K2M9QRX
+  convertedShipmentId?: string; // Linked shipment e.g. DLS7K2M9
 }
 
 export interface AuditLogEntry {
@@ -95,7 +95,7 @@ export interface AdminDocument {
   id: string; // e.g. LBL-2026-00881, REC-2026-00481, INV-2026-00321, BOL-2026-00184
   docType: DocumentType;
   title: string;
-  shipmentTracking: string; // e.g. DXP-2026-7K2M9QRX or DXP-2026-9QRX
+  shipmentTracking: string; // e.g. DLS7K2M9
   
   // Parties
   senderName: string;

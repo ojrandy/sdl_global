@@ -137,7 +137,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   const [alertSuccess, setAlertSuccess] = useState(false);
 
   // Safe field extraction from synchronized liveShipment
-  const trackingNum = liveShipment?.trackingNumber || shipment?.trackingNumber || 'DXP-2026-7KZM9QRX';
+  const trackingNum = liveShipment?.trackingNumber || shipment?.trackingNumber || '';
   const status = liveShipment?.status || 'IN_TRANSIT';
   const isDelivered = status === 'DELIVERED';
   const isException = status === 'EXCEPTION' || status === 'DELAYED';

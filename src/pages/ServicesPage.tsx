@@ -581,7 +581,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
                     className="ind-showcase-img"
                   />
                   <div className="ind-img-overlay">
-                    <span className="overlay-badge font-mono">DXP SECURE LINEHAUL</span>
+                    <span className="overlay-badge font-mono">SDL SECURE VAULT</span>
                     <span className="overlay-text">Dedicated handling and physical verification at every gateway</span>
                   </div>
                 </div>

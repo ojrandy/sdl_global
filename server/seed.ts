@@ -1,8 +1,9 @@
 import { db } from './db.js';
+import { COMPANY_SHORT, LEGAL_NAME } from '../src/config/brand.js';
 
 export function seedDatabaseIfEmpty() {
   // Must check whether the table is genuinely empty, not merely whether this one flagship
-  // record exists — the earlier version checked only for 'DXP-2026-7K2M9QRX', which meant
+  // record exists — the earlier version checked only for 'DLS7K2M9', which meant
   // deleting that specific demo shipment (and leaving any other real shipments in place)
   // caused it to be silently reinserted on every server restart, making that one delete look
   // like it "didn't take" even though the DELETE itself worked correctly.
@@ -11,7 +12,7 @@ export function seedDatabaseIfEmpty() {
     return; // Database already has real data — never reseed over it.
   }
 
-  console.log('[DB] Seeding flagship shipment DXP-2026-7K2M9QRX, quotes, and documents...');
+  console.log('[DB] Seeding flagship shipment DLS7K2M9, quotes, and documents...');
 
   const insertShipment = db.prepare(`
     INSERT OR IGNORE INTO shipments (
@@ -67,10 +68,10 @@ export function seedDatabaseIfEmpty() {
   // Atomic seed — node:sqlite has no db.transaction() helper, so BEGIN/COMMIT/ROLLBACK
   // are managed explicitly around the call to runSeed() below.
   const runSeed = () => {
-    // 1. PRIMARY SHIPMENT: Randy's Tacoma (DXP-2026-7K2M9QRX)
+    // 1. PRIMARY SHIPMENT: vehicle parts, in transit (DLS7K2M9)
     insertShipment.run(
-      'DXP-2026-7K2M9QRX',
-      'DXP-2026-7K2M9QRX',
+      'DLS7K2M9',
+      'DLS7K2M9',
       'IN_TRANSIT',
       'IN TRANSIT',
       68,
@@ -80,7 +81,7 @@ export function seedDatabaseIfEmpty() {
       'by end of day',
       'Express',
       'Parcel',
-      'Toyota Tacoma Bumper',
+      'Steel Bumper Assembly',
       45.0,
       1,
       1850.00,
@@ -98,26 +99,26 @@ export function seedDatabaseIfEmpty() {
       -87.6298,
       'Chicago Regional Sort Facility',
       JSON.stringify({
-        name: 'Randy',
-        company: 'Apex Auto Design & Fabrication',
+        name: 'Demo Shipper',
+        company: 'Demo Auto Parts Co.',
         addressLine: '123 Main Street, Suite 400',
         city: 'New York',
         state: 'NY',
         postalCode: '10001',
         country: 'USA',
         phone: '+1 (212) 555-0198',
-        email: 'randy@apexautodesign.com'
+        email: 'shipper@example.com'
       }),
       JSON.stringify({
-        name: 'Daniel',
-        company: 'West Coast Offroad Outfitters',
+        name: 'Demo Consignee',
+        company: 'Demo Offroad Outfitters',
         addressLine: '456 Sunset Boulevard',
         city: 'Los Angeles',
         state: 'CA',
         postalCode: '90028',
         country: 'USA',
         phone: '+1 (310) 555-0144',
-        email: 'daniel@wcoffroad.com',
+        email: 'consignee@example.com',
         instructions: 'Direct signature required upon delivery.'
       }),
       JSON.stringify({ length: 72, width: 24, height: 18 }),
@@ -144,8 +145,8 @@ export function seedDatabaseIfEmpty() {
 
     insertPiece.run(
       'p1',
-      'DXP-2026-7K2M9QRX-01',
-      'DXP-2026-7K2M9QRX',
+      'DLS7K2M9-01',
+      'DLS7K2M9',
       1,
       1,
       'IN_TRANSIT',
@@ -162,7 +163,7 @@ export function seedDatabaseIfEmpty() {
         facility: 'Manhattan Origin Terminal',
         location: 'New York, NY',
         timestamp: 'August 19, 2026 · 11:42 AM ET',
-        description: 'Shipment received into the Duolingo Express network.',
+        description: `Shipment received into the ${COMPANY_SHORT} network.`,
         sort_order: 1,
         completed: 1,
         current: 0
@@ -205,7 +206,7 @@ export function seedDatabaseIfEmpty() {
     for (const evt of primaryEvents) {
       insertEvent.run(
         evt.id,
-        'DXP-2026-7K2M9QRX',
+        'DLS7K2M9',
         'IN_TRANSIT',
         evt.title,
         evt.location,
@@ -220,10 +221,10 @@ export function seedDatabaseIfEmpty() {
       );
     }
 
-    // 2. DELIVERED SHIPMENT (DXP-2026-8M4P2LQA)
+    // 2. DELIVERED SHIPMENT (DLS8M4PQ)
     insertShipment.run(
-      'DXP-2026-8M4P2LQA',
-      'DXP-2026-8M4P2LQA',
+      'DLS8M4PQ',
+      'DLS8M4PQ',
       'DELIVERED',
       'DELIVERED',
       100,
@@ -261,7 +262,7 @@ export function seedDatabaseIfEmpty() {
 
     insertEvent.run(
       'ev-del-1',
-      'DXP-2026-8M4P2LQA',
+      'DLS8M4PQ',
       'DELIVERED',
       'Delivered to Recipient',
       'San Francisco, CA',
@@ -272,10 +273,10 @@ export function seedDatabaseIfEmpty() {
       0, 1, 1, 1
     );
 
-    // 3. DELAYED SHIPMENT (DXP-2026-3J7N6KRB)
+    // 3. DELAYED SHIPMENT (DLS3J7NK)
     insertShipment.run(
-      'DXP-2026-3J7N6KRB',
-      'DXP-2026-3J7N6KRB',
+      'DLS3J7NK',
+      'DLS3J7NK',
       'DELAYED',
       'DELAYED',
       55,
@@ -316,10 +317,10 @@ export function seedDatabaseIfEmpty() {
       'Q-2026-8491',
       '2026-08-20T14:30:00Z',
       'NEW',
-      'Marcus Vance',
-      'm.vance@vanguardlogistics.com',
+      'Demo Customer',
+      'quotes.demo1@example.com',
       '+1 (312) 555-0819',
-      'Vanguard Automotive Logistics',
+      'Demo Automotive Co.',
       JSON.stringify({ city: 'Detroit', state: 'MI', postalCode: '48201' }),
       JSON.stringify({ city: 'Atlanta', state: 'GA', postalCode: '30301' }),
       'Priority Freight',
@@ -345,10 +346,10 @@ export function seedDatabaseIfEmpty() {
       'Q-2026-8492',
       '2026-08-21T09:15:00Z',
       'RATE_PUBLISHED',
-      'Elena Rostova',
-      'e.rostova@apexflight.aero',
+      'Demo Customer',
+      'quotes.demo2@example.com',
       '+1 (206) 555-0143',
-      'Apex Flight Systems',
+      'Demo Flight Systems',
       JSON.stringify({ city: 'Seattle', state: 'WA', postalCode: '98101' }),
       JSON.stringify({ city: 'Miami', state: 'FL', postalCode: '33101' }),
       'Air Express',
@@ -372,25 +373,25 @@ export function seedDatabaseIfEmpty() {
 
     // 5. Sample Official Document
     insertDoc.run(
-      'doc-bol-7k2m9qrx',
+      'doc-bol-dls7k2m9',
       'BOL',
       'Auto Transport Bill of Lading & Inspection',
-      'DXP-2026-7K2M9QRX',
-      'Randy',
-      'Apex Auto Design',
+      'DLS7K2M9',
+      'Demo Shipper',
+      'Demo Auto Parts Co.',
       '123 Main Street, Suite 400',
       'New York',
       'NY',
       '10001',
       '+1 (212) 555-0198',
-      'Daniel',
-      'West Coast Offroad',
+      'Demo Consignee',
+      'Demo Offroad Outfitters',
       '456 Sunset Boulevard',
       'Los Angeles',
       'CA',
       '90028',
       '+1 (310) 555-0144',
-      'Toyota Tacoma Bumper Consignment',
+      'Steel Bumper Assembly Consignment',
       'Parcel',
       'Express',
       45.0,
@@ -398,9 +399,9 @@ export function seedDatabaseIfEmpty() {
       '72 × 24 × 18 in',
       1850.0,
       JSON.stringify({ baseRate: 320, insurance: 45, fuelSurcharge: 28.5, total: 393.5 }),
-      'Duolingo Express Dedicated Linehaul LLC',
+      LEGAL_NAME,
       'TL-4982',
-      'SEAL #DXP-2M9QRX-SEC',
+      'SDL-SL-892401',
       'Must inspect mounting brackets upon dock arrival. Store upright.',
       'Aug 19, 2026',
       'GENERATED',

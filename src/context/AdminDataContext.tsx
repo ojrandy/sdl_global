@@ -6,12 +6,11 @@ import { simulationEngine } from '../services/simulationEngine';
 import { resolveLocation, resolveLocationPrecise } from '../services/geocodingService';
 import { MOCK_SHIPMENTS } from '../data/mockShipments';
 import { applyForwardOnlyShipmentUpdate } from '../utils/shipmentSync';
+import { generateTrackingId, parseTrackingInput, pieceLabel } from '../shared/trackingId';
+import { COMPANY_SHORT } from '../config/brand';
 
-// MOCK_SHIPMENTS has multiple alias keys (e.g. 'DXP-7K2M9QRX', 'DXP-2026-7KZM9QRX') pointing
-// at the same underlying object so lookups work with shorthand tracking numbers — but that
-// means Object.values() would yield that same shipment several times over, producing
-// duplicate React keys (and duplicate rows) anywhere this list gets rendered. Dedupe by
-// object identity to collapse aliases back down to one entry per real shipment.
+// Deduped by object identity so a shipment listed under more than one key in MOCK_SHIPMENTS
+// can never produce duplicate React keys (and duplicate rows) where this list is rendered.
 const INITIAL_SHIPMENTS: Shipment[] = Array.from(new Set(Object.values(MOCK_SHIPMENTS)));
 const INITIAL_QUOTE_REQUESTS: QuoteRequest[] = [];
 const INITIAL_ADMIN_DOCUMENTS: AdminDocument[] = [];
@@ -196,8 +195,11 @@ const normalizeShipment = (s: any): Shipment => {
     return () => unsubscribe();
   }, []);
 
+  // Normalises SDL IDs ("dls 7k2-m9", child label DLS7K2M9-01 -> DLS7K2M9); anything else is
+  // matched as typed.
   const getShipment = (trackingNumber: string) => {
-    return shipments.find(s => s.trackingNumber.toUpperCase() === trackingNumber.toUpperCase());
+    const wanted = parseTrackingInput(trackingNumber)?.trackingId ?? trackingNumber.trim().toUpperCase();
+    return shipments.find(s => s.trackingNumber.toUpperCase() === wanted);
   };
 
   const updateShipmentDirect = (updated: Shipment) => {
@@ -524,8 +526,7 @@ const normalizeShipment = (s: any): Shipment => {
     const targetQuote = quoteRequests.find(q => q.id === quoteId);
     if (!targetQuote) return undefined;
 
-    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const trackingNumber = `DXP-2026-${randomSuffix}`;
+    const trackingNumber = generateTrackingId();
 
     const tq = targetQuote as any;
     const originCity = tq.originCity || tq.origin?.city || 'New York';
@@ -600,7 +601,7 @@ const normalizeShipment = (s: any): Shipment => {
           id: `${trackingNumber}-P1`,
           pieceNumber: 1,
           totalPieces: 1,
-          trackingNumber: `${trackingNumber}-01`,
+          trackingNumber: pieceLabel(trackingNumber, 1),
           status: 'RECEIVED',
           statusText: 'Consignment Registered',
           currentLocation: `${originCity}, ${originState}`,
@@ -748,8 +749,7 @@ const normalizeShipment = (s: any): Shipment => {
   };
 
   const createShipment = (shipmentData: Partial<Shipment>): Shipment => {
-    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const trackingNumber = shipmentData.trackingNumber || `DXP-2026-${randomSuffix}`;
+    const trackingNumber = shipmentData.trackingNumber || generateTrackingId();
 
     const originCity = typeof shipmentData.origin === 'object' ? shipmentData.origin.city : (shipmentData.origin || 'New York');
     const originState = typeof shipmentData.origin === 'object' ? shipmentData.origin.state : 'NY';
@@ -840,7 +840,7 @@ const normalizeShipment = (s: any): Shipment => {
               id: `${trackingNumber}-P1`,
               pieceNumber: 1,
               totalPieces: shipmentData.totalPieces || 1,
-              trackingNumber: `${trackingNumber}-01`,
+              trackingNumber: pieceLabel(trackingNumber, 1),
               status: 'RECEIVED',
               statusText: 'Consignment Registered',
               currentLocation: `${originCity}, ${originState}`,
@@ -856,7 +856,7 @@ const normalizeShipment = (s: any): Shipment => {
           location: `${shipmentData.origin?.city || 'New York'}, ${shipmentData.origin?.state || 'NY'}`,
           facility: 'Intake Gateway Hub',
           timestamp: 'Just now',
-          description: 'Shipment received into the Duolingo Express national sort network. Linear Code 128 barcode assigned.',
+          description: `Shipment received into the ${COMPANY_SHORT} network. Linear Code 128 barcode assigned.`,
           delayFlag: false,
           completed: true,
           current: true

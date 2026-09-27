@@ -197,7 +197,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                   <Search size={22} className="terminal-search-icon" />
                   <input
                     type="text"
-                    placeholder="Enter tracking number (e.g. DXP-2026-7K2M9QRX or QR-2026-88752)"
+                    placeholder="Enter tracking ID (e.g. DLS7K2M9) or quote ID"
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
                     className="terminal-input font-mono"
@@ -232,7 +232,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                   value={multiInput}
                   onChange={(e) => setMultiInput(e.target.value)}
                   className="terminal-textarea font-mono"
-                  placeholder="DXP-2026-7K2M9QRX&#10;DXP-2026-8M4P2LQA&#10;DXP-2026-3J7N6KRB"
+                  placeholder="DLS7K2M9&#10;DLS8M4PQ&#10;DLS3J7NK"
                 />
                 <div className="batch-actions-row">
                   <span className="batch-hint-text">

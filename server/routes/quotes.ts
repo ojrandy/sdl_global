@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
+import { generateUniqueTrackingId } from '../trackingIds.js';
+import { isValidTrackingId, normalizeTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
 
 export const quotesRouter = Router();
 
@@ -254,8 +256,14 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
 
     const q = formatQuote(quoteRow)!;
     const s = req.body && typeof req.body === 'object' ? req.body : {};
-    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const trackingNumber = s.trackingNumber || `DXP-2026-${randomSuffix}`;
+    const requested = s.trackingNumber ? normalizeTrackingInput(s.trackingNumber) : '';
+    if (requested && !isValidTrackingId(requested)) {
+      return res.status(400).json({ success: false, error: `"${s.trackingNumber}" is not a valid tracking ID.` });
+    }
+    if (requested && db.prepare('SELECT 1 FROM shipments WHERE tracking_number = ?').get(requested)) {
+      return res.status(409).json({ success: false, error: `Tracking number ${requested} is already in use.` });
+    }
+    const trackingNumber = requested || generateUniqueTrackingId();
     const createdAt = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
     // The quote's raw stored dimensions (an object, e.g. {length,width,height}) — formatQuote()
@@ -339,7 +347,7 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       `${trackingNumber}-P01`,
-      `${trackingNumber}-01`,
+      pieceLabel(trackingNumber, 1),
       trackingNumber,
       1,
       1,

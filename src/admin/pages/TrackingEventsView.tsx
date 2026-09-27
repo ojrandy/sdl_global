@@ -36,6 +36,7 @@ import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
 import { AdminViewType } from '../AdminLayout';
 import { resolveLocation, resolveLocationPrecise } from '../../services/geocodingService';
 import './TrackingEventsView.css';
+import { COMPANY_SHORT } from '../../config/brand';
 
 // Pre-defined structured standard network locations
 const NETWORK_LOCATIONS = [
@@ -54,7 +55,7 @@ const MESSAGE_TEMPLATES: Record<string, string> = {
   ARRIVED: 'Your shipment has arrived at our facility and is continuing toward its destination.',
   DEPARTED: 'Your shipment has departed our location and is en route to the next network gateway.',
   PROCESSING: 'Your shipment is being processed and prepared for scheduled linehaul transit.',
-  RECEIVED: 'Shipment received into the Duolingo Express network.',
+  RECEIVED: `Shipment received into the ${COMPANY_SHORT} network.`,
   SHIPMENT_CREATED: 'Shipment waybill registered and physical piece barcode generated.',
   OUT_FOR_DELIVERY: 'Your shipment is out for delivery with our courier and will be delivered today.',
   DELIVERED: 'Your shipment has been successfully delivered and signed for.',
@@ -127,9 +128,9 @@ interface TrackingEventsViewProps {
 export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelectView }) => {
   const { shipments, addTrackingEvent, updateShipmentStatus, correctTrackingEvent } = useAdminData();
 
-  // Active Shipment Selection (Defaults to Randy's flagship shipment DXP-2026-7K2M9QRX)
+  // Active shipment selection (defaults to the first shipment)
   const [selectedTracking, setSelectedTracking] = useState<string>(
-    shipments.find(s => s.trackingNumber === 'DXP-2026-7K2M9QRX')?.trackingNumber || shipments[0]?.trackingNumber || ''
+    shipments[0]?.trackingNumber || ''
   );
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedId, setCopiedId] = useState<string | null>(null);

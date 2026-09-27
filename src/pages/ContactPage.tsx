@@ -52,7 +52,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
       return;
     }
 
-    const generatedId = `DXP-TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const generatedId = `SDL-TKT-${Math.floor(100000 + Math.random() * 900000)}`;
     setTicketId(generatedId);
     setSubmitted(true);
     window.scrollTo({ top: 300, behavior: 'smooth' });
@@ -77,7 +77,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
   const faqs = [
     {
       q: "How do I track an active consignment across your sortation network?",
-      a: "Enter your tracking identifier (e.g. DXP-2026-7K2M9QRX) in the search bar on our Track page. You will immediately access live 60 FPS highway telemetry, verified checkpoint scan milestones, and real-time arrival estimates."
+      a: "Enter your 8-character tracking ID (e.g. DLS7K2M9) in the search bar on our Track page. You'll see verified checkpoint scans, live milestones and your estimated delivery."
     },
     {
       q: "What courier delivery options exist for commercial and residential tenders?",
@@ -265,7 +265,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                       type="text"
                       value={tracking}
                       onChange={(e) => setTracking(e.target.value)}
-                      placeholder="e.g. DXP-2026-7K2M9QRX"
+                      placeholder="e.g. DLS7K2M9"
                       className="sdl-input font-mono"
                     />
                   </div>

@@ -38,7 +38,7 @@ import {
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminDocument, DocumentType, DocumentStatus } from '../../types/admin';
 import { Barcode } from '../../components/Barcode';
-import { LOGO, LOGO_ALT } from '../../config/brand';
+import { COMPANY, COMPANY_SHORT, LEGAL_NAME, LOGO, LOGO_ALT } from '../../config/brand';
 import './DocumentCenterView.css';
 
 interface DocumentCenterViewProps {
@@ -456,7 +456,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
         paidDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         paymentMethod: 'Corporate Freight Account'
       } : undefined,
-      bolCarrier: 'Duolingo Express Dedicated Linehaul Division',
+      bolCarrier: LEGAL_NAME,
       bolTrailerNumber,
       bolSealNumber,
       bolSpecialInstructions,
@@ -1216,7 +1216,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       fontSize={12}
                     />
                     <div className="rec-footer-note font-mono">
-                      TRACKING REF: {previewDoc.shipmentTracking} · THANK YOU FOR SHIPPING WITH DUOLINGO EXPRESS
+                      TRACKING REF: {previewDoc.shipmentTracking} · THANK YOU FOR SHIPPING WITH {COMPANY.toUpperCase()}
                     </div>
                   </div>
                 </div>
@@ -1366,7 +1366,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       fontSize={11}
                     />
                     <div className="font-mono text-xs text-slate mt-1">
-                      INVOICE REF: {previewDoc.id} · AUTH REF: DXP-CORP-PAY-4091
+                      INVOICE REF: {previewDoc.id} · AUTH REF: SDL-INV-004091
                     </div>
                   </div>
                 </div>
@@ -1415,7 +1415,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
 
                   {/* Carrier & Equipment Details */}
                   <div className="bol-carrier-strip font-mono">
-                    <div className="c-field"><span>CARRIER:</span> <strong>{previewDoc.bolCarrier || 'Duolingo Express Linehaul'}</strong></div>
+                    <div className="c-field"><span>CARRIER:</span> <strong>{previewDoc.bolCarrier || LEGAL_NAME}</strong></div>
                     <div className="c-field"><span>TRAILER NO:</span> <strong>{previewDoc.bolTrailerNumber || 'TR-4091-E'}</strong></div>
                     <div className="c-field"><span>SEAL NO:</span> <strong>{previewDoc.bolSealNumber || 'SL-99420'}</strong></div>
                   </div>
@@ -1496,7 +1496,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <div className="sig-box">
                       <span className="sig-label font-mono">CARRIER ACKNOWLEDGEMENT & RECEIPT</span>
                       <div className="sig-line">
-                        <span className="signed-name font-mono">{settings.signatoryName || 'Duolingo Express Dispatch Officer'}</span>
+                        <span className="signed-name font-mono">{settings.signatoryName || `${COMPANY_SHORT} Dispatch Officer`}</span>
                       </div>
                       {settings.signatoryTitle && <div className="ins-signatory-title font-mono">{settings.signatoryTitle}</div>}
                       <div className="sig-date font-mono">DATE: {previewDoc.createdDate}</div>
@@ -1530,7 +1530,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   <div className="ins-top-header">
                     <div className="ins-brand">
                       <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
-                      <p>Cargo Insurance Arranged Through Duolingo Express Freight Services</p>
+                      <p>Cargo Insurance Arranged Through {LEGAL_NAME}</p>
                     </div>
                     <div className="ins-id-box font-mono">
                       <div className="b-row"><span>CERTIFICATE NO:</span> <strong className="ins-id-value">{previewDoc.id}</strong></div>
@@ -1546,7 +1546,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
 
                   {/* Certifying Statement */}
                   <p className="ins-certify-text">
-                    This is to certify that insurance is effected under Master Policy No. <strong>{previewDoc.policyNumber || 'MCC-2026-778120'}</strong>, issued by <strong>{previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'}</strong>, on the cargo described below, and that this Certificate represents and takes the place of the Policy and conveys all the rights of the original policyholder for the purpose of collecting any loss or claim thereunder, subject to the terms, conditions, and exclusions of the original policy. Signed for and on behalf of {previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'} by an authorized agent of Duolingo Express Freight Services under binding open cover authority.
+                    This is to certify that insurance is effected under Master Policy No. <strong>{previewDoc.policyNumber || 'MCC-2026-778120'}</strong>, issued by <strong>{previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'}</strong>, on the cargo described below, and that this Certificate represents and takes the place of the Policy and conveys all the rights of the original policyholder for the purpose of collecting any loss or claim thereunder, subject to the terms, conditions, and exclusions of the original policy. Signed for and on behalf of {previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'} by an authorized agent of {LEGAL_NAME} under binding open cover authority.
                   </p>
 
                   {/* Parties Section */}
@@ -1570,7 +1570,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* Conveyance & Transit Details */}
                   <div className="ins-transit-strip font-mono">
                     <div className="c-field"><span>WAYBILL / TRACKING NO:</span> <strong>{previewDoc.shipmentTracking}</strong></div>
-                    <div className="c-field"><span>CONVEYANCE:</span> <strong>{previewDoc.bolCarrier || 'Duolingo Express Dedicated Linehaul'}</strong></div>
+                    <div className="c-field"><span>CONVEYANCE:</span> <strong>{previewDoc.bolCarrier || LEGAL_NAME}</strong></div>
                     <div className="c-field"><span>ROUTE:</span> <strong>{previewDoc.senderCity}, {previewDoc.senderState} → {previewDoc.recipientCity}, {previewDoc.recipientState}</strong></div>
                   </div>
 
@@ -1627,7 +1627,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   <div className="ins-claims-box">
                     <span className="font-mono font-bold text-xs text-slate">CLAIMS NOTICE:</span>
                     <p className="ins-claims-text">
-                      In the event of loss or damage which may give rise to a claim under this insurance, immediate notice must be given to Duolingo Express Claims Department. Any claim must be supported by this Certificate in original form. Failure to comply with these conditions may prejudice the claim.
+                      In the event of loss or damage which may give rise to a claim under this insurance, immediate notice must be given to the {COMPANY_SHORT} Claims Department. Any claim must be supported by this Certificate in original form. Failure to comply with these conditions may prejudice the claim.
                     </p>
                   </div>
 

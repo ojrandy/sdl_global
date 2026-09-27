@@ -1,5 +1,5 @@
 /**
- * Duolingo Express — Autonomous Logistics Planning & Dynamic Timeline Engine
+ * SDL Global Logistics — Autonomous Logistics Planning & Dynamic Timeline Engine
  * Generates automated planned timelines, predicts milestone timestamps,
  * enforces 3-state milestone taxonomy (CONFIRMED, ESTIMATED, PENDING_CONFIRMATION),
  * and handles state-machine transitions (Hold, Delay, Return, Deliver) with full audit logging.
@@ -15,6 +15,7 @@ import {
 } from '../types/shipment.js';
 import { findIntermediateHub } from './routingEngine.js';
 import { resolveLocation } from './geocodingService.js';
+import { generateTrackingId } from '../shared/trackingId.js';
 
 /**
  * Shipment.currentLocation is typed as a string, but the simulation engine (in motion)
@@ -635,7 +636,8 @@ export function applyReturnToOrigin(
   returnReason: string,
   operator = 'Super Admin'
 ): { updatedShipment: Shipment; auditEntry: ShipmentAuditEntry; event: TrackingEvent } {
-  const returnTrackingNumber = `DXP-RTO-${shipment.trackingNumber.replace('DXP-', '')}`;
+  // A return gets its own new tracking ID, linked to the original (BRAND_GUIDE §7).
+  const returnTrackingNumber = generateTrackingId();
 
   const now = new Date();
   const timestampStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +

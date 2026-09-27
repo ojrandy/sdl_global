@@ -50,8 +50,9 @@ import { generateShipmentPlan } from '../../services/planningEngine';
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminViewType } from '../AdminLayout';
 import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
-import { LEGAL_NAME } from '../../config/brand';
+import { COMPANY, COMPANY_SHORT, LEGAL_NAME, TRACKING_PREFIX } from '../../config/brand';
 import './CreateShipmentView.css';
+import { generateTrackingId, pieceLabel } from '../../shared/trackingId';
 
 interface CreateShipmentViewProps {
   onSelectView: (view: AdminViewType) => void;
@@ -170,8 +171,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // ----------------------------------------------------
   // DOCUMENT CARGO SPECIFIC STATE (When shipmentType === 'Document')
   // ----------------------------------------------------
-  const [docEnvelopeType, setDocEnvelopeType] = useState('Duolingo Express Waterproof Pouch');
-  const [docSealNumber, setDocSealNumber] = useState('DXP-SEAL-892401');
+  const [docEnvelopeType, setDocEnvelopeType] = useState(`${COMPANY_SHORT} Waterproof Pouch`);
+  const [docSealNumber, setDocSealNumber] = useState('SDL-SL-892401');
   const [docDirectSignOnly, setDocDirectSignOnly] = useState(true);
   const [docUrgentDeadline, setDocUrgentDeadline] = useState('By 10:30 AM Next Business Day');
   const [docFilingCourtRef, setDocFilingCourtRef] = useState('CASE-2026-NY-4481');
@@ -330,12 +331,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // Generate tracking identity on mount or when reaching review
   useEffect(() => {
     if (!generatedTrackingNumber) {
-      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-      let entropy = '';
-      for (let i = 0; i < 8; i++) {
-        entropy += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      setGeneratedTrackingNumber(`DXP-2026-${entropy}`);
+      setGeneratedTrackingNumber(generateTrackingId());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatedTrackingNumber]);
@@ -612,8 +608,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       setShipmentType('Document');
       setCargoCategory('Legal & Documents');
       setShipmentDescription('Executed Commercial Vehicle Titles & Sales Contracts (35 Pages)');
-      setDocEnvelopeType('Duolingo Express Waterproof Legal Pouch (12×16 in)');
-      setDocSealNumber('DXP-SEAL-892401');
+      setDocEnvelopeType(`${COMPANY_SHORT} Waterproof Legal Pouch (12×16 in)`);
+      setDocSealNumber('SDL-SL-892401');
       setDocDirectSignOnly(true);
       setDocUrgentDeadline('By 10:30 AM Next Business Day (Priority Legal)');
       setDocFilingCourtRef('CASE-2026-NY-4481');
@@ -741,7 +737,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: `${generatedTrackingNumber}-01`,
+            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Vehicle Manifest Created' : 'Vehicle Ingested & Inspected',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -758,7 +754,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           id: String(idx + 1).padStart(2, '0'),
           pieceNumber: idx + 1,
           totalPieces: palletCount,
-          trackingNumber: `${generatedTrackingNumber}-PL${String(idx + 1).padStart(2, '0')}`,
+          trackingNumber: pieceLabel(generatedTrackingNumber, idx + 1),
           status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
           statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Skid Manifested' : 'Skid Received & Scanned',
           currentLocation: `${senderCity}, ${senderState}`,
@@ -775,7 +771,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: `${generatedTrackingNumber}-CTR01`,
+            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Container Booked' : 'Container Ingested at Terminal',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -792,7 +788,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           id: String(idx + 1).padStart(2, '0'),
           pieceNumber: idx + 1,
           totalPieces: freightPiecesCount,
-          trackingNumber: `${generatedTrackingNumber}-FR${String(idx + 1).padStart(2, '0')}`,
+          trackingNumber: pieceLabel(generatedTrackingNumber, idx + 1),
           status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
           statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Freight Linehaul Manifested' : 'Freight Ingested at Raised Dock',
           currentLocation: `${senderCity}, ${senderState}`,
@@ -809,7 +805,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: `${generatedTrackingNumber}-DOC01`,
+            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Document Pouch Registered' : 'Document Pouch Sealed & Logged',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -827,7 +823,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             id: '01',
             pieceNumber: 1,
             totalPieces: 1,
-            trackingNumber: `${generatedTrackingNumber}-PET01`,
+            trackingNumber: pieceLabel(generatedTrackingNumber, 1),
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Pet Relocation Manifest Created' : 'Live Pet Health Ingested & Staged',
             currentLocation: `${senderCity}, ${senderState}`,
@@ -843,7 +839,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           id: String(idx + 1).padStart(2, '0'),
           pieceNumber: idx + 1,
           totalPieces: packagesList.length,
-          trackingNumber: `${generatedTrackingNumber}-${String(idx + 1).padStart(2, '0')}`,
+          trackingNumber: pieceLabel(generatedTrackingNumber, idx + 1),
           status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
           statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Shipment Created' : 'Shipment Received at Origin',
           currentLocation: `${senderCity}, ${senderState}`,
@@ -1149,7 +1145,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         title: `Uniform Straight Bill of Lading (${generatedTrackingNumber})`,
         shipmentTracking: generatedTrackingNumber,
         senderName: senderName || 'Origin Consignor',
-        senderCompany: senderCompany || 'Duolingo Logistics Intake',
+        senderCompany: senderCompany || `${COMPANY_SHORT} Intake`,
         senderAddress: senderAddress,
         senderCity: senderCity,
         senderState: senderState,
@@ -2628,8 +2624,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         type="button"
                         className="preset-spec-btn"
                         onClick={() => {
-                          setDocEnvelopeType('Duolingo Express Waterproof Legal Pouch (12×16 in)');
-                          setDocSealNumber('DXP-SEAL-892401');
+                          setDocEnvelopeType(`${COMPANY_SHORT} Waterproof Legal Pouch (12×16 in)`);
+                          setDocSealNumber('SDL-SL-892401');
                           setDocDirectSignOnly(true);
                           setDocUrgentDeadline('By 10:30 AM Next Business Day (Priority Legal)');
                           setDocFilingCourtRef('CASE-2026-NY-4481');
@@ -2651,7 +2647,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                           value={docEnvelopeType}
                           onChange={e => setDocEnvelopeType(e.target.value)}
                         >
-                          <option value="Duolingo Express Waterproof Legal Pouch (12×16 in)">Duolingo Express Waterproof Legal Pouch (12×16 in)</option>
+                          <option value={`${COMPANY_SHORT} Waterproof Legal Pouch (12×16 in)`}>{COMPANY_SHORT} Waterproof Legal Pouch (12×16 in)</option>
                           <option value="Rigid Cardboard Stay-Flat Mailer (9.5×12.5 in)">Rigid Cardboard Stay-Flat Mailer (9.5×12.5 in)</option>
                           <option value="Heavy Duty Tyvek Courier Envelope (10×13 in)">Heavy Duty Tyvek Courier Envelope (10×13 in)</option>
                           <option value="Tamper-Evident Bank Deposit Polybag">Tamper-Evident Bank Deposit / Evidence Polybag</option>
@@ -2665,7 +2661,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                           className="font-mono"
                           value={docSealNumber}
                           onChange={e => setDocSealNumber(e.target.value.toUpperCase())}
-                          placeholder="DXP-SEAL-892401"
+                          placeholder="SDL-SL-892401"
                         />
                         <span className="field-hint-txt" style={{ fontSize: '0.65rem' }}>Sequential tamper-evident barcode seal</span>
                       </div>
@@ -3930,7 +3926,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           <div className="summary-sticky-card">
             <div className="summary-passport-header">
               <div className="summary-head-title-row">
-                <span className="summary-carrier-tag">DUOLINGO EXPRESS</span>
+                <span className="summary-carrier-tag">{COMPANY.toUpperCase()}</span>
                 <span className="summary-live-badge">
                   <span className="summary-live-dot" />
                   <span>LIVE MANIFEST</span>
@@ -4019,7 +4015,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                 <div className="b-bar w-4" /><div className="b-bar w-1" /><div className="b-bar w-3" />
               </div>
               <span className="barcode-tracking-text font-mono">
-                {currentStep === 6 ? generatedTrackingNumber : 'DXP-AUTOGEN-REGISTER'}
+                {currentStep === 6 ? generatedTrackingNumber : `${TRACKING_PREFIX}·····`}
               </span>
             </div>
           </div>

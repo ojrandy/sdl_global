@@ -25,6 +25,8 @@ import { Barcode } from '../components/Barcode';
 import { useAdminData } from '../context/AdminDataContext';
 import { resolveLocation } from '../services/geocodingService';
 import './ShipPage.css';
+import { generateTrackingId, pieceLabel } from '../shared/trackingId';
+import { COMPANY_SHORT } from '../config/brand';
 
 interface ShipPageProps {
   onTrack: (trackingNumber: string) => void;
@@ -177,15 +179,14 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
     setIsSubmitting(true);
 
-    const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const newTrackingId = `DXP-2026-${randomSuffix}`;
+    const newTrackingId = generateTrackingId();
     setGeneratedTracking(newTrackingId);
 
     const piecesFormatted = piecesList.map((p, idx) => ({
       id: `${newTrackingId}-P${idx + 1}`,
       pieceNumber: idx + 1,
       totalPieces: piecesList.length,
-      trackingNumber: `${newTrackingId}-${(idx + 1).toString().padStart(2, '0')}`,
+      trackingNumber: pieceLabel(newTrackingId, idx + 1),
       status: 'AWAITING_PICKUP' as const,
       statusText: 'Consignment Tender Staged for Intake',
       currentLocation: `${senderCity}, ${senderState}`,
@@ -206,7 +207,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       barcodeCode: `*${newTrackingId}*`,
       status: 'AWAITING_PICKUP',
       statusText: 'Consignment Tender Registered · Awaiting Intake Scan',
-      statusMessage: 'Consignment registered in Duolingo Express intake system. Linear Code 128 piece barcodes assigned.',
+      statusMessage: `Consignment registered in the ${COMPANY_SHORT} intake system. Linear Code 128 piece barcodes assigned.`,
       health: 'ON_TRACK',
       progressPercent: 10,
       lastUpdated: 'Just now',

@@ -3,6 +3,7 @@ import { X, ArrowRight, Save, Building, User, Package, Calendar, MapPin } from '
 import { Shipment } from '../../types/shipment';
 import { resolveLocation } from '../../services/geocodingService';
 import './EditShipmentModal.css';
+import { COMPANY_SHORT } from '../../config/brand';
 
 interface EditShipmentModalProps {
   shipment: Shipment;
@@ -124,7 +125,7 @@ export const EditShipmentModal: React.FC<EditShipmentModalProps> = ({
   const [freightTotalWeightLbs, setFreightTotalWeightLbs] = useState(String(freight?.totalWeightLbs || ''));
 
   const doc = shipment.documentDetails;
-  const [docEnvelopeType, setDocEnvelopeType] = useState(doc?.envelopeType || 'Duolingo Express Waterproof Pouch');
+  const [docEnvelopeType, setDocEnvelopeType] = useState(doc?.envelopeType || `${COMPANY_SHORT} Waterproof Pouch`);
   const [docSealNumber, setDocSealNumber] = useState(doc?.sealNumber || '');
   const [docDirectSignOnly, setDocDirectSignOnly] = useState(doc?.directSignOnly !== false);
   const [docUrgentDeadline, setDocUrgentDeadline] = useState(doc?.urgentDeadline || '');

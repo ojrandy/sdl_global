@@ -3,6 +3,9 @@ import { db } from '../db.js';
 import { syncTimeBasedProgress } from '../progress.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
+import { generateUniqueTrackingId } from '../trackingIds.js';
+import { parseTrackingInput, isValidTrackingId, normalizeTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
+import { COMPANY_SHORT } from '../../src/config/brand.js';
 
 export const shipmentsRouter = Router();
 
@@ -177,12 +180,11 @@ shipmentsRouter.get('/', requireAdminAuth, (req: Request, res: Response) => {
 // GET /api/shipments/:trackingNumber — admin only, unmasked (public lookups use /api/track/:id)
 shipmentsRouter.get('/:trackingNumber', requireAdminAuth, (req: Request, res: Response) => {
   try {
-    const tracking = (req.params.trackingNumber as string).trim().toUpperCase();
-    let row = db.prepare('SELECT * FROM shipments WHERE tracking_number = ? AND deleted_at_ts IS NULL').get(tracking) as any;
-
-    if (!row && (tracking.includes('7KZM9QRX') || tracking.includes('7K2M9QRX') || tracking === 'DXP-SAMPLE')) {
-      row = db.prepare('SELECT * FROM shipments WHERE tracking_number = ? AND deleted_at_ts IS NULL').get('DXP-2026-7K2M9QRX') as any;
-    }
+    // Accepts "dls 7k2-m9" and child labels (DLS7K2M9-01 -> DLS7K2M9); anything else is looked
+    // up as typed, so records created before the DLS format can still be opened here.
+    const raw = (req.params.trackingNumber as string).trim().toUpperCase();
+    const tracking = parseTrackingInput(raw)?.trackingId ?? raw;
+    const row = db.prepare('SELECT * FROM shipments WHERE tracking_number = ? AND deleted_at_ts IS NULL').get(tracking) as any;
 
     if (!row) {
       return res.status(404).json({ success: false, error: `Shipment ${tracking} not found` });
@@ -201,8 +203,11 @@ shipmentsRouter.get('/:trackingNumber', requireAdminAuth, (req: Request, res: Re
 shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
   try {
     const s = req.body;
-    let trackingNumber = s.trackingNumber;
+    let trackingNumber: string = s.trackingNumber ? normalizeTrackingInput(s.trackingNumber) : '';
     if (trackingNumber) {
+      if (!isValidTrackingId(trackingNumber)) {
+        return res.status(400).json({ success: false, error: `"${s.trackingNumber}" is not a valid tracking ID.` });
+      }
       // The client (CreateShipmentView) generates its own tracking number up front and
       // shows it to the admin before this request is even sent — if it happens to collide
       // with an existing one (vanishingly rare, but possible), fail with a clean, specific
@@ -213,7 +218,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         return res.status(409).json({ success: false, error: `Tracking number ${trackingNumber} is already in use. Please retry — a new number will be generated.` });
       }
     } else {
-      trackingNumber = `DXP-2026-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      trackingNumber = generateUniqueTrackingId();
     }
     const barcodeCode = `*${trackingNumber}*`;
     const createdAt = s.createdAt || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -315,7 +320,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       const pieceId = `${trackingNumber}-P${pieceNum}`;
       insertPiece.run(
         pieceId,
-        p.trackingNumber || `${trackingNumber}-${String(pieceNum).padStart(2, '0')}`,
+        pieceLabel(trackingNumber, pieceNum),
         trackingNumber,
         pieceNum,
         p.totalPieces || pieces.length,
@@ -343,7 +348,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       `${s.origin?.city || 'New York'}, ${s.origin?.state || 'NY'}`,
       s.currentLocation?.facility || 'Intake Gateway',
       `${createdAt} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
-      'Shipment received into the Duolingo Express national sort network. Linear Code 128 barcode assigned.',
+      `Shipment received into the ${COMPANY_SHORT} network. Linear Code 128 barcode assigned.`,
       'Initial entry scan.',
       0, 1, 1, 1
     );
@@ -468,7 +473,7 @@ shipmentsRouter.patch('/:trackingNumber/status', requireAdminAuth, (req: Request
         newStatus,
         eventTitle || statusText,
         location || 'Regional Transit Gateway',
-        facility || 'Duolingo Express Facility',
+        facility || `${COMPANY_SHORT} Facility`,
         `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
         notes || `Status transitioned to ${newStatus}.`,
         notes || null,

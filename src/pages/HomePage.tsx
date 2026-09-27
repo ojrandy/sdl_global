@@ -1046,11 +1046,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
               <div className="bc-canvas-wrap-thermal">
                 <div className="laser-sweep-line" />
-                <Barcode value="DXP-2026-7K2M9QRX" width={2.2} height={68} />
+                <Barcode value="DLS7K2M9" width={2.2} height={68} />
               </div>
 
               <div className="thermal-footer font-mono">
-                <span>CONSIGNMENT ID: DXP-2026-7K2M9QRX</span>
+                <span>TRACKING ID: DLS7K2M9</span>
                 <span>PIECE 01/01 · VERIFIED LEDGER</span>
               </div>
             </div>

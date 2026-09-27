@@ -17,7 +17,7 @@ import { AdminApp } from './admin/AdminApp';
 import { AdminLogin } from './admin/AdminLogin';
 import { TrackingLoadingScreen } from './components/TrackingLoadingScreen';
 import { AdminDataProvider, useAdminData } from './context/AdminDataContext';
-import { PRIMARY_SHIPMENT, getShipmentByTrackingNumber } from './data/mockShipments';
+import { getShipmentByTrackingNumber } from './data/mockShipments';
 import { Shipment } from './types/shipment';
 import { QuoteRequest } from './types/admin';
 import { api } from './services/api';
@@ -353,20 +353,7 @@ function MainAppContent() {
       // not found
     }
 
-    // 3. IF FALLBACK SEARCHING SAMPLE
-    if (query.toUpperCase().startsWith('DXP-SAMPLE') || query.toUpperCase().includes('7K2M9QRX')) {
-      const sample = getShipmentByTrackingNumber(query) || PRIMARY_SHIPMENT;
-      await finishSearch(() => {
-        setCurrentShipment(sample);
-        setNotFoundQuery(null);
-        setCurrentPage('track-result');
-        window.location.hash = `/track/${sample.trackingNumber}`;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-      return;
-    }
-
-    // 4. NOT FOUND STATE
+    // 3. NOT FOUND STATE
     await finishSearch(() => {
       setNotFoundQuery(query);
       setCurrentPage('track');
