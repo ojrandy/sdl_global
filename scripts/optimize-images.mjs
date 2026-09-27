@@ -1,5 +1,6 @@
 // Prepares SDL brand assets and responsive photos from the untouched originals in images/.
-// Run with: node scripts/optimize-images.mjs
+// Run with: node scripts/optimize-images.mjs            (everything)
+//           node scripts/optimize-images.mjs --icons    (favicon and app icons only)
 // Outputs: Public/brand/* (logos, icons, OG image) and Public/images/sdl/* (WebP + JPG per width),
 // plus src/data/sdlImages.ts (the manifest <ResponsiveImage> reads).
 import sharp from 'sharp';
@@ -71,6 +72,57 @@ async function redOnly(pngBuffer) {
   return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer();
 }
 
+// Icon mark: the red globe, arrow and parcel that form the "D", without the black letterforms
+// behind them, centred on a transparent square. Crop box measured on the 1170x626 original
+// (includes the arrow tip over the "L").
+async function buildSquareMark(transparent) {
+  const MARK = { left: 538, top: 95, width: 372, height: 250 };
+  const markRed = await redOnly(await sharp(transparent).extract(MARK).png().toBuffer());
+  const mark = await sharp(markRed).trim({ threshold: 1 }).png().toBuffer();
+  const markMeta = await sharp(mark).metadata();
+  const side = Math.max(markMeta.width, markMeta.height);
+  return sharp(mark)
+    .extend({
+      top: Math.floor((side - markMeta.height) / 2), bottom: Math.ceil((side - markMeta.height) / 2),
+      left: Math.floor((side - markMeta.width) / 2), right: Math.ceil((side - markMeta.width) / 2),
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png().toBuffer();
+}
+
+// Browser, home-screen and PWA icons, all rendered straight from the square mark at their exact
+// size (never resized from another icon). `inset` is the share of the canvas the mark may fill.
+const CLEAR = { r: 0, g: 0, b: 0, alpha: 0 };
+const ICONS = [
+  // Tab icons sit on a white rounded tile so the red mark stays visible on dark browser tabs.
+  { file: 'favicon-16.png', size: 16, inset: 1, bg: '#ffffff', tile: true },  // browser tab (standard DPI)
+  { file: 'favicon-32.png', size: 32, inset: 0.94, bg: '#ffffff', tile: true }, // browser tab (retina), taskbar
+  { file: 'icon-192.png', size: 192, inset: 0.92, bg: CLEAR },        // Android home screen, manifest
+  { file: 'favicon.png', size: 512, inset: 0.92, bg: CLEAR },         // manifest, install splash
+  { file: 'icon-maskable-512.png', size: 512, inset: 0.64, bg: '#ffffff' }, // Android adaptive: fits the 80% safe circle
+  { file: 'apple-touch-icon.png', size: 180, inset: 0.76, bg: '#ffffff' },  // iOS fills transparency with black, so white
+];
+
+async function buildIcons(squareMark) {
+  for (const { file, size, inset, bg, tile } of ICONS) {
+    const inner = Math.round(size * inset);
+    const edge = size - inner;
+    let icon = sharp(squareMark)
+      .resize(inner, inner, { fit: 'contain', background: CLEAR, kernel: 'lanczos3' })
+      .extend({ top: Math.floor(edge / 2), bottom: Math.ceil(edge / 2), left: Math.floor(edge / 2), right: Math.ceil(edge / 2), background: CLEAR });
+    if (tile) {
+      const r = Math.round(size * 0.22);
+      const card = Buffer.from(`<svg width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="${r}" fill="${bg}"/></svg>`);
+      icon = sharp(card).composite([{ input: await icon.png().toBuffer() }]);
+    } else if (bg !== CLEAR) {
+      icon = sharp(await icon.png().toBuffer()).flatten({ background: bg });
+    }
+    // Full-colour PNG for the tiny sizes: palette quantising visibly bands 16/32 px edges.
+    const png = size <= 32 ? { compressionLevel: 9 } : { palette: true, quality: 95, effort: 10, compressionLevel: 9 };
+    await icon.png(png).toFile(path.join(BRAND_OUT, file));
+  }
+}
+
 async function buildBrand() {
   const transparent = await whiteToAlpha(path.join(SRC, 'logo.jpeg'));
   const trimmed = await sharp(transparent).trim({ threshold: 1 }).png().toBuffer();
@@ -79,33 +131,9 @@ async function buildBrand() {
   const white = await toWhiteVersion(trimmed);
   await sharp(white).png({ palette: true, quality: 90, effort: 10, compressionLevel: 9 }).toFile(path.join(BRAND_OUT, 'sdl-logo-white.png'));
 
-  // Icon mark: the red globe, arrow and parcel that form the "D", without the black letterforms
-  // behind them. Crop box measured on the 1170x626 original (includes the arrow tip over the "L").
-  const MARK = { left: 538, top: 95, width: 372, height: 250 };
-  const markRed = await redOnly(await sharp(transparent).extract(MARK).png().toBuffer());
-  const mark = await sharp(markRed).trim({ threshold: 1 }).png().toBuffer();
-  const markMeta = await sharp(mark).metadata();
-  const side = Math.max(markMeta.width, markMeta.height);
-  const squareMark = await sharp(mark)
-    .extend({
-      top: Math.floor((side - markMeta.height) / 2), bottom: Math.ceil((side - markMeta.height) / 2),
-      left: Math.floor((side - markMeta.width) / 2), right: Math.ceil((side - markMeta.width) / 2),
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .png().toBuffer();
+  const squareMark = await buildSquareMark(transparent);
   await sharp(squareMark).png({ palette: true, quality: 90, effort: 10, compressionLevel: 9 }).toFile(path.join(BRAND_OUT, 'sdl-mark.png'));
-
-  // favicon: transparent, a little padding. apple-touch-icon: iOS ignores transparency, so white.
-  const pad = (size, pct) => Math.round(size * pct);
-  const fav = 512, favInner = fav - 2 * pad(fav, 0.04);
-  await sharp(squareMark).resize(favInner, favInner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .extend({ top: pad(fav, 0.04), bottom: pad(fav, 0.04), left: pad(fav, 0.04), right: pad(fav, 0.04), background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .resize(fav, fav).png({ palette: true, quality: 90, effort: 10, compressionLevel: 9 }).toFile(path.join(BRAND_OUT, 'favicon.png'));
-  const ati = 180, atiInner = ati - 2 * pad(ati, 0.12);
-  await sharp(squareMark).resize(atiInner, atiInner, { fit: 'contain', background: '#ffffff' })
-    .flatten({ background: '#ffffff' })
-    .extend({ top: pad(ati, 0.12), bottom: pad(ati, 0.12), left: pad(ati, 0.12), right: pad(ati, 0.12), background: '#ffffff' })
-    .resize(ati, ati).png({ palette: true, quality: 90, effort: 10, compressionLevel: 9 }).toFile(path.join(BRAND_OUT, 'apple-touch-icon.png'));
+  await buildIcons(squareMark);
 
   // OG image 1200x630 from the landscape hero.
   await sharp(path.join(SRC, 'landingimage.png')).resize(1200, 630, { fit: 'cover', position: 'centre' })
@@ -201,7 +229,13 @@ export type SdlImageName = keyof typeof SDL_IMAGES;
   fs.writeFileSync(MANIFEST_OUT, ts);
 }
 
-await buildBrand();
-const manifest = await buildPhotos();
-writeManifest(manifest);
-console.log('Done.');
+// --icons rebuilds only the icon set, leaving the logos, OG image and photos untouched.
+if (process.argv.includes('--icons')) {
+  await buildIcons(await buildSquareMark(await whiteToAlpha(path.join(SRC, 'logo.jpeg'))));
+  console.log('Icons done.');
+} else {
+  await buildBrand();
+  const manifest = await buildPhotos();
+  writeManifest(manifest);
+  console.log('Done.');
+}
