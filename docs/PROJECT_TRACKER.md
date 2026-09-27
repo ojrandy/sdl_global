@@ -50,8 +50,8 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [x] 1.3 Rename token prefix `--dxp-*` → `--sdl-*` and class prefix `dxp-` → `sdl-` across `src/` (~59 files, 63 tokens).
 - [x] 1.4 Replace `logo.png`, footer logo, favicon, apple-touch-icon; add `site.webmanifest` and OG image.
 - [x] 1.5 Update `index.html`: title, description, Open Graph/Twitter tags, theme-color, canonical (CONTENT.md §1).
-- [ ] 1.6 Update `package.json` name → `sdl-global-logistics`; rename DB file default `duolingo_express.db` → `sdl_global.db` (server/db.ts, server/index.ts, .env.example).
-- [ ] 1.7 Replace all emails with `info@sdlgloballogistics.com` (defaults in `server/db.ts` settings, Header, Contact, PublicQuoteResult, Admin Settings).
+- [x] 1.6 Update `package.json` name → `sdl-global-logistics`; rename DB file default `duolingo_express.db` → `sdl_global.db` (server/db.ts, server/index.ts, .env.example).
+- [x] 1.7 Replace all emails with `info@sdlgloballogistics.com` (defaults in `server/db.ts` settings, Header, Contact, PublicQuoteResult, Admin Settings).
 - [ ] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3).
 - [ ] 1.9 Update tracking input validation, placeholders and help text to the new 8-character format.
 - [ ] 1.10 Replace demo data (`src/data/mockShipments.ts`, `server/seed.ts`) with SDL-branded, worldwide demo shipments using DLS IDs.
@@ -180,7 +180,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 
 **Admin auth.** A single shared password, checked with `bcrypt.compare` against `ADMIN_PASSWORD_HASH` (rate-limited to 20 per 15 min). It sets `req.session.isAdmin`. Session store is in memory: cookie `dxp.sid`, httpOnly, sameSite=lax, secure in production, 12 h, trust proxy 1. **Every restart or redeploy logs everyone out.** `requireAdminAuth` is now a plain session check; the Origin/CSRF check was removed (`dd47754`), so CSRF protection relies on SameSite=lax alone. Shipments, quotes, documents and settings gate per route; stats is gated at the mount.
 
-**DB.** `node:sqlite` (Node ≥ 22.5) at `DB_PATH`, or `<cwd>/data/duolingo_express.db` if unset. WAL mode, foreign keys on. The schema is created in `initDatabase()` with try/catch `ALTER` migrations (incl. `deleted_at_ts` for soft delete). The seed runs **only** when `SEED_DEMO_DATA=true` **and** the shipments table is empty. Shipment delete is soft (trash); `/permanent` hard-deletes from the trash.
+**DB.** `node:sqlite` (Node ≥ 22.5) at `DB_PATH`, or `<cwd>/data/sdl_global.db` if unset. WAL mode, foreign keys on. The schema is created in `initDatabase()` with try/catch `ALTER` migrations (incl. `deleted_at_ts` for soft delete). The seed runs **only** when `SEED_DEMO_DATA=true` **and** the shipments table is empty. Shipment delete is soft (trash); `/permanent` hard-deletes from the trash.
 
 **Fragile / worth knowing**
 - **`/api/diag/storage` is public** and returns the server's absolute data path. Gate it (Prompt 09) and remove it after the persistence check.

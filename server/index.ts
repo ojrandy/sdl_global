@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { initDatabase } from './db.js';
+import { initDatabase, dataDir, dbPath } from './db.js';
 import { shipmentsRouter } from './routes/shipments.js';
 import { quotesRouter } from './routes/quotes.js';
 import { documentsRouter } from './routes/documents.js';
@@ -112,7 +112,7 @@ if (ADMIN_PROXY_TARGET) {
   app.get('/api/health', (req, res) => {
     res.json({
       status: 'ok',
-      service: 'Duolingo Express Core Logistics API',
+      service: 'SDL Global Logistics API',
       version: '1.0.0',
       timestamp: new Date().toISOString()
     });
@@ -124,10 +124,9 @@ if (ADMIN_PROXY_TARGET) {
   // same original timestamp back. If a redeploy resets this to a brand-new timestamp, the
   // host is wiping untracked files on every deploy — the same thing that would be silently
   // destroying the database each time. If the timestamp survives a redeploy, it isn't. Safe
-  // to remove once that's confirmed one way or the other.
-  app.get('/api/diag/storage', (req, res) => {
+  // to remove once that's confirmed one way or the other. Admin-only: it reveals server paths.
+  app.get('/api/diag/storage', requireAdminAuth, (req, res) => {
     try {
-      const dataDir = process.env.DB_PATH ? path.dirname(process.env.DB_PATH) : path.join(process.cwd(), 'data');
       const markerPath = path.join(dataDir, '.persistence-check.json');
       let marker: { firstSeen: string; checkedAt: string };
       if (fs.existsSync(markerPath)) {
@@ -138,7 +137,6 @@ if (ADMIN_PROXY_TARGET) {
         fs.mkdirSync(dataDir, { recursive: true });
         fs.writeFileSync(markerPath, JSON.stringify({ firstSeen: marker.firstSeen }));
       }
-      const dbPath = process.env.DB_PATH || path.join(dataDir, 'duolingo_express.db');
       const dbExists = fs.existsSync(dbPath);
       const dbStat = dbExists ? fs.statSync(dbPath) : null;
       res.json({
@@ -212,11 +210,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);
-  console.log(`🚀 Duolingo Express API Server running on port ${PORT}`);
+  console.log(`🚀 SDL Global Logistics API running on port ${PORT}`);
   if (ADMIN_PROXY_TARGET) {
     console.log(`🔀 Admin-proxy mode — /api forwards to ${ADMIN_PROXY_TARGET}`);
   } else {
-    console.log(`📦 Database: duolingo_express.db (Persistent SQLite)`);
+    console.log(`📦 Database: ${dbPath} (Persistent SQLite)`);
     console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
   }
   console.log(`====================================================`);

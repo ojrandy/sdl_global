@@ -66,9 +66,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 SDL starts with a fresh database, so there's nothing to migrate. If you ever need old records, copy the old file to the
 new `DB_PATH` before first start.
 
-**Check persistence before launch:** the server has a temporary endpoint, `GET /api/diag/storage`. Call it, redeploy,
-then call it again. If `markerFirstSeen` stays the same, storage persists. **After confirming, remove this endpoint**
-(it exposes server paths publicly), or put it behind `requireAdminAuth`.
+**Check persistence before launch:** the server has a temporary endpoint, `GET /api/diag/storage`. It is admin-only,
+so log in to the admin console first, then open `https://private.sdlgloballogistics.com/api/diag/storage` in the same
+browser. Redeploy and open it again. If `markerFirstSeen` stays the same, storage persists. **After confirming, remove
+this endpoint.**
 
 ## 5. Domains & DNS
 
