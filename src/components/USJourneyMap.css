@@ -374,7 +374,7 @@
 }
 
 .map-floating-alert.live-gps {
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(var(--sdl-ink-rgb), 0.88);
   border: 1px solid rgba(56, 139, 253, 0.4);
   color: #93c5fd;
   font-weight: 700;

@@ -62,7 +62,7 @@
    ============================================================ */
 .sdl-pro-footer-main {
   position: relative;
-  background: #08101d;
+  background: var(--sdl-ink-950);
   color: #94a3b8;
   padding: 5rem 0 2.25rem;
   overflow: hidden;

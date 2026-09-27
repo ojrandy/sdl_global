@@ -673,7 +673,7 @@
 .doc-preview-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(var(--sdl-ink-rgb), 0.6);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -699,7 +699,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.85rem 1.25rem;
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
 }
 
@@ -1400,7 +1400,7 @@
 
 .inv-divider {
   height: 2px;
-  background: #0f172a;
+  background: var(--sdl-ink-950);
 }
 
 .inv-parties-grid {
@@ -1471,7 +1471,7 @@
 }
 
 .inv-items-table th {
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   padding: 0.55rem 0.75rem;
   font-weight: 700;
@@ -1990,7 +1990,7 @@
 .doc-generate-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(var(--sdl-ink-rgb), 0.6);
   backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
@@ -2257,7 +2257,7 @@
 .doc-delete-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(var(--sdl-ink-rgb), 0.45);
   backdrop-filter: blur(6px);
   z-index: 1100;
   display: flex;
@@ -2375,7 +2375,7 @@
   position: fixed;
   top: 1.5rem;
   right: 1.5rem;
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   border: 1px solid #334155;
   border-radius: 8px;

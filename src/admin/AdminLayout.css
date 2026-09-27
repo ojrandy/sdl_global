@@ -42,7 +42,7 @@
   width: 4px;
 }
 .sdl-admin-sidebar::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--sdl-ink-800);
   border-radius: 4px;
 }
 
@@ -321,7 +321,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #1e293b;
+  background: var(--sdl-ink-800);
   border: 1.5px solid #334155;
   color: #ffffff;
   font-size: 0.75rem;
@@ -714,7 +714,7 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   font-size: 0.72rem;
   font-weight: 800;
@@ -828,7 +828,7 @@
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   padding: 0.85rem 1.25rem;
   border-radius: 10px;

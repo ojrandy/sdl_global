@@ -576,7 +576,7 @@ input:checked + .slider-round:before {
   position: fixed;
   top: 1.5rem;
   right: 1.5rem;
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   border: 1px solid #334155;
   border-radius: 8px;

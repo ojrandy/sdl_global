@@ -1121,7 +1121,7 @@
 /* Interactive SVG Radar Map */
 .hub-radar-canvas-card {
   position: relative;
-  background: #0b1727;
+  background: var(--sdl-ink-950);
   border-radius: var(--sdl-radius-xl);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);

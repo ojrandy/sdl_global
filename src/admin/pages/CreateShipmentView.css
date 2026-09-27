@@ -1758,7 +1758,7 @@
 }
 
 .b-bar {
-  background: #1e293b;
+  background: var(--sdl-ink-800);
   border-radius: 1px;
 }
 
@@ -2240,7 +2240,7 @@
   position: relative;
   width: 100%;
   height: 340px;
-  background: #030712;
+  background: var(--sdl-ink-950);
   border-radius: 0.65rem;
   overflow: hidden;
   display: flex;

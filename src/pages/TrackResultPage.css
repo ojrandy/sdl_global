@@ -565,7 +565,7 @@
 }
 
 .realtime-live-chip.simulating {
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   border-color: rgba(56, 139, 253, 0.4);
   color: #93c5fd;
   font-weight: 700;
@@ -1889,7 +1889,7 @@
 .alerts-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(var(--sdl-ink-rgb), 0.6);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;

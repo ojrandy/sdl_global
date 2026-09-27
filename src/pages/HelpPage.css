@@ -156,7 +156,7 @@
    2. NETWORK STATUS STRIP
    ============================================================ */
 .sdl-help-network-strip {
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 1rem 0;
   color: var(--sdl-white);

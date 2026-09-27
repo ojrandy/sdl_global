@@ -7,7 +7,7 @@
 
 .quote-res-hero {
   position: relative;
-  background-color: #0f172a;
+  background-color: var(--sdl-ink-950);
   background-image: 
     linear-gradient(135deg, rgba(15, 23, 42, 0.93) 0%, rgba(30, 41, 59, 0.88) 100%),
     url('https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1920&auto=format&fit=crop&q=85');
@@ -582,7 +582,7 @@
 }
 
 .contact-desk-card {
-  background: #0f172a;
+  background: var(--sdl-ink-950);
   color: #ffffff;
   border: none;
 }
@@ -722,7 +722,7 @@
 
   .print-divider {
     height: 2px;
-    background: #0f172a;
+    background: var(--sdl-ink-950);
     margin: 12px 0 16px;
   }
 
