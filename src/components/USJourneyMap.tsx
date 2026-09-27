@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { destroyMap } from '../utils/leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { calculateRouteGeometry, calculateEstimatedPosition, fetchLiveRoadRoute, findNearestPointOnPolyline } from '../services/routingEngine';
@@ -482,7 +483,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
   useEffect(() => {
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        destroyMap(mapInstanceRef.current);
         mapInstanceRef.current = null;
         completedLineRef.current = null;
         remainingLineRef.current = null;

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { destroyMap } from '../utils/leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Building, MapPin, Phone, Clock, ShieldCheck, ZoomIn, ZoomOut, Compass, Radio } from 'lucide-react';
 import './FacilityNetworkMap.css';
@@ -224,7 +225,7 @@ export const FacilityNetworkMap: React.FC = () => {
 
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        destroyMap(mapInstanceRef.current);
         mapInstanceRef.current = null;
       }
     };

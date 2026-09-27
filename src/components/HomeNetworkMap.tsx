@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { destroyMap } from '../utils/leaflet';
 import 'leaflet/dist/leaflet.css';
 import './HomeNetworkMap.css';
 
@@ -105,7 +106,7 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeHub, onSel
     mapInstanceRef.current = map;
 
     return () => {
-      map.remove();
+      destroyMap(map);
       mapInstanceRef.current = null;
     };
   }, []);
