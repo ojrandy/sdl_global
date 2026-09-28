@@ -49,6 +49,7 @@ import {
 import { Shipment, TrackingEvent, RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { Barcode } from '../components/Barcode';
 import { USJourneyMap } from '../components/USJourneyMap';
+import { OPERATIONS_CENTRE } from '../config/brand';
 import { SupportModal } from '../components/SupportModal';
 import { calculateRouteGeometry } from '../services/routingEngine';
 import { simulationEngine } from '../services/simulationEngine';
@@ -177,21 +178,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
     : status === 'EXCEPTION'
     ? 'Exception'
     : 'In Transit';
-  // The flagship demo tracking number describes a "Toyota Tacoma Front Bumper" freight
-  // shipment (an auto part, not the whole vehicle) and deliberately shows illustrative
-  // vehicle photos for it throughout this page — computed early so isVehicle below can use
-  // it (was previously defined further down, after isVehicle already needed it).
-  // Matched on tracking number ONLY. This used to also match any shipment whose
-  // cargoDescription merely contained the word "tacoma" or "bumper" — which meant a real,
-  // unrelated Parcel shipment (e.g. someone actually shipping a truck bumper part) got its
-  // real type/weight/dimensions/coordinates silently replaced by this demo's hardcoded
-  // values below. Only the one literal flagship tracking number should ever trigger this.
-  const isFlagshipTacoma = trackingNum.includes('7K2M9QRX') || trackingNum.includes('7KZM9QRX');
-  // Was hardcoded `|| true`, making this evaluate true for every shipment regardless of
-  // real type — a plain Parcel shipment would show "Vehicle Photos" with a stock Toyota
-  // Tacoma image. That trailing `|| true` is why. isFlagshipTacoma is kept as its own,
-  // deliberate exception (see above) rather than removed along with the blanket `|| true`.
-  const isVehicle = liveShipment?.shipmentType === 'Vehicle' || !!liveShipment?.vehicleDetails || isFlagshipTacoma;
+  // Vehicle views only for real vehicle shipments (by type or stored vehicle details).
+  const isVehicle = liveShipment?.shipmentType === 'Vehicle' || !!liveShipment?.vehicleDetails;
   const isPet = liveShipment?.shipmentType === 'Pets' || !!liveShipment?.petDetails;
   const pet = liveShipment?.petDetails;
   
@@ -275,38 +263,19 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
 
   const service = liveShipment?.service || shipment?.service || 'Express';
 
-  // Real shipment data always wins here now — these hardcoded values are only the
-  // ultimate fallback when no real data exists at all (e.g. the flagship demo's own mock
-  // record, which sets its own real weight/dimensions/type and no longer gets overridden).
+  // Real shipment data always wins; these are only fallbacks when a field is missing.
   const cargoType = liveShipment?.shipmentType || 'Freight';
-  const cargoDescription = liveShipment?.cargoDescription || shipment?.cargoDescription || 'Toyota Tacoma Front Bumper';
+  const cargoDescription = liveShipment?.cargoDescription || shipment?.cargoDescription || 'General cargo';
   const shipmentType = cargoType === 'Vehicle' ? 'Freight' : cargoType;
   const transportType = 'Open Auto Carrier';
   const totalWeight = Number(liveShipment?.totalWeightLbs || shipment?.totalWeightLbs || 435.0);
   const totalPieces = Number(shipment?.totalPieces || 1);
   const dimensions = liveShipment?.dimensions || shipment?.dimensions || { length: 60, width: 20, height: 15 };
 
-  // Vehicle data with safe defaults
-  const vehicle = shipment?.vehicleDetails || {
-    make: 'Toyota',
-    model: 'Tacoma',
-    year: 2024,
-    vin: '4T1BK1EB7RU128940',
-    color: 'Magnetic Grey Metallic',
-    bodyType: 'Pickup Truck',
-    condition: 'Running',
-    operable: true,
-    licensePlate: 'N/A',
-    keys: true,
-    fuelType: 'Gasoline'
-  };
-
   // Parties data — only Full Name and Street Address are required at booking (see
   // CreateShipmentView); Company/Email/Phone are explicitly optional there, so a blank one
-  // must not show a fabricated fallback value here (they used to fall back to the flagship
-  // demo shipment's own real contact info — "Randy" / "Apex Auto Design" / a fake phone
-  // number — for ANY shipment missing that field, which is exactly backwards for a public
-  // page: those fields are conditionally rendered below and simply omitted when empty).
+  // must not show a fabricated fallback value here: those fields are conditionally rendered
+  // below and simply omitted when empty.
   const senderName = shipment?.sender?.name || 'Shipper';
   const senderCompany = shipment?.sender?.company;
   const senderAddress = shipment?.sender?.addressLine;
@@ -421,7 +390,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
       displayDate: 'Aug 19, 2026',
       displayTime: '9:30 AM ET',
       title: 'Shipment Record Created',
-      facility: 'Super Admin Operations Desk',
+      facility: OPERATIONS_CENTRE,
       city: originCity,
       state: originState,
       description: 'Consignment manifest generated and barcode applied.',
@@ -1261,7 +1230,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                     <strong>
                       {originCity}, {originState}
                       <span className="gps-sub font-mono">
-                        ({originGeo.lat.toFixed(4)}, {originGeo.lng.toFixed(4)})
+                        ({Number(routeCheckpoints[0].lat).toFixed(4)}, {Number(routeCheckpoints[0].lng).toFixed(4)})
                       </span>
                     </strong>
                   </div>
@@ -1283,7 +1252,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                     <strong>
                       {destCity}, {destState}
                       <span className="gps-sub font-mono">
-                        ({destGeo.lat.toFixed(4)}, {destGeo.lng.toFixed(4)})
+                        ({Number(routeCheckpoints[2].lat).toFixed(4)}, {Number(routeCheckpoints[2].lng).toFixed(4)})
                       </span>
                     </strong>
                   </div>

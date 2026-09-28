@@ -13,6 +13,7 @@ import {
   ShipmentAuditEntry
 } from '../types/shipment.js';
 import { findIntermediateHub } from './routingEngine.js';
+import { ADMIN_ROLE_LABEL } from '../config/brand.js';
 import { resolveLocation } from './geocodingService.js';
 
 /**
@@ -381,7 +382,7 @@ export function generateShipmentPlan(
 }
 
 /**
- * Creates an immutable Audit Log Entry for Super Admin operational actions
+ * Creates an immutable Audit Log Entry for administrator operational actions
  */
 export function createAuditLogEntry(
   operator: string,
@@ -399,7 +400,7 @@ export function createAuditLogEntry(
     id: `aud-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
     timestamp: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
       ' · ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-    operator: operator || 'Super Admin',
+    operator: operator || ADMIN_ROLE_LABEL,
     action,
     reason: params?.reason,
     durationHours: params?.durationHours,
@@ -437,7 +438,7 @@ export function applyHoldState(
   shipment: Shipment,
   holdReason: string,
   holdHours: number,
-  operator = 'Super Admin'
+  operator = ADMIN_ROLE_LABEL
 ): { updatedShipment: Shipment; auditEntry: ShipmentAuditEntry; event: TrackingEvent } {
   const prevETA = typeof shipment.estimatedDelivery === 'string'
     ? shipment.estimatedDelivery
@@ -511,7 +512,7 @@ export function applyHoldState(
  */
 export function applyResumeState(
   shipment: Shipment,
-  operator = 'Super Admin'
+  operator = ADMIN_ROLE_LABEL
 ): { updatedShipment: Shipment; auditEntry: ShipmentAuditEntry; event: TrackingEvent } {
   const currentProgress = shipment.frozenProgressPercent ?? shipment.progressPercent ?? 35;
 
@@ -566,7 +567,7 @@ export function applyDelayState(
   shipment: Shipment,
   delayReason: string,
   delayHours: number,
-  operator = 'Super Admin'
+  operator = ADMIN_ROLE_LABEL
 ): { updatedShipment: Shipment; auditEntry: ShipmentAuditEntry; event: TrackingEvent } {
   const prevETA = typeof shipment.estimatedDelivery === 'string'
     ? shipment.estimatedDelivery

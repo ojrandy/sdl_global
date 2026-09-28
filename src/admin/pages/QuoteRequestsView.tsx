@@ -45,7 +45,7 @@ export const QuoteRequestsView: React.FC = () => {
       .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
-  // Selected Quote for Review Workspace (Defaults to Randy's flagship scenario QR-2026-00124)
+  // Selected quote for the review workspace
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');

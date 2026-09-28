@@ -19,6 +19,7 @@ import {
   createAuditLogEntry
 } from '../../services/planningEngine';
 import { simulationEngine } from '../../services/simulationEngine';
+import { ADMIN_ROLE_LABEL } from '../../config/brand';
 import { useAdminData } from '../../context/AdminDataContext';
 import { resolveLocation } from '../../services/geocodingService';
 import './ShipmentControlModal.css';
@@ -142,7 +143,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
 
     if (targetAction === 'IN_TRANSIT') {
       if (shipment.status === 'ON_HOLD') {
-        const res = applyResumeState(updated, 'Super Admin');
+        const res = applyResumeState(updated, ADMIN_ROLE_LABEL);
         updated = res.updatedShipment;
       } else {
         const event: TrackingEvent = {
@@ -160,9 +161,9 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
           description: 'Shipment has departed the origin facility and is in linehaul transit.',
           isCompleted: true,
           isCurrent: true,
-          recordedBy: 'Super Admin'
+          recordedBy: ADMIN_ROLE_LABEL
         };
-        const auditEntry = createAuditLogEntry('Super Admin', 'START_TRANSIT', 'Linehaul departure confirmed.');
+        const auditEntry = createAuditLogEntry(ADMIN_ROLE_LABEL, 'START_TRANSIT', 'Linehaul departure confirmed.');
         updated = {
           ...updated,
           status: 'IN_TRANSIT',
@@ -197,9 +198,9 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
         description: `Physical checkpoint scan confirmed at ${customFacility}.`,
         isCompleted: true,
         isCurrent: true,
-        recordedBy: 'Super Admin'
+        recordedBy: ADMIN_ROLE_LABEL
       };
-      const auditEntry = createAuditLogEntry('Super Admin', 'CONFIRM_CHECKPOINT', `Arrived at ${customFacility}.`);
+      const auditEntry = createAuditLogEntry(ADMIN_ROLE_LABEL, 'CONFIRM_CHECKPOINT', `Arrived at ${customFacility}.`);
       updated = {
         ...updated,
         currentLocation: {
@@ -233,9 +234,9 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
         description: 'With local courier for delivery today.',
         isCompleted: true,
         isCurrent: true,
-        recordedBy: 'Super Admin'
+        recordedBy: ADMIN_ROLE_LABEL
       };
-      const auditEntry = createAuditLogEntry('Super Admin', 'OUT_FOR_DELIVERY', 'Dispatched for final-mile delivery.');
+      const auditEntry = createAuditLogEntry(ADMIN_ROLE_LABEL, 'OUT_FOR_DELIVERY', 'Dispatched for final-mile delivery.');
       updated = {
         ...updated,
         status: 'OUT_FOR_DELIVERY',
@@ -272,9 +273,9 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
         description: `Delivered and signed by ${signedBy}.`,
         isCompleted: true,
         isCurrent: true,
-        recordedBy: 'Super Admin'
+        recordedBy: ADMIN_ROLE_LABEL
       };
-      const auditEntry = createAuditLogEntry('Super Admin', 'DELIVERY_CONFIRMED', `Delivered to ${signedBy}.`);
+      const auditEntry = createAuditLogEntry(ADMIN_ROLE_LABEL, 'DELIVERY_CONFIRMED', `Delivered to ${signedBy}.`);
       updated = {
         ...updated,
         status: 'DELIVERED',
@@ -294,10 +295,10 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
       };
     } else if (targetAction === 'ON_HOLD') {
       const effectiveHoldReason = holdReason === 'OTHER' ? (customHoldReason.trim() || 'Other') : holdReason;
-      const res = applyHoldState(updated, effectiveHoldReason, holdHours, 'Super Admin');
+      const res = applyHoldState(updated, effectiveHoldReason, holdHours, ADMIN_ROLE_LABEL);
       updated = res.updatedShipment;
     } else if (targetAction === 'DELAY') {
-      const res = applyDelayState(updated, delayReason, delayHours, 'Super Admin');
+      const res = applyDelayState(updated, delayReason, delayHours, ADMIN_ROLE_LABEL);
       updated = res.updatedShipment;
     }
 

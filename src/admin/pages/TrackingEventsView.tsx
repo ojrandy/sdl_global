@@ -36,7 +36,7 @@ import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
 import { AdminViewType } from '../AdminLayout';
 import { resolveLocation, resolveLocationPrecise } from '../../services/geocodingService';
 import './TrackingEventsView.css';
-import { COMPANY_SHORT } from '../../config/brand';
+import { ADMIN_ROLE_LABEL, COMPANY_SHORT, displayOperator } from '../../config/brand';
 
 // Pre-defined structured standard network locations
 const NETWORK_LOCATIONS = [
@@ -292,8 +292,8 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
       state: locState,
       description: formCustomerMessage,
       internalNote: formInternalNote,
-      recordedBy: 'Super Admin',
-      operatorId: 'Super Admin',
+      recordedBy: ADMIN_ROLE_LABEL,
+      operatorId: ADMIN_ROLE_LABEL,
       isCurrent: true,
       isCompleted: true
     };
@@ -347,7 +347,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
         originalTitle: correctingEvent.title,
         reason: correctionReason,
         correctedAt: new Date().toLocaleDateString('en-US') + ' ' + new Date().toLocaleTimeString('en-US'),
-        operator: 'Super Admin'
+        operator: ADMIN_ROLE_LABEL
       }
     });
 
@@ -720,14 +720,14 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                       <div className="correction-audit-banner">
                         <AlertTriangle size={13} className="text-amber" />
                         <span>
-                          <strong>Edited / Corrected:</strong> Formerly {event.correctionAudit.originalLocation} by {event.correctionAudit.operator}. Reason: {event.correctionAudit.reason}
+                          <strong>Edited / Corrected:</strong> Formerly {event.correctionAudit.originalLocation} by {displayOperator(event.correctionAudit.operator)}. Reason: {event.correctionAudit.reason}
                         </span>
                       </div>
                     )}
 
                     {/* Provenance Footer */}
                     <div className="event-provenance-footer">
-                      <span>Recorded by: <strong>{event.recordedBy || 'Super Admin'}</strong></span>
+                      <span>Recorded by: <strong>{displayOperator(event.recordedBy)}</strong></span>
                       <span>Audit Milestone ID: <code className="font-mono">{event.id}</code></span>
                     </div>
                   </div>
@@ -909,7 +909,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               <div className="modal-provenance-strip">
                 <div className="prov-item">
                   <span className="prov-label">RECORDED BY</span>
-                  <strong>Super Admin</strong>
+                  <strong>{ADMIN_ROLE_LABEL}</strong>
                 </div>
                 <div className="prov-item">
                   <span className="prov-label">TIMESTAMP STAMP</span>
@@ -1090,7 +1090,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                 </div>
                 <div className="inspect-item">
                   <span className="i-label">OPERATOR PROVENANCE</span>
-                  <strong>{inspectEvent.recordedBy || 'Super Admin'}</strong>
+                  <strong>{displayOperator(inspectEvent.recordedBy)}</strong>
                 </div>
               </div>
 
@@ -1109,7 +1109,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               {inspectEvent.correctionAudit && (
                 <div className="inspect-box correction">
                   <span className="i-label">AUDIT EDIT LOG</span>
-                  <p>Edited by {inspectEvent.correctionAudit.operator} at {inspectEvent.correctionAudit.correctedAt}: {inspectEvent.correctionAudit.reason}</p>
+                  <p>Edited by {displayOperator(inspectEvent.correctionAudit.operator)} at {inspectEvent.correctionAudit.correctedAt}: {inspectEvent.correctionAudit.reason}</p>
                 </div>
               )}
             </div>

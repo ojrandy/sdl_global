@@ -17,7 +17,7 @@ Audit taken from the `duolingo-express` repo on 2026-09-26. When you work throug
 |---|---|---|
 | `Duolingo Express Logistics LLC` | `SDL Global Logistics Ltd` | Legal, footer, documents |
 | `Duolingo Express` / `DUOLINGO EXPRESS` | `SDL Global Logistics` / `SDL` | Follow BRAND_GUIDE §1 |
-| `Duolingo Logistics Intake` | `SDL Intake Desk` | CreateShipmentView.tsx:1151 default sender |
+| `Duolingo Logistics Intake` | `SDL Intake Desk` | CreateShipmentView.tsx:1151 default sender. *Done: `INTAKE_DESK` in brand.ts.* |
 | `duolingoexpress.com` | `sdlgloballogistics.com` | |
 | `dispatch@duolingoexpress.com` | `info@sdlgloballogistics.com` | server/db.ts default settings, Header, Contact, PublicQuoteResult, Admin Settings, AdminLayout |
 | `duolingo_express.db` | `sdl_global.db` | server/db.ts, server/index.ts, .env.example (see DEPLOYMENT §4) |
@@ -27,8 +27,8 @@ Audit taken from the `duolingo-express` repo on 2026-09-26. When you work throug
 | `Duolingo Express Dedicated Linehaul Division` | `SDL Freight & Linehaul` | |
 | `DUOLINGO EXPRESS CORPORATE DESIGN SYSTEM` (CSS header comments) | `SDL Global Logistics design system` | tokens.css, many CSS headers |
 | `NATIONWIDE COURIER NETWORK` badge | `WORLDWIDE LOGISTICS NETWORK` | Home hero |
-| `Super Admin Operations Desk` (shown publicly as a facility) | `SDL Operations Centre` | TrackResultPage.tsx:425 |
-| `Super Admin` (admin UI labels) | `Administrator` | Admin UI only; don't change stored audit values in existing data |
+| `Super Admin Operations Desk` (shown publicly as a facility) | `SDL Operations Centre` | TrackResultPage.tsx:425. *Done: `OPERATIONS_CENTRE`.* |
+| `Super Admin` (admin UI labels) | `Administrator` | Admin UI only; don't change stored audit values in existing data. *Done: `ADMIN_ROLE_LABEL` for new records; stored "Super Admin" values untouched and shown via `displayOperator()`.* |
 | `1-800-555-0199` and other placeholder phones | value from `brand.ts` | FacilityNetworkMap.tsx (×5+), settings defaults |
 | `One World Trade Center, Suite 8500, New York…` | value from `brand.ts` (TBD) | ContactPage.tsx:30 default |
 | Social links `#facebook` … | real URLs from `brand.ts`, or hide the icon | Footer.tsx:113–117 |
@@ -82,16 +82,20 @@ Shared module: `src/shared/trackingId.ts` (generate, normalise, validate, `parse
 - [x] Type comments: `src/types/shipment.ts:62`, `src/types/admin.ts:71/98`
 
 ### 3.4 Other references
-- [ ] Seals `DXP-SEAL-892401` → `SDL-SL-######`: CreateShipmentView.tsx:173, 615, 2631, 2667
-- [ ] Tickets `DXP-SPT-` (SupportModal.tsx:59), `DXP-TKT-` (ContactPage.tsx:55) → `SDL-TKT-######`
-- [ ] Invoice auth ref `DXP-CORP-PAY-4091` → `SDL-INV-######` (DocumentCenterView.tsx:1368)
-- [ ] `DXP-AUTOGEN-REGISTER` → `DLS·····` (CreateShipmentView.tsx:4021)
-- [ ] `DXP SECURE LINEHAUL` badge → `SDL SECURE VAULT` (ServicesPage.tsx:584)
+Generator: `src/shared/references.ts` (`generateReference('seal'|'ticket'|'invoice')`, `referenceFor()` for stable per-record refs).
+- [x] Seals `DXP-SEAL-892401` → `SDL-SL-######`: CreateShipmentView.tsx:173, 615, 2631, 2667. *Also the BOL seal generators (CreateShipmentView, DocumentCenterView) and the server default in `routes/documents.ts`.*
+- [x] Tickets `DXP-SPT-` (SupportModal.tsx:59), `DXP-TKT-` (ContactPage.tsx:55) → `SDL-TKT-######`. *SupportModal now generates once at submit (it re-rolled on every render).*
+- [x] Invoice auth ref `DXP-CORP-PAY-4091` → `SDL-INV-######` (DocumentCenterView.tsx:1368). *Derived per document, no longer the same number on every invoice.*
+- [x] `DXP-AUTOGEN-REGISTER` → `DLS·····` (CreateShipmentView.tsx:4021)
+- [x] `DXP SECURE LINEHAUL` badge → `SDL SECURE VAULT` (ServicesPage.tsx:584)
 
 ### 3.5 Demo data
-- [ ] `server/seed.ts` (17 hits) and `src/data/mockShipments.ts` (14 hits): rewrite as SDL demo shipments with worldwide
+- [x] `server/seed.ts` (17 hits) and `src/data/mockShipments.ts` (14 hits): rewrite as SDL demo shipments with worldwide
       routes (e.g. Lagos → London by air, Shanghai → Rotterdam by ocean, Dubai → Nairobi by air). Remove the
       personal-name demo ("Randy's Tacoma") and use fictional names like "Demo Consignee".
+      *Both now build from `src/shared/demoData.ts`: DLS7K2M9 Lagos→London (air, in transit), DLS8M4PQ Shanghai→Rotterdam
+      (sea, via Singapore), DLS3J7NK Dubai→Nairobi (air, delivered), DLS5P6TL Houston→Rotterdam (sea, delayed); two quotes.
+      Demo names, example.com emails, no phones or street addresses. Tacoma presets/defaults in the admin wizard replaced.*
 
 ## 4. CSS / class naming
 - [x] Tokens `--dxp-*` → `--sdl-*` (63 unique tokens, 59 files). Do it with a single, scoped find-and-replace on `src/`, then build.

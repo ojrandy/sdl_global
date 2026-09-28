@@ -403,6 +403,11 @@ export async function resolveLocationPrecise(input: string): Promise<GeoLocation
  * route (schedule-based server sync, or a live admin simulation tick) — instead of freezing at
  * the origin city while the marker itself keeps visibly moving.
  */
+// The metro list is US-only, so a point far from every entry (e.g. over the Atlantic on a
+// Lagos -> London leg) returns null instead of the nearest US city. Callers then keep the
+// last known label. ~3 degrees is roughly 200-330 km.
+const MAX_METRO_DISTANCE_DEG = 3;
+
 export function findNearestMetro(lat: number, lng: number): { city: string; state: string } | null {
   let best: { city: string; state: string } | null = null;
   let bestDistSq = Infinity;
@@ -413,7 +418,7 @@ export function findNearestMetro(lat: number, lng: number): { city: string; stat
       best = { city: entry.city, state: entry.state };
     }
   }
-  return best;
+  return bestDistSq <= MAX_METRO_DISTANCE_DEG ** 2 ? best : null;
 }
 
 /**

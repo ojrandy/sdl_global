@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
-import { LEGAL_NAME } from '../../src/config/brand.js';
+import { ADMIN_ROLE_LABEL, LEGAL_NAME } from '../../src/config/brand.js';
+import { generateReference } from '../../src/shared/references.js';
 
 export const documentsRouter = Router();
 
@@ -128,7 +129,7 @@ documentsRouter.post('/generate', publicWriteLimiter, (req: Request, res: Respon
       {
         version: 1,
         createdDate: `${dateStr} ${timeStr}`,
-        generatedBy: 'Super Admin',
+        generatedBy: ADMIN_ROLE_LABEL,
         notes: 'Master document generated.'
       }
     ];
@@ -178,7 +179,7 @@ documentsRouter.post('/generate', publicWriteLimiter, (req: Request, res: Respon
       d.charges ? JSON.stringify(d.charges) : null,
       d.bolCarrier || LEGAL_NAME,
       d.bolTrailerNumber || 'TR-4091-E',
-      d.bolSealNumber || 'SL-99420',
+      d.bolSealNumber || generateReference('seal'),
       d.bolSpecialInstructions || null,
       d.insurerName || null,
       d.policyNumber || null,
@@ -220,7 +221,7 @@ documentsRouter.post('/:id/regenerate', requireAdminAuth, (req: Request, res: Re
       {
         version: nextVersion,
         createdDate: `${dateStr} ${timeStr}`,
-        generatedBy: 'Super Admin',
+        generatedBy: ADMIN_ROLE_LABEL,
         notes: notes || `Regenerated version ${nextVersion} with revised parameters.`
       },
       ...currentDoc.versionHistory

@@ -454,7 +454,7 @@ export const SettingsView: React.FC = () => {
               </div>
               <div>
                 <h3>Tariff & Pricing Parameters</h3>
-                <p>Default parameters used when Super Admin reviews and calculates customer quote requests.</p>
+                <p>Default parameters used when an administrator reviews and calculates customer quote requests.</p>
               </div>
             </div>
 

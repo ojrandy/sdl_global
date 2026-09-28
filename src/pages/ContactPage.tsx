@@ -18,6 +18,7 @@ import {
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { LEGAL_NAME } from '../config/brand';
+import { generateReference } from '../shared/references';
 import './ContactPage.css';
 
 interface ContactPageProps {
@@ -52,7 +53,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
       return;
     }
 
-    const generatedId = `SDL-TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const generatedId = generateReference('ticket');
     setTicketId(generatedId);
     setSubmitted(true);
     window.scrollTo({ top: 300, behavior: 'smooth' });

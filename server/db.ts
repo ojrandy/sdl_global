@@ -351,7 +351,7 @@ export function initDatabase() {
     }
   }
 
-  // Demo/sample data (the "Randy's Tacoma" flagship shipment, sample quotes, a sample
+  // Demo/sample data (the SDL demo shipments, sample quotes, a sample
   // document) is opt-in only, via SEED_DEMO_DATA=true — never automatic. This app is in real
   // production use now, not just a demo: an admin deleting every shipment (intentionally, or
   // via a bug like the one that motivated this) must land on a genuinely empty dashboard, not

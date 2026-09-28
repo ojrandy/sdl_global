@@ -50,7 +50,8 @@ import { generateShipmentPlan } from '../../services/planningEngine';
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminViewType } from '../AdminLayout';
 import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
-import { COMPANY, COMPANY_SHORT, LEGAL_NAME, TRACKING_PREFIX } from '../../config/brand';
+import { ADMIN_ROLE_LABEL, COMPANY, COMPANY_SHORT, INTAKE_DESK, LEGAL_NAME, TRACKING_PREFIX } from '../../config/brand';
+import { generateReference } from '../../shared/references';
 import './CreateShipmentView.css';
 
 interface CreateShipmentViewProps {
@@ -91,25 +92,25 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   const [customerRef, setCustomerRef] = useState('PO-45821');
   const [invoiceRef, setInvoiceRef] = useState('INV-2026-892');
   const [internalRef, setInternalRef] = useState('INT-CORP-01');
-  const [shipmentDescription, setShipmentDescription] = useState('2024 Toyota Tacoma Front Bumper');
+  const [shipmentDescription, setShipmentDescription] = useState('Generator spare parts');
 
   // ----------------------------------------------------
   // VEHICLE CARGO SPECIFIC STATE (When shipmentType === 'Vehicle')
   // ----------------------------------------------------
   const [vehMake, setVehMake] = useState('Toyota');
-  const [vehModel, setVehModel] = useState('Tacoma');
+  const [vehModel, setVehModel] = useState('Land Cruiser');
   const [vehYear, setVehYear] = useState('2024');
-  const [vehVin, setVehVin] = useState('3TYCZ5AN9RT048122');
-  const [vehColor, setVehColor] = useState('Ice Cap White');
-  const [vehBodyType, setVehBodyType] = useState('Pickup Truck');
+  const [vehVin, setVehVin] = useState('');
+  const [vehColor, setVehColor] = useState('White');
+  const [vehBodyType, setVehBodyType] = useState('SUV / Crossover');
   const [vehOperable, setVehOperable] = useState(true);
   const [vehCondition, setVehCondition] = useState('Good');
   const [vehPlate, setVehPlate] = useState('7XYZ892 (NY)');
   const [vehTitleNumber, setVehTitleNumber] = useState('TITLE-NY-90214');
-  const [vehWeightLbs, setVehWeightLbs] = useState('4445');
-  const [vehLengthIn, setVehLengthIn] = useState('213');
-  const [vehWidthIn, setVehWidthIn] = useState('75');
-  const [vehHeightIn, setVehHeightIn] = useState('71');
+  const [vehWeightLbs, setVehWeightLbs] = useState('5490');
+  const [vehLengthIn, setVehLengthIn] = useState('195');
+  const [vehWidthIn, setVehWidthIn] = useState('78');
+  const [vehHeightIn, setVehHeightIn] = useState('75');
 
   // Vehicle Condition Checklist
   const [damageChecklist, setDamageChecklist] = useState<string[]>(['No major visible damage']);
@@ -171,7 +172,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // DOCUMENT CARGO SPECIFIC STATE (When shipmentType === 'Document')
   // ----------------------------------------------------
   const [docEnvelopeType, setDocEnvelopeType] = useState(`${COMPANY_SHORT} Waterproof Pouch`);
-  const [docSealNumber, setDocSealNumber] = useState('SDL-SL-892401');
+  const [docSealNumber, setDocSealNumber] = useState(() => generateReference('seal'));
   const [docDirectSignOnly, setDocDirectSignOnly] = useState(true);
   const [docUrgentDeadline, setDocUrgentDeadline] = useState('By 10:30 AM Next Business Day');
   const [docFilingCourtRef, setDocFilingCourtRef] = useState('CASE-2026-NY-4481');
@@ -270,7 +271,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       length: 72,
       width: 24,
       height: 18,
-      description: '2024 Toyota Tacoma Front Bumper (OEM Factory Pack)'
+      description: 'Generator spare parts (factory packed)'
     }
   ]);
 
@@ -310,7 +311,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   const [otherHandlingInstructions, setOtherHandlingInstructions] = useState('');
 
   // ----------------------------------------------------
-  // STEP 6: Pricing (Private Super Admin)
+  // STEP 6: Pricing (administrator only)
   // ----------------------------------------------------
   const [baseRate, setBaseRate] = useState<number>(shipmentType === 'Vehicle' ? 1450.00 : 125.00);
   const [additionalCharges, setAdditionalCharges] = useState<number>(shipmentType === 'Vehicle' ? 150.00 : 25.00);
@@ -370,42 +371,42 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       setBaseRate(1450.00);
       setAdditionalCharges(150.00);
       setSurcharges(95.00);
-      if (!shipmentDescription || shipmentDescription.includes('Bumper') || shipmentDescription.includes('Skid') || shipmentDescription.includes('Container') || shipmentDescription.includes('Gearbox')) {
-        setShipmentDescription('2024 Toyota Tacoma TRD Pro 4x4');
+      if (!shipmentDescription || shipmentDescription.includes('spare parts') || shipmentDescription.includes('Skid') || shipmentDescription.includes('Container') || shipmentDescription.includes('Gearbox')) {
+        setShipmentDescription('2024 Toyota Land Cruiser');
       }
     } else if (shipmentType === 'Pallet') {
       setBaseRate(380.00);
       setAdditionalCharges(45.00);
       setSurcharges(35.00);
-      if (!shipmentDescription || shipmentDescription.includes('Tacoma') || shipmentDescription.includes('Bumper')) {
+      if (!shipmentDescription || shipmentDescription.includes('Land Cruiser') || shipmentDescription.includes('spare parts')) {
         setShipmentDescription('Industrial Machinery Spares (2 Pallet Skids)');
       }
     } else if (shipmentType === 'Container') {
       setBaseRate(2850.00);
       setAdditionalCharges(350.00);
       setSurcharges(180.00);
-      if (!shipmentDescription || shipmentDescription.includes('Tacoma') || shipmentDescription.includes('Bumper')) {
+      if (!shipmentDescription || shipmentDescription.includes('Land Cruiser') || shipmentDescription.includes('spare parts')) {
         setShipmentDescription('Automotive Sub-Assemblies (40HC FCL Container)');
       }
     } else if (shipmentType === 'Freight') {
       setBaseRate(620.00);
       setAdditionalCharges(75.00);
       setSurcharges(55.00);
-      if (!shipmentDescription || shipmentDescription.includes('Tacoma') || shipmentDescription.includes('Bumper')) {
+      if (!shipmentDescription || shipmentDescription.includes('Land Cruiser') || shipmentDescription.includes('spare parts')) {
         setShipmentDescription('Heavy Industrial Gearbox & Drivetrain Unit');
       }
     } else if (shipmentType === 'Document') {
       setBaseRate(45.00);
       setAdditionalCharges(10.00);
       setSurcharges(5.00);
-      if (!shipmentDescription || shipmentDescription.includes('Tacoma') || shipmentDescription.includes('Bumper')) {
+      if (!shipmentDescription || shipmentDescription.includes('Land Cruiser') || shipmentDescription.includes('spare parts')) {
         setShipmentDescription('Executed Commercial Vehicle Titles & Master Agreements');
       }
     } else if (shipmentType === 'Pets') {
       setBaseRate(680.00);
       setAdditionalCharges(120.00);
       setSurcharges(85.00);
-      if (!shipmentDescription || shipmentDescription.includes('Tacoma') || shipmentDescription.includes('Bumper') || shipmentDescription.includes('Skid')) {
+      if (!shipmentDescription || shipmentDescription.includes('Land Cruiser') || shipmentDescription.includes('spare parts') || shipmentDescription.includes('Skid')) {
         setShipmentDescription('Live Animal / Canine Relocation (Barnaby - Golden Retriever)');
       }
     } else {
@@ -527,24 +528,24 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
 
   // Load Preset Test Data (All Cargo Categories)
   const handleLoadPreset = (
-    type: 'vehicle_tacoma' | 'skid_pallet' | 'ocean_container' | 'heavy_freight' | 'legal_doc' | 'live_pet' | 'bumper_parcel' | 'electronics'
+    type: 'vehicle_suv' | 'skid_pallet' | 'ocean_container' | 'heavy_freight' | 'legal_doc' | 'live_pet' | 'parts_parcel' | 'electronics'
   ) => {
-    if (type === 'vehicle_tacoma') {
+    if (type === 'vehicle_suv') {
       setShipmentType('Vehicle');
       setCargoCategory('Automotive & Parts');
-      setShipmentDescription('2024 Toyota Tacoma TRD Pro 4x4');
+      setShipmentDescription('2024 Toyota Land Cruiser');
       setVehMake('Toyota');
-      setVehModel('Tacoma');
+      setVehModel('Land Cruiser');
       setVehYear('2024');
-      setVehColor('Ice Cap White');
-      setVehVin('3TYCZ5AN9RT048122');
-      setVehBodyType('Pickup Truck');
+      setVehColor('White');
+      setVehVin('');
+      setVehBodyType('SUV / Crossover');
       setVehOperable(true);
       setVehCondition('Pristine');
-      setVehWeightLbs('4445');
-      setVehLengthIn('213');
-      setVehWidthIn('75');
-      setVehHeightIn('71');
+      setVehWeightLbs('5490');
+      setVehLengthIn('195');
+      setVehWidthIn('78');
+      setVehHeightIn('75');
       setService('Standard');
       setIsOversized(true);
       setIsSpecialHandling(true);
@@ -602,7 +603,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       setCargoCategory('Legal & Documents');
       setShipmentDescription('Executed Commercial Vehicle Titles & Sales Contracts (35 Pages)');
       setDocEnvelopeType(`${COMPANY_SHORT} Waterproof Legal Pouch (12×16 in)`);
-      setDocSealNumber('SDL-SL-892401');
+      setDocSealNumber(generateReference('seal'));
       setDocDirectSignOnly(true);
       setDocUrgentDeadline('By 10:30 AM Next Business Day (Priority Legal)');
       setDocFilingCourtRef('CASE-2026-NY-4481');
@@ -637,10 +638,10 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       setPetSpecialInstructions('Gentle handling; favorite comfort blanket inside crate. No sedation per AVMA protocol.');
       setService('Priority');
       setIsSpecialHandling(true);
-    } else if (type === 'bumper_parcel') {
+    } else if (type === 'parts_parcel') {
       setShipmentType('Parcel');
       setCargoCategory('Automotive & Parts');
-      setShipmentDescription('2024 Toyota Tacoma Front Bumper');
+      setShipmentDescription('Generator spare parts');
       setService('Express');
       setPackagesList([
         {
@@ -650,7 +651,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           length: 72,
           width: 24,
           height: 18,
-          description: '2024 Toyota Tacoma Front Bumper'
+          description: 'Generator spare parts'
         }
       ]);
       setIsOversized(true);
@@ -700,7 +701,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     }
   };
 
-  // Validation per step (Non-blocking for free Super Admin navigation)
+  // Validation per step (non-blocking so the administrator can move freely between steps)
   const validateStep = (_step?: number): boolean => {
     setErrors({});
     return true;
@@ -911,7 +912,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         city: originGeo.city,
         state: originGeo.state,
         description: initialLocationMode === 'NOT_RECEIVED'
-          ? 'Physical waybill registered by Super Admin. Awaiting carrier collection.'
+          ? `Physical waybill registered by ${ADMIN_ROLE_LABEL}. Awaiting carrier collection.`
           : (shipmentType === 'Vehicle'
               ? `${vehYear} ${vehMake} ${vehModel} (VIN: ${vehVin}) inspected and physically received. Key custody verified.`
               : shipmentType === 'Pallet'
@@ -927,7 +928,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
               : `Shipment physically received at ${originGeo.city}, ${originGeo.state}. Code 128 barcode applied.`),
         isCurrent: true,
         isCompleted: true,
-        operatorId: 'Super Admin'
+        operatorId: ADMIN_ROLE_LABEL
       }
     ];
 
@@ -1132,7 +1133,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     // other one regardless of cargo.
     const trailerLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
     const bolTrailerNumber = `TR-${Math.floor(1000 + Math.random() * 9000)}-${trailerLetter}`;
-    const bolSealNumber = `SL-${Math.floor(10000 + Math.random() * 90000)}`;
+    const bolSealNumber = generateReference('seal');
     const bolSpecialInstructionsPool = [
       'Handle with care. Protect from moisture and extreme temperature.',
       'Fragile contents. Do not stack additional freight on top of this shipment.',
@@ -1149,7 +1150,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         title: `Uniform Straight Bill of Lading (${trackingNumber})`,
         shipmentTracking: trackingNumber,
         senderName: senderName || 'Origin Consignor',
-        senderCompany: senderCompany || `${COMPANY_SHORT} Intake`,
+        senderCompany: senderCompany || INTAKE_DESK,
         senderAddress: senderAddress,
         senderCity: senderCity,
         senderState: senderState,
@@ -1382,7 +1383,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         <div className="bar-right">
           <div className="preset-quick-pills">
             <span className="preset-caption">QUICK PRESETS:</span>
-            <button type="button" className="preset-pill" onClick={() => handleLoadPreset('vehicle_tacoma')}>
+            <button type="button" className="preset-pill" onClick={() => handleLoadPreset('vehicle_suv')}>
               <Car size={13} className="preset-icon-car" />
               <span>Vehicle</span>
             </button>
@@ -1406,7 +1407,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
               <FileText size={13} className="preset-icon-doc" />
               <span>Legal Doc</span>
             </button>
-            <button type="button" className="preset-pill" onClick={() => handleLoadPreset('bumper_parcel')}>
+            <button type="button" className="preset-pill" onClick={() => handleLoadPreset('parts_parcel')}>
               <Package size={13} className="preset-icon-pkg" />
               <span>Parcel</span>
             </button>
@@ -1830,15 +1831,15 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         className="preset-spec-btn"
                         onClick={() => {
                           setVehMake('Toyota');
-                          setVehModel('Tacoma');
+                          setVehModel('Land Cruiser');
                           setVehYear('2024');
-                          setVehWeightLbs('4445');
-                          setVehLengthIn('213');
-                          setVehWidthIn('75');
-                          setVehHeightIn('71');
+                          setVehWeightLbs('5490');
+                          setVehLengthIn('195');
+                          setVehWidthIn('78');
+                          setVehHeightIn('75');
                         }}
                       >
-                        Use Standard Tacoma Specs
+                        Use Example Specs
                       </button>
                     </div>
                   </div>
@@ -1863,7 +1864,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                           type="text"
                           value={vehModel}
                           onChange={e => setVehModel(e.target.value)}
-                          placeholder="e.g. Tacoma"
+                          placeholder="e.g. Land Cruiser"
                         />
                         {errors.vehModel && <span className="field-error-msg">{errors.vehModel}</span>}
                       </div>
@@ -1886,7 +1887,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                           className="font-mono"
                           value={vehVin}
                           onChange={e => setVehVin(e.target.value.toUpperCase())}
-                          placeholder="3TYCZ5AN9RT048122"
+                          placeholder="17-character VIN"
                         />
                         {errors.vehVin && <span className="field-error-msg">{errors.vehVin}</span>}
                       </div>
@@ -2629,7 +2630,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         className="preset-spec-btn"
                         onClick={() => {
                           setDocEnvelopeType(`${COMPANY_SHORT} Waterproof Legal Pouch (12×16 in)`);
-                          setDocSealNumber('SDL-SL-892401');
+                          setDocSealNumber(generateReference('seal'));
                           setDocDirectSignOnly(true);
                           setDocUrgentDeadline('By 10:30 AM Next Business Day (Priority Legal)');
                           setDocFilingCourtRef('CASE-2026-NY-4481');
@@ -3428,7 +3429,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           {currentStep === 5 && (
             <div className="step-inner-content animate-fade-in">
               <div className="step-section-heading">
-                <h3>05. Shipment Pricing (Private Super Admin)</h3>
+                <h3>05. Shipment Pricing (Administrator only)</h3>
                 <p>Internal rate calculation. Pricing is PRIVATE and never automatically displayed to customers.</p>
               </div>
 

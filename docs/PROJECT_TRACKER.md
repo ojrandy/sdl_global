@@ -54,8 +54,8 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [x] 1.7 Replace all emails with `info@sdlgloballogistics.com` (defaults in `server/db.ts` settings, Header, Contact, PublicQuoteResult, Admin Settings).
 - [x] 1.8 Implement the new tracking-ID generator (`DLS` + 5 chars = 8 total) as ONE shared util; replace all 6 generators (see REBRAND_MAP §3). *The server assigns every ID; clients adopt it. Tests: `npm test`.*
 - [x] 1.9 Update tracking input validation, placeholders and help text to the new 8-character format.
-- [~] 1.10 Replace demo data (`src/data/mockShipments.ts`, `server/seed.ts`) with SDL-branded, worldwide demo shipments using DLS IDs. *DLS IDs, SDL names and fictional people done; the routes stay domestic until Phase 2 (2.2/2.3) can geocode and draw worldwide legs.*
-- [ ] 1.11 Replace the other ID prefixes: seals, support tickets, invoices, returns (REBRAND_MAP §3).
+- [x] 1.10 Replace demo data (`src/data/mockShipments.ts`, `server/seed.ts`) with SDL-branded, worldwide demo shipments using DLS IDs. *Both build from `src/shared/demoData.ts` (Lagos→London air, Shanghai→Rotterdam sea, Dubai→Nairobi air, Houston→Rotterdam sea).*
+- [x] 1.11 Replace the other ID prefixes: seals, support tickets, invoices, returns (REBRAND_MAP §3). *`src/shared/references.ts`; returns done in the 1.8 follow-up.*
 - [ ] 1.12 Sweep: `grep -rniE "duolingo|dxp|dex\b" --exclude-dir=node_modules .` → only allowed hits remain (list them in REBRAND_MAP §6).
 
 ## Phase 2 — Worldwide operations
@@ -132,13 +132,15 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 10 | ~~Admin subdomain name~~ **Resolved: `private.sdlgloballogistics.com`** | 7.3 |
 | 11 | Lawyer review of legal pages | 3.11 |
 | 12 | ~~Returns kept only in browser state~~ **Resolved 2026-09-28: a return is its own linked shipment row (`POST /api/shipments/:id/return`).** Still browser-only after a control action: `statusMessage`, the audit log and the hold "frozen" flag (no columns). Decide whether to persist them. | 1.8 follow-up |
+| 13 | Public site shows demo shipments from the client mock (`App.tsx` looks up `mockShipments` before the API), even when the DB has no demo data. Remove with the demo data before launch. | 6.7 |
 
 ## Decisions log
 | Date | Decision |
 |---|---|
 | 2026-09-26 | Brand: SDL Global Logistics Ltd; email info@sdlgloballogistics.com; worldwide coverage. |
 | 2026-09-27 | Admin session cookie renamed `dxp.sid` → `sdl.sid` (owner approved signing everyone out once). |
-| 2026-09-27 | Demo shipments keep their current routes until Phase 2: position labels come from `US_METRO_DATABASE`, so intercontinental demo routes would show US city names. Revisit in 1.10 once 2.2/2.3 land. |
+| 2026-09-27 | ~~Demo shipments keep their current routes until Phase 2: position labels come from `US_METRO_DATABASE`, so intercontinental demo routes would show US city names. Revisit in 1.10 once 2.2/2.3 land.~~ **Superseded 2026-09-28: owner asked for worldwide demo routes now (1.10).** |
+| 2026-09-28 | Demo data uses worldwide routes (owner request). To keep in-transit labels honest, `findNearestMetro` returns nothing beyond ~3° from a US metro, so the last known label is kept instead of a wrong US city. The map's estimated-position marker still follows the road-routing geometry (Phase 2, 2.2/2.3). Admin UI shows "Administrator"; new records store it; existing "Super Admin" values are not rewritten (shown via `displayOperator`). |
 | 2026-09-27 | Public `/api/track` only accepts DLS IDs (400 for anything else). Records created before the DLS format stay reachable in the admin console. |
 | 2026-09-27 | The server assigns every tracking ID: `POST /api/shipments` and quote conversion ignore any `trackingNumber` in the body (the public route must not let callers pick IDs). Admin create, quick create, the Ship page and quote conversion now wait for the server and use its ID. If the server fails, nothing is added locally and an error is shown (previously a local-only shipment appeared with an ID the server never saved). |
 | 2026-09-28 | Returns are real shipments: each return gets its own shipment row and server-assigned DLS ID, linked both ways (`return_leg_json` on the original, `return_of_tracking` on the return). One return per shipment; a return can't itself be returned (409). Columns added, none renamed. |
@@ -172,6 +174,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-26 | 0.2 | Docs are in the repo (`CLAUDE.md` at the root, the rest in `/docs`). |
 | 2026-09-27 | 1.8 / 1.9 | Server-authoritative IDs (see Decisions); normaliser keeps a `-NN` piece suffix and accepts Unicode dashes; `parsePieceLabel()`; `src/shared` in `tsconfig.server.json`; `npm test` (8 tests); Track page tells "bad format" apart from "not found". Verified on a scratch DB: 15 API checks, forced-collision retry, admin wizard → public track by `dls xxx-xx - 01`, Ship page booking. |
 | 2026-09-28 | 1.8 follow-up | Server IDs now use `crypto.randomInt` (BRAND_GUIDE §7; the shared generator takes a random source). Returns are stored: `POST /api/shipments/:id/return` creates the return as its own shipment (new DLS ID, route and parties swapped, pieces relabelled) in one transaction; new columns `return_leg_json` / `return_of_tracking`; public page links both ways; `applyReturnToOrigin` removed from planningEngine. Verified: 15 API checks incl. 401/400/404/409, public lookup of the return's piece label, return from the admin control modal on a DB created before the migration. |
+| 2026-09-28 | 1.10 / 1.11 | Reference IDs via `src/shared/references.ts` (SDL-SL / SDL-TKT / SDL-INV + 6 digits; server default seal too; invoice auth ref stable per document; support ticket no longer re-rolls on render). Demo data rewritten from `src/shared/demoData.ts` (4 worldwide shipments, 2 quotes, 1 ocean BOL; Demo names, example.com, no phones). "Super Admin" → "Administrator" (UI + new records), "SDL Operations Centre" public facility, "SDL Intake Desk" default sender, Tacoma presets and personal-demo comments removed, US-only nearest-metro labels capped. `npm test` 13/13. Verified on a fresh DB with SEED_DEMO_DATA=true passed per process (`.env` unchanged, flag stays off): 10 API checks, all four demo IDs tracked in the browser with no old strings, admin shows Administrator, 0 page errors. |
 ---
 
 ## System notes (codebase walkthrough, updated 2026-09-26 for commit `6b8185f`)

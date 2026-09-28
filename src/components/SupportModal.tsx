@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Headphones, X, CheckCircle, Send, AlertCircle } from 'lucide-react';
 import './SupportModal.css';
 import { COMPANY_SHORT } from '../config/brand';
+import { generateReference } from '../shared/references';
 
 interface SupportModalProps {
   isOpen: boolean;
@@ -22,11 +23,13 @@ export const SupportModal: React.FC<SupportModalProps> = ({
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [ticketId, setTicketId] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setTicketId(generateReference('ticket'));
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -57,7 +60,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
             <CheckCircle size={44} className="text-emerald" />
             <h4>Support Request Received</h4>
             <p>
-              Your ticket <strong>#SDL-TKT-{Math.floor(100000 + Math.random() * 900000)}</strong> has been opened for tracking number <strong>{trackingNumber || 'General'}</strong>.
+              Your ticket <strong>#{ticketId}</strong> has been opened for tracking number <strong>{trackingNumber || 'General'}</strong>.
             </p>
             <span className="support-timeframe">Our operations specialist will respond within 2 business hours.</span>
           </div>

@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { api } from '../services/api';
-import { EMAIL, LOGO_ALT, LOGO_WHITE, TAGLINE } from '../config/brand';
+import { ADMIN_ROLE_LABEL, EMAIL, LOGO_ALT, LOGO_WHITE, TAGLINE } from '../config/brand';
 import './AdminLayout.css';
 
 export type AdminViewType =
@@ -255,11 +255,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
           <div className="sidebar-operator-card">
             <div className="operator-avatar">
-              <span>SA</span>
+              <span>AD</span>
               <span className="operator-online-dot" />
             </div>
             <div className="operator-info">
-              <strong>Super Admin</strong>
+              <strong>{ADMIN_ROLE_LABEL}</strong>
               <small>Terminal Dispatcher #01</small>
             </div>
           </div>
@@ -377,9 +377,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 className="user-profile-btn"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                <div className="avatar-chip">SA</div>
+                <div className="avatar-chip">AD</div>
                 <div className="profile-text">
-                  <span className="profile-name">Super Admin</span>
+                  <span className="profile-name">{ADMIN_ROLE_LABEL}</span>
                   <span className="profile-role">Root Dispatch</span>
                 </div>
                 <ChevronDown size={14} className="chevron-icon" />
@@ -388,7 +388,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               {showUserMenu && (
                 <div className="user-menu-popover animate-scale-in">
                   <div className="menu-popover-header">
-                    <strong>Super Admin (Console)</strong>
+                    <strong>{ADMIN_ROLE_LABEL} (Console)</strong>
                     <small>{EMAIL}</small>
                   </div>
                   <div className="menu-popover-links">

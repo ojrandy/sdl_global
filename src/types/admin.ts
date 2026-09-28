@@ -33,7 +33,7 @@ export interface QuoteRequest {
   status: QuoteRequestStatus;
   
   // Requester / Sender
-  requesterName: string; // Randy
+  requesterName: string; // e.g. Demo Customer
   requesterEmail: string;
   requesterPhone: string;
   requesterCompany?: string;
@@ -54,7 +54,7 @@ export interface QuoteRequest {
   destZip?: string; // 90071
 
   // Cargo
-  cargoDescription: string; // Toyota Tacoma Bumper
+  cargoDescription: string; // e.g. Generator spare parts
   cargoType: string; // Automotive part / Parcel
   quantity: number;
   totalWeightLbs: number;

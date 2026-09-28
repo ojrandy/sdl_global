@@ -66,8 +66,8 @@ export const EditShipmentModal: React.FC<EditShipmentModalProps> = ({
   // shows its real data instead of blank fields, with sensible defaults only for a shipment
   // that has none yet (e.g. the admin is switching its type here for the first time).
   const veh = shipment.vehicleDetails;
-  const [vehMake, setVehMake] = useState(veh?.make || 'Toyota');
-  const [vehModel, setVehModel] = useState(veh?.model || 'Tacoma');
+  const [vehMake, setVehMake] = useState(veh?.make || '');
+  const [vehModel, setVehModel] = useState(veh?.model || '');
   const [vehYear, setVehYear] = useState(String(veh?.year || 2024));
   const [vehVin, setVehVin] = useState(veh?.vin || '');
   const [vehColor, setVehColor] = useState(veh?.color || '');

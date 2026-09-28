@@ -1,18 +1,23 @@
 import { db } from './db.js';
-import { COMPANY_SHORT, LEGAL_NAME } from '../src/config/brand.js';
+import { LEGAL_NAME } from '../src/config/brand.js';
+import { pieceLabel } from '../src/shared/trackingId.js';
+import {
+  DEMO_SHIPMENTS, DEMO_QUOTES, DemoShipment,
+  hoursFrom, demoTimestamp, demoDate, demoShortDate, placeLabel
+} from '../src/shared/demoData.js';
 
+// Seeds the SDL demo shipments, quotes and a sample document (src/shared/demoData.ts).
+// Only runs when SEED_DEMO_DATA=true (see db.ts) and the shipments table is empty.
 export function seedDatabaseIfEmpty() {
-  // Must check whether the table is genuinely empty, not merely whether this one flagship
-  // record exists — the earlier version checked only for 'DLS7K2M9', which meant
-  // deleting that specific demo shipment (and leaving any other real shipments in place)
-  // caused it to be silently reinserted on every server restart, making that one delete look
-  // like it "didn't take" even though the DELETE itself worked correctly.
+  // Must check whether the table is genuinely empty, not merely whether one demo record
+  // exists: deleting a single demo shipment must not make it reappear on the next restart.
   const { count } = db.prepare('SELECT COUNT(*) as count FROM shipments').get() as { count: number };
   if (count > 0) {
     return; // Database already has real data — never reseed over it.
   }
 
-  console.log('[DB] Seeding flagship shipment DLS7K2M9, quotes, and documents...');
+  console.log(`[DB] Seeding ${DEMO_SHIPMENTS.length} SDL demo shipments, quotes and a sample document...`);
+  const now = Date.now();
 
   const insertShipment = db.prepare(`
     INSERT OR IGNORE INTO shipments (
@@ -23,9 +28,10 @@ export function seedDatabaseIfEmpty() {
       destination_city, destination_state, destination_lat, destination_lng,
       current_location_city, current_location_state, current_location_lat, current_location_lng,
       current_facility, sender_json, recipient_json, dimensions_json,
-      vehicle_json, references_json, cargo_category, photos_json
+      container_json, pallet_json, references_json, cargo_category,
+      created_at_ts, progress_updated_at_ts
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
   `);
 
@@ -48,368 +54,107 @@ export function seedDatabaseIfEmpty() {
       id, created_at, status, customer_name, customer_email, customer_phone,
       company, origin_json, destination_json, service, shipment_type,
       cargo_description, weight_lbs, pieces, dimensions_json, declared_value,
-      special_instructions, pricing_json, internal_notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      special_instructions, pricing_json, internal_notes, created_at_ts
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertDoc = db.prepare(`
     INSERT OR IGNORE INTO documents (
       id, doc_type, title, shipment_tracking,
-      sender_name, sender_company, sender_address, sender_city, sender_state, sender_zip, sender_phone,
-      recipient_name, recipient_company, recipient_address, recipient_city, recipient_state, recipient_zip, recipient_phone,
+      sender_name, sender_company, sender_city, sender_state,
+      recipient_name, recipient_company, recipient_city, recipient_state,
       cargo_description, shipment_type, service, weight_lbs, pieces, dimensions,
       declared_value, charges_json, bol_carrier, bol_trailer_number, bol_seal_number,
-      bol_special_instructions, created_date, status, version, file_size
+      bol_special_instructions, created_date, status, version, file_size, created_at_ts
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
   `);
 
-  // Atomic seed — node:sqlite has no db.transaction() helper, so BEGIN/COMMIT/ROLLBACK
-  // are managed explicitly around the call to runSeed() below.
-  const runSeed = () => {
-    // 1. PRIMARY SHIPMENT: vehicle parts, in transit (DLS7K2M9)
+  const party = (p: DemoShipment['sender'], place: DemoShipment['origin']) => JSON.stringify({
+    name: p.name, company: p.company, email: p.email,
+    city: place.city, state: place.region, country: place.country
+  });
+
+  const seedShipment = (s: DemoShipment) => {
+    const created = hoursFrom(now, -s.createdHoursAgo);
+    const eta = hoursFrom(now, s.etaHoursFromNow);
+    const delivered = s.status === 'DELIVERED';
+    const lastEvent = s.events[s.events.length - 1];
+
     insertShipment.run(
-      'DLS7K2M9',
-      'DLS7K2M9',
-      'IN_TRANSIT',
-      'IN TRANSIT',
-      68,
-      'Aug 20, 2026 · 4:35 PM CT',
-      '2026-08-19',
-      'Wednesday, August 22',
-      'by end of day',
-      'Express',
-      'Parcel',
-      'Steel Bumper Assembly',
-      45.0,
-      1,
-      1850.00,
-      'New York',
-      'NY',
-      40.7128,
-      -74.0060,
-      'Los Angeles',
-      'CA',
-      34.0522,
-      -118.2437,
-      'Chicago',
-      'IL',
-      41.8781,
-      -87.6298,
-      'Chicago Regional Sort Facility',
-      JSON.stringify({
-        name: 'Demo Shipper',
-        company: 'Demo Auto Parts Co.',
-        addressLine: '123 Main Street, Suite 400',
-        city: 'New York',
-        state: 'NY',
-        postalCode: '10001',
-        country: 'USA',
-        phone: '+1 (212) 555-0198',
-        email: 'shipper@example.com'
-      }),
-      JSON.stringify({
-        name: 'Demo Consignee',
-        company: 'Demo Offroad Outfitters',
-        addressLine: '456 Sunset Boulevard',
-        city: 'Los Angeles',
-        state: 'CA',
-        postalCode: '90028',
-        country: 'USA',
-        phone: '+1 (310) 555-0144',
-        email: 'consignee@example.com',
-        instructions: 'Direct signature required upon delivery.'
-      }),
-      JSON.stringify({ length: 72, width: 24, height: 18 }),
-      JSON.stringify({
-        make: 'Toyota',
-        model: 'Tacoma',
-        year: 2024,
-        vin: '4T1BK1EB7RU128940',
-        color: 'Army Green',
-        condition: 'Mint / Factory Packaged',
-        licensePlate: 'TRK-8842',
-        keysIncluded: true,
-        operable: true,
-        inspectionNotes: 'Full reinforced steel bumper consignment with mounting hardware.'
-      }),
-      JSON.stringify({ customerReference: 'PO-45821', orderNumber: 'ORD-84921', invoiceNumber: 'INV-2026-892' }),
-      'Automotive & Parts',
-      JSON.stringify([
-        'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'
-      ])
+      s.trackingNumber, `*${s.trackingNumber}*`, s.status, s.statusText, s.progressPercent,
+      demoTimestamp(hoursFrom(now, -lastEvent.hoursAgo)), demoShortDate(created),
+      demoDate(eta),
+      delivered ? `Delivered at ${demoTimestamp(eta).split(' · ')[1]}` : 'by 5:00 PM',
+      s.service, s.shipmentType, s.cargoDescription, s.totalWeightLbs, s.pieces,
+      s.declaredValue,
+      s.origin.city, s.origin.region, s.origin.lat, s.origin.lng,
+      s.destination.city, s.destination.region, s.destination.lat, s.destination.lng,
+      s.current.city, s.current.region, s.current.lat, s.current.lng,
+      s.currentFacility,
+      party(s.sender, s.origin), party(s.recipient, s.destination),
+      JSON.stringify(s.dimensions),
+      s.containerDetails ? JSON.stringify(s.containerDetails) : null,
+      s.palletDetails ? JSON.stringify(s.palletDetails) : null,
+      JSON.stringify(s.references), s.cargoCategory,
+      created.getTime(), now
     );
 
-    insertPiece.run(
-      'p1',
-      'DLS7K2M9-01',
-      'DLS7K2M9',
-      1,
-      1,
-      'IN_TRANSIT',
-      'IN TRANSIT',
-      'Chicago, IL',
-      45.0,
-      JSON.stringify({ length: 72, width: 24, height: 18 })
-    );
-
-    const primaryEvents = [
-      {
-        id: 'ev-1',
-        title: 'Shipment Received',
-        facility: 'Manhattan Origin Terminal',
-        location: 'New York, NY',
-        timestamp: 'August 19, 2026 · 11:42 AM ET',
-        description: `Shipment received into the ${COMPANY_SHORT} network.`,
-        sort_order: 1,
-        completed: 1,
-        current: 0
-      },
-      {
-        id: 'ev-2',
-        title: 'Processing at Facility',
-        facility: 'New York Gateway Sort Center',
-        location: 'New York, NY',
-        timestamp: 'August 19, 2026 · 2:10 PM ET',
-        description: 'Shipment processed and prepared for linehaul departure.',
-        sort_order: 2,
-        completed: 1,
-        current: 0
-      },
-      {
-        id: 'ev-3',
-        title: 'Departed Facility',
-        facility: 'New York Outbound Gateway',
-        location: 'New York, NY',
-        timestamp: 'August 20, 2026 · 8:15 AM ET',
-        description: 'Shipment departed our New York location.',
-        sort_order: 3,
-        completed: 1,
-        current: 0
-      },
-      {
-        id: 'ev-4',
-        title: 'Arrived at Facility',
-        facility: 'Chicago Regional Sort Facility',
-        location: 'Chicago, IL',
-        timestamp: 'August 20, 2026 · 4:35 PM CT',
-        description: 'Your shipment has arrived at our Chicago location and is continuing toward its destination.',
-        sort_order: 4,
-        completed: 1,
-        current: 1
-      }
-    ];
-
-    for (const evt of primaryEvents) {
-      insertEvent.run(
-        evt.id,
-        'DLS7K2M9',
-        'IN_TRANSIT',
-        evt.title,
-        evt.location,
-        evt.facility,
-        evt.timestamp,
-        evt.description,
-        'Verified physical RFID facility scan.',
-        0,
-        evt.completed,
-        evt.current,
-        evt.sort_order
+    for (let n = 1; n <= s.pieces; n++) {
+      insertPiece.run(
+        `${s.trackingNumber}-P${n}`, pieceLabel(s.trackingNumber, n), s.trackingNumber, n, s.pieces,
+        s.status, s.statusText, placeLabel(s.current),
+        Math.round((s.totalWeightLbs / s.pieces) * 10) / 10, JSON.stringify(s.dimensions)
       );
     }
 
-    // 2. DELIVERED SHIPMENT (DLS8M4PQ)
-    insertShipment.run(
-      'DLS8M4PQ',
-      'DLS8M4PQ',
-      'DELIVERED',
-      'DELIVERED',
-      100,
-      'August 14, 2026 · 2:15 PM PT',
-      '2026-08-11',
-      'August 14, 2026',
-      'Delivered at 2:15 PM',
-      'Priority Linehaul',
-      'Parcel',
-      'Avionics Navigation Transponder Unit',
-      28.5,
-      1,
-      4200.00,
-      'Boston',
-      'MA',
-      42.3601,
-      -71.0589,
-      'San Francisco',
-      'CA',
-      37.7749,
-      -122.4194,
-      'San Francisco',
-      'CA',
-      37.7749,
-      -122.4194,
-      'Delivered to Front Desk',
-      JSON.stringify({ name: 'AeroTech Systems', city: 'Boston', state: 'MA' }),
-      JSON.stringify({ name: 'Pacific Avionics Labs', city: 'San Francisco', state: 'CA' }),
-      JSON.stringify({ length: 24, width: 18, height: 12 }),
-      null,
-      JSON.stringify({ customerReference: 'AV-99120' }),
-      'Industrial & Aerospace',
-      null
-    );
+    s.events.forEach((e, i) => {
+      const isCurrent = i === s.events.length - 1;
+      insertEvent.run(
+        `ev-${s.trackingNumber}-${i + 1}`, s.trackingNumber, e.status, e.title, placeLabel(e.place), e.facility,
+        demoTimestamp(hoursFrom(now, -e.hoursAgo)), e.description, null,
+        e.status === 'DELAYED' ? 1 : 0, 1, isCurrent ? 1 : 0, i + 1
+      );
+    });
+  };
 
-    insertEvent.run(
-      'ev-del-1',
-      'DLS8M4PQ',
-      'DELIVERED',
-      'Delivered to Recipient',
-      'San Francisco, CA',
-      'Bay Area Delivery Center',
-      'August 14, 2026 · 2:15 PM PT',
-      'Consignment successfully delivered and signed for by M. Johnson.',
-      'Proof of delivery stored.',
-      0, 1, 1, 1
-    );
+  const runSeed = () => {
+    DEMO_SHIPMENTS.forEach(seedShipment);
 
-    // 3. DELAYED SHIPMENT (DLS3J7NK)
-    insertShipment.run(
-      'DLS3J7NK',
-      'DLS3J7NK',
-      'DELAYED',
-      'DELAYED',
-      55,
-      'August 17, 2026 · 11:30 AM CT',
-      '2026-08-15',
-      'Thursday, August 20',
-      'Revised Schedule',
-      'Standard',
-      'Parcel',
-      'Industrial Automation Sensors',
-      34.0,
-      1,
-      1200.00,
-      'Chicago',
-      'IL',
-      41.8781,
-      -87.6298,
-      'Dallas',
-      'TX',
-      32.7767,
-      -96.7970,
-      'Dallas',
-      'TX',
-      32.7767,
-      -96.7970,
-      'Dallas Gateway Hub',
-      JSON.stringify({ name: 'Midwest Tech', city: 'Chicago', state: 'IL' }),
-      JSON.stringify({ name: 'Lone Star Distribution', city: 'Dallas', state: 'TX' }),
-      JSON.stringify({ length: 30, width: 20, height: 15 }),
-      null,
-      null,
-      'General Freight',
-      null
-    );
+    for (const q of DEMO_QUOTES) {
+      const created = hoursFrom(now, -q.hoursAgo);
+      const { validForDays, ...pricing } = q.pricing;
+      insertQuote.run(
+        q.id, created.toISOString(), q.status, q.customerName, q.customerEmail, '',
+        q.company,
+        JSON.stringify({ city: q.origin.city, state: q.origin.region, country: q.origin.country }),
+        JSON.stringify({ city: q.destination.city, state: q.destination.region, country: q.destination.country }),
+        q.service, q.shipmentType, q.cargoDescription, q.weightLbs, q.pieces,
+        JSON.stringify(q.dimensions), q.declaredValue, q.specialInstructions,
+        JSON.stringify({ ...pricing, validUntil: hoursFrom(created.getTime(), validForDays * 24).toISOString().slice(0, 10) }),
+        q.internalNotes, created.getTime()
+      );
+    }
 
-    // 4. Sample Quote Requests
-    insertQuote.run(
-      'Q-2026-8491',
-      '2026-08-20T14:30:00Z',
-      'NEW',
-      'Demo Customer',
-      'quotes.demo1@example.com',
-      '+1 (312) 555-0819',
-      'Demo Automotive Co.',
-      JSON.stringify({ city: 'Detroit', state: 'MI', postalCode: '48201' }),
-      JSON.stringify({ city: 'Atlanta', state: 'GA', postalCode: '30301' }),
-      'Priority Freight',
-      'Vehicle',
-      '2x Prototype EV Battery Powertrains',
-      1250,
-      2,
-      JSON.stringify({ length: 96, width: 48, height: 36 }),
-      45000,
-      'Requires temperature monitored flatbed trailer with 24/7 telematics.',
-      JSON.stringify({
-        baseRate: 1850,
-        fuelSurcharge: 157.25,
-        accessorials: 200,
-        total: 2207.25,
-        estimatedTransitDays: 2,
-        validUntil: '2026-09-03'
-      }),
-      'Customer requested expedited booking pending rate confirmation.'
-    );
-
-    insertQuote.run(
-      'Q-2026-8492',
-      '2026-08-21T09:15:00Z',
-      'RATE_PUBLISHED',
-      'Demo Customer',
-      'quotes.demo2@example.com',
-      '+1 (206) 555-0143',
-      'Demo Flight Systems',
-      JSON.stringify({ city: 'Seattle', state: 'WA', postalCode: '98101' }),
-      JSON.stringify({ city: 'Miami', state: 'FL', postalCode: '33101' }),
-      'Air Express',
-      'Parcel',
-      'Hydraulic Actuator Calibration Rig',
-      85,
-      1,
-      JSON.stringify({ length: 36, width: 24, height: 24 }),
-      12000,
-      'Fragile sensitive avionics.',
-      JSON.stringify({
-        baseRate: 640,
-        fuelSurcharge: 54.40,
-        accessorials: 75,
-        total: 769.40,
-        estimatedTransitDays: 1,
-        validUntil: '2026-09-04'
-      }),
-      'Quote issued via customer portal.'
-    );
-
-    // 5. Sample Official Document
+    // Sample document: the ocean bill of lading for the Shanghai -> Rotterdam container.
+    const sea = DEMO_SHIPMENTS.find(s => s.trackingNumber === 'DLS8M4PQ')!;
+    const docCreated = hoursFrom(now, -sea.createdHoursAgo);
     insertDoc.run(
-      'doc-bol-dls7k2m9',
-      'BOL',
-      'Auto Transport Bill of Lading & Inspection',
-      'DLS7K2M9',
-      'Demo Shipper',
-      'Demo Auto Parts Co.',
-      '123 Main Street, Suite 400',
-      'New York',
-      'NY',
-      '10001',
-      '+1 (212) 555-0198',
-      'Demo Consignee',
-      'Demo Offroad Outfitters',
-      '456 Sunset Boulevard',
-      'Los Angeles',
-      'CA',
-      '90028',
-      '+1 (310) 555-0144',
-      'Steel Bumper Assembly Consignment',
-      'Parcel',
-      'Express',
-      45.0,
-      1,
-      '72 × 24 × 18 in',
-      1850.0,
-      JSON.stringify({ baseRate: 320, insurance: 45, fuelSurcharge: 28.5, total: 393.5 }),
-      LEGAL_NAME,
-      'TL-4982',
-      'SDL-SL-892401',
-      'Must inspect mounting brackets upon dock arrival. Store upright.',
-      'Aug 19, 2026',
-      'GENERATED',
-      1,
-      '1.4 MB'
+      'doc-bol-dls8m4pq', 'BOL', 'Ocean Bill of Lading', sea.trackingNumber,
+      sea.sender.name, sea.sender.company, sea.origin.city, sea.origin.region,
+      sea.recipient.name, sea.recipient.company, sea.destination.city, sea.destination.region,
+      sea.cargoDescription, sea.shipmentType, sea.service, sea.totalWeightLbs, sea.pieces,
+      `${sea.dimensions.length} × ${sea.dimensions.width} × ${sea.dimensions.height} in`,
+      sea.declaredValue,
+      JSON.stringify({ baseRate: 3200, insurance: 450, fuelSurcharge: 272, total: 3922 }),
+      LEGAL_NAME, sea.containerDetails!.containerNumber, sea.containerDetails!.boltSeal,
+      'Keep container sealed until customs inspection at destination.',
+      demoShortDate(docCreated), 'GENERATED', 1, '1.4 MB', docCreated.getTime()
     );
   };
 
+  // Atomic seed — node:sqlite has no db.transaction() helper.
   db.exec('BEGIN');
   try {
     runSeed();

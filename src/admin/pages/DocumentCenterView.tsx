@@ -39,6 +39,7 @@ import { useAdminData } from '../../context/AdminDataContext';
 import { AdminDocument, DocumentType, DocumentStatus } from '../../types/admin';
 import { Barcode } from '../../components/Barcode';
 import { COMPANY, COMPANY_SHORT, LEGAL_NAME, LOGO, LOGO_ALT } from '../../config/brand';
+import { generateReference, referenceFor } from '../../shared/references';
 import './DocumentCenterView.css';
 
 interface DocumentCenterViewProps {
@@ -388,7 +389,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     // show the identical trailer/seal number and handling notes regardless of cargo.
     const trailerLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
     const bolTrailerNumber = `TR-${Math.floor(1000 + Math.random() * 9000)}-${trailerLetter}`;
-    const bolSealNumber = `SL-${Math.floor(10000 + Math.random() * 90000)}`;
+    const bolSealNumber = generateReference('seal');
     const specialInstructionsPool = [
       'Handle with care. Protect from moisture and extreme temperature.',
       'Fragile contents. Do not stack additional freight on top of this shipment.',
@@ -1366,7 +1367,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       fontSize={11}
                     />
                     <div className="font-mono text-xs text-slate mt-1">
-                      INVOICE REF: {previewDoc.id} · AUTH REF: SDL-INV-004091
+                      INVOICE REF: {previewDoc.id} · AUTH REF: {referenceFor('invoice', previewDoc.id)}
                     </div>
                   </div>
                 </div>
@@ -1417,7 +1418,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   <div className="bol-carrier-strip font-mono">
                     <div className="c-field"><span>CARRIER:</span> <strong>{previewDoc.bolCarrier || LEGAL_NAME}</strong></div>
                     <div className="c-field"><span>TRAILER NO:</span> <strong>{previewDoc.bolTrailerNumber || 'TR-4091-E'}</strong></div>
-                    <div className="c-field"><span>SEAL NO:</span> <strong>{previewDoc.bolSealNumber || 'SL-99420'}</strong></div>
+                    <div className="c-field"><span>SEAL NO:</span> <strong>{previewDoc.bolSealNumber || '—'}</strong></div>
                   </div>
 
                   {/* Freight Commodity Grid */}

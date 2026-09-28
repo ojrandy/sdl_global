@@ -4,6 +4,7 @@ import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
 import { generateUniqueTrackingId } from '../trackingIds.js';
 import { pieceLabel } from '../../src/shared/trackingId.js';
+import { ADMIN_ROLE_LABEL } from '../../src/config/brand.js';
 
 export const quotesRouter = Router();
 
@@ -364,7 +365,7 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
       'Origin Gateway',
       `${createdAt} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
       `Consignment generated from approved quote ${q.id}. Linear Code 128 barcode assigned.`,
-      `Converted by Super Admin. Tariff: $${q.pricing?.finalPrice || '350.00'}`,
+      `Converted by ${ADMIN_ROLE_LABEL}. Tariff: $${q.pricing?.finalPrice || '350.00'}`,
       0, 1, 1, 1
     );
 
