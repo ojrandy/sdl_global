@@ -83,7 +83,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
               </div>
               <h1>Shipping Rate Reference: <span className="font-mono text-blue">{quote.id}</span></h1>
               <p className="hero-subtext">
-                Direct linehaul rate quotation issued by the Duolingo Express Central Tariff Desk.
+                Direct linehaul rate quotation issued by the {COMPANY} Central Tariff Desk.
               </p>
             </div>
 
@@ -341,7 +341,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
               <div className="side-detail-card guarantee-card">
                 <div className="card-head">
                   <ShieldCheck size={16} className="text-emerald" />
-                  <h4>Duolingo Express Tariff Integrity</h4>
+                  <h4>{COMPANY} Tariff Integrity</h4>
                 </div>
                 <div className="card-body">
                   <div className="guarantee-point">
@@ -500,14 +500,14 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
               1. This rate quotation is guaranteed and locked until <strong>{quote.pricing?.validUntil || '14 days from issue'}</strong>.<br />
               2. Final charges are subject to physical dimensional scale verification upon origin intake tender.<br />
               3. Door-to-door transit includes piece-level Code 128 barcode chain-of-custody tracking.<br />
-              4. To confirm and execute this shipment, present reference #{quote.id} to any Duolingo Express terminal.
+              4. To confirm and execute this shipment, present reference #{quote.id} to any {COMPANY} terminal.
             </p>
           </div>
 
           <div className="terms-right-auth">
             <div className="auth-stamp-box">
               <Award size={28} className="stamp-icon" />
-              <span>DUOLINGO EXPRESS</span>
+              <span>{COMPANY.toUpperCase()}</span>
               <small>CENTRAL TARIFF DESK</small>
               <strong>OFFICIAL SEAL</strong>
             </div>

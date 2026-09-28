@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, FileText, Lock, Eye, DollarSign, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { COMPANY, LEGAL_NAME } from '../config/brand';
 import './LegalPage.css';
 
 interface LegalPageProps {
@@ -40,7 +41,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
           </h1>
 
           <p className="legal-hero-lead animate-fade-in">
-            Review Duolingo Express regulatory standards, terms of carriage, carrier tariffs, and comprehensive client privacy protections.
+            Review {COMPANY} regulatory standards, terms of carriage, carrier tariffs, and comprehensive client privacy protections.
           </p>
         </div>
       </section>
@@ -129,7 +130,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                 <section className="legal-section">
                   <h3>1. Scope of Privacy Protection</h3>
                   <p>
-                    Duolingo Express ("we," "our," or "the Platform") provides priority express courier, scheduled commercial linehaul, auto transport, and secure vault logistics across the United States. This Privacy Policy details how we collect, safeguard, and manage data across public tracking engines, booking portals, and customer support channels.
+                    {LEGAL_NAME} ("we," "our," or "the Platform") provides priority express courier, scheduled commercial linehaul, auto transport, and secure vault logistics across the United States. This Privacy Policy details how we collect, safeguard, and manage data across public tracking engines, booking portals, and customer support channels.
                   </p>
                 </section>
 
@@ -155,7 +156,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                 <section className="legal-section">
                   <h3>1. Acceptance of Master Terms</h3>
                   <p>
-                    By booking, tracking, or tendering consignments through Duolingo Express, you agree to these Master Terms and Conditions governing rate calculations, transit schedules, proof of delivery, and operational procedures.
+                    By booking, tracking, or tendering consignments through {COMPANY}, you agree to these Master Terms and Conditions governing rate calculations, transit schedules, proof of delivery, and operational procedures.
                   </p>
                 </section>
 
@@ -207,7 +208,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                 <section className="legal-section">
                   <h3>1. Tender and Acceptance of Goods</h3>
                   <p>
-                    Duolingo Express accepts commercial parcels, cartons, motor vehicles, and secure vault consignments subject to compliance with packaging standards, safety regulations, and legal transit requirements.
+                    {COMPANY} accepts commercial parcels, cartons, motor vehicles, and secure vault consignments subject to compliance with packaging standards, safety regulations, and legal transit requirements.
                   </p>
                 </section>
 
@@ -233,7 +234,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({
                 <section className="legal-section">
                   <h3>1. Digital Accessibility Commitment</h3>
                   <p>
-                    Duolingo Express is committed to ensuring our digital logistics platform is accessible to all individuals, adhering to WCAG 2.1 Level AA standards including high-contrast color systems, keyboard navigation, and screen-reader support across our radar feeds and booking workflows.
+                    {COMPANY} is committed to ensuring our digital logistics platform is accessible to all individuals, adhering to WCAG 2.1 Level AA standards including high-contrast color systems, keyboard navigation, and screen-reader support across our radar feeds and booking workflows.
                   </p>
                 </section>
 

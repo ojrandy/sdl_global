@@ -26,7 +26,7 @@ import { useAdminData } from '../context/AdminDataContext';
 import { resolveLocation } from '../services/geocodingService';
 import './ShipPage.css';
 import { pieceLabel } from '../shared/trackingId';
-import { COMPANY_SHORT } from '../config/brand';
+import { COMPANY, COMPANY_SHORT } from '../config/brand';
 
 interface ShipPageProps {
   onTrack: (trackingNumber: string) => void;
@@ -362,7 +362,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
           </h1>
 
           <p className="ship-hero-subtitle animate-fade-in">
-            Register single or multi-piece consignments directly into the Duolingo Express relay network with linear Code 128 barcode provisioning. No customer account required.
+            Register single or multi-piece consignments directly into the {COMPANY} relay network with linear Code 128 barcode provisioning. No customer account required.
           </p>
 
           <div className="ship-hero-trust-strip animate-fade-in">
@@ -389,7 +389,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               <CheckCircle2 size={56} className="confirm-check-icon text-emerald" />
               <h2>Shipment Successfully Registered</h2>
               <p>
-                Your consignment has been recorded in the Duolingo Express intake queue. Master tracking identifier <strong className="font-mono">{generatedTracking}</strong> has been provisioned.
+                Your consignment has been recorded in the {COMPANY} intake queue. Master tracking identifier <strong className="font-mono">{generatedTracking}</strong> has been provisioned.
               </p>
             </div>
 
@@ -399,7 +399,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               <div>
                 <strong>Official Documentation & Invoicing Dispatch Notice</strong>
                 <p>
-                  All official shipping documents, including your <strong>certified Bill of Lading (BOL)</strong>, <strong>Code 128 piece barcode labels</strong>, and <strong>published tariff invoice</strong>, are issued directly by the Duolingo Express dispatch desk and will be transmitted to you via your designated communication channel (email, SMS, or dispatch coordinator).
+                  All official shipping documents, including your <strong>certified Bill of Lading (BOL)</strong>, <strong>Code 128 piece barcode labels</strong>, and <strong>published tariff invoice</strong>, are issued directly by the {COMPANY} dispatch desk and will be transmitted to you via your designated communication channel (email, SMS, or dispatch coordinator).
                 </p>
               </div>
             </div>
@@ -682,7 +682,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
                   {/* Tender Method Toggle */}
                   <div className="tender-mode-wrap">
-                    <label className="section-sublabel">How will Duolingo Express receive this consignment?</label>
+                    <label className="section-sublabel">How will {COMPANY} receive this consignment?</label>
                     <div className="tender-toggle-row">
                       <div
                         className={`tender-card ${pickupType === 'pickup' ? 'selected' : ''}`}

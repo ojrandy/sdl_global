@@ -23,6 +23,7 @@ import {
   Package
 } from 'lucide-react';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { COMPANY } from '../config/brand';
 import './ServicesPage.css';
 
 interface ServicesPageProps {
@@ -225,7 +226,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
             Precision Delivery Speeds for Every <span className="services-highlight-accent">Commercial Consignment.</span>
           </h1>
           <p className="services-hero-sub animate-fade-in">
-            From urgent next-morning express courier deliveries to scheduled interstate linehauls and specialized auto transport, Duolingo Express operates a transparent, verified domestic logistics network.
+            From urgent next-morning express courier deliveries to scheduled interstate linehauls and specialized auto transport, {COMPANY} operates a transparent, verified domestic logistics network.
           </p>
 
           <div className="services-hero-stats-row animate-fade-in">
@@ -684,7 +685,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
         <div className="sdl-container-wide">
           <div className="lifecycle-header">
             <span className="lifecycle-eyebrow">UNBROKEN COURIER PIPELINE</span>
-            <h3>How Every Consignment Moves Through Duolingo Express</h3>
+            <h3>How Every Consignment Moves Through {COMPANY}</h3>
             <p>Our standardized 4-stage operational journey ensures zero blind spots, instant Code 128 piece barcoding, and total transparency.</p>
           </div>
 

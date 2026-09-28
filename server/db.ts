@@ -45,7 +45,7 @@ if (!process.env.ADMIN_PROXY_TARGET && !fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// SDL starts with a fresh database (DEPLOYMENT.md §4), so a pre-rebrand duolingo_express.db is
+// SDL starts with a fresh database (DEPLOYMENT.md §4), so the pre-rebrand database file is
 // never opened or migrated. Say so at startup, so it isn't mistaken for live data.
 if (!process.env.ADMIN_PROXY_TARGET && fs.existsSync(path.join(dataDir, LEGACY_DB_FILE))) {
   console.warn(`⚠️ Ignoring ${LEGACY_DB_FILE} in ${dataDir}: SDL uses ${DB_FILE}. Delete the old file once you no longer need it.`);

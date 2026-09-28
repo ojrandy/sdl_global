@@ -21,6 +21,7 @@ import { PRIMARY_SHIPMENT, getShipmentByTrackingNumber } from '../data/mockShipm
 import { Shipment } from '../types/shipment';
 import { api } from '../services/api';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { COMPANY } from '../config/brand';
 import { parseTrackingInput } from '../shared/trackingId';
 import './TrackPage.css';
 
@@ -49,7 +50,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
   // Load recent searches from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('dxp_recent_tracking');
+      const saved = localStorage.getItem('sdl_recent_tracking');
       if (saved) {
         setRecentSearches(JSON.parse(saved).slice(0, 4));
       }
@@ -64,7 +65,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
       const existing = recentSearches.filter(n => n.toUpperCase() !== clean);
       const updated = [clean, ...existing].slice(0, 4);
       setRecentSearches(updated);
-      localStorage.setItem('dxp_recent_tracking', JSON.stringify(updated));
+      localStorage.setItem('sdl_recent_tracking', JSON.stringify(updated));
     } catch (e) {
       // ignore
     }
@@ -311,7 +312,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
             <span className="section-eyebrow">OFFICIAL DISPATCH DOCUMENTATION</span>
             <h2>Where to Locate Your Consignment Reference</h2>
             <p className="section-desc-sub">
-              All official shipping documents, tracking numbers, and bills of lading are issued directly by the Duolingo Express dispatch desk and provided to you through your designated communication channel.
+              All official shipping documents, tracking numbers, and bills of lading are issued directly by the {COMPANY} dispatch desk and provided to you through your designated communication channel.
             </p>
             <div className="section-header-line" />
           </div>
@@ -323,7 +324,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
               </div>
               <h3>Direct Dispatch Confirmation</h3>
               <p>
-                Your dedicated Duolingo Express logistics coordinator sends your official tracking identifier and booking receipt directly to you via email, SMS, or dispatch message upon consignment tender.
+                Your dedicated {COMPANY} logistics coordinator sends your official tracking identifier and booking receipt directly to you via email, SMS, or dispatch message upon consignment tender.
               </p>
               <div className="ref-format-pill font-mono">Issued Directly by Dispatch</div>
             </div>

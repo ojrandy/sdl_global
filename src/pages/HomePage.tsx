@@ -42,6 +42,7 @@ import { Barcode } from '../components/Barcode';
 import { HomeNetworkMap } from '../components/HomeNetworkMap';
 import { CLIENT_LOGOS } from '../components/ClientLogos';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { COMPANY, COMPANY_SHORT } from '../config/brand';
 import './HomePage.css';
 
 interface HomePageProps {
@@ -89,7 +90,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
   const testimonials = [
     {
-      quote: "Duolingo Express gives us the visibility and reliability we need to keep our commercial clients completely satisfied. Checkpoint updates are accurate, schedules are consistent, and their dedicated dispatch desk is unmatched.",
+      quote: "Their team gives us the visibility and reliability we need to keep our commercial clients completely satisfied. Checkpoint updates are accurate, schedules are consistent, and their dedicated dispatch desk is unmatched.",
       author: "Jessica Morgan",
       role: "Director of Supply Chain, Apex Retail Logistics",
       company: "Apex Commercial Corp",
@@ -117,7 +118,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   const faqs = [
     {
       q: 'Do I need an account or password to track a shipment?',
-      a: 'No. Duolingo Express operates a public logistics ledger. Simply enter your unique tracking identifier into our public tracking engine to view verified facility checkpoints, transit progress, and dynamic ETA updates.'
+      a: `No. ${COMPANY} operates a public logistics ledger. Simply enter your unique tracking identifier into our public tracking engine to view verified facility checkpoints, transit progress, and dynamic ETA updates.`
     },
     {
       q: 'How does live highway telemetry work without continuous driver GPS?',
@@ -279,7 +280,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
         <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">RELIABLE COURIER EXCELLENCE</span>
-            <h2>Why commercial shippers choose Duolingo Express</h2>
+            <h2>Why commercial shippers choose {COMPANY}</h2>
             <p className="section-desc-sub">
               Precision transit schedules, verifiable chain of custody, and dedicated driver dispatch across all major interstate corridors.
             </p>
@@ -354,7 +355,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
         <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">SEAMLESS COURIER PROTOCOL</span>
-            <h2>How Duolingo Express moves your shipments</h2>
+            <h2>How {COMPANY} moves your shipments</h2>
             <p className="section-desc-sub">
               From origin pickup to final recipient signature, every consignment follows our verified 4-step chain of custody.
             </p>
@@ -499,7 +500,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <div className="about-main-img-wrapper">
               <img
                 src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=900&auto=format&fit=crop&q=85"
-                alt="Duolingo Express Commercial Logistics Operations"
+                alt={`${COMPANY} logistics operations`}
                 className="about-main-img"
               />
               <div className="about-experience-badge">
@@ -527,10 +528,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
           {/* Right Text Content */}
           <div className="about-text-content">
-            <span className="section-eyebrow">ABOUT DUOLINGO EXPRESS</span>
+            <span className="section-eyebrow">ABOUT {COMPANY.toUpperCase()}</span>
             <h2>We believe modern shipping should be visible, fast, and effortlessly dependable.</h2>
             <p className="about-lead">
-              Duolingo Express provides nationwide interstate courier services and express parcel distribution across major U.S. commercial corridors.
+              {COMPANY} provides nationwide interstate courier services and express parcel distribution across major U.S. commercial corridors.
             </p>
             <p className="about-body">
               Built on certified carrier compliance and digital transparency, our operations eliminate the ambiguity of traditional shipping. Shippers and consignees receive physical facility checkpoint verification, high-density linear Code 128 barcodes, and continuous vehicle tracking from origin tender to final delivery.
@@ -996,7 +997,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <span className="section-eyebrow text-accent">PROVENANCE TECHNOLOGY</span>
             <h2>High-Density Linear Code 128 Barcode Symbology</h2>
             <p>
-              Unlike generic QR codes that fail in industrial dock environments, Duolingo Express utilizes standardized high-density linear Code 128 barcodes across all parcel cartons, auto VIN passes, and Bills of Lading.
+              Unlike generic QR codes that fail in industrial dock environments, {COMPANY} utilizes standardized high-density linear Code 128 barcodes across all parcel cartons, auto VIN passes, and Bills of Lading.
             </p>
             <div className="barcode-specs-row">
               <div className="b-spec">
@@ -1019,7 +1020,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               <div className="thermal-perforation-top" />
               <div className="thermal-header-strip">
                 <div>
-                  <strong className="thermal-brand font-mono">DUOLINGO EXPRESS CARRIER LABEL</strong>
+                  <strong className="thermal-brand font-mono">{COMPANY_SHORT} CARRIER LABEL</strong>
                   <span className="thermal-fmcsa font-mono">{dotNumber ? `${dotNumber} · ` : ''}STANDARD MASTER WAYBILL</span>
                 </div>
                 <span className="thermal-badge font-mono">PRIORITY AIR/GROUND</span>

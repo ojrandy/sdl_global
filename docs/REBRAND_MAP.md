@@ -36,26 +36,26 @@ Audit taken from the `duolingo-express` repo on 2026-09-26. When you work throug
 ## 2. Files containing "Duolingo" (54 files, ~130 hits)
 
 **Highest counts first:**
-- [ ] src/admin/pages/DocumentCenterView.tsx (13)
-- [ ] src/App.tsx (13)
-- [ ] src/pages/PublicQuoteResultPage.tsx (9)
-- [ ] src/pages/HomePage.tsx (9)
-- [ ] src/admin/pages/CreateShipmentView.tsx (7)
-- [ ] src/pages/AboutPage.tsx (6)
-- [ ] src/pages/ShipPage.tsx (5)
-- [ ] src/pages/LegalPage.tsx (5)
-- [ ] src/components/Header.tsx (5)
-- [ ] src/admin/pages/SettingsView.tsx (5)
-- [ ] src/components/Footer.tsx (4)
-- [ ] server/index.ts (4)
-- [ ] server/db.ts (3)
-- [ ] src/pages/TrackPage.tsx, ServicesPage.tsx, QuotePage.tsx, ContactPage.tsx (2 each)
-- [ ] src/components/ShipmentDocuments.tsx, src/admin/AdminLayout.tsx (2 each)
-- [ ] server/seed.ts, server/routes/shipments.ts, index.html, .env.example (2 each)
-- [ ] 1 hit each: routingEngine.ts, planningEngine.ts, geocodingService.ts, TrackResultPage.tsx, main.tsx,
+- [x] src/admin/pages/DocumentCenterView.tsx (13)
+- [x] src/App.tsx (13)
+- [x] src/pages/PublicQuoteResultPage.tsx (9)
+- [x] src/pages/HomePage.tsx (9)
+- [x] src/admin/pages/CreateShipmentView.tsx (7)
+- [x] src/pages/AboutPage.tsx (6)
+- [x] src/pages/ShipPage.tsx (5)
+- [x] src/pages/LegalPage.tsx (5)
+- [x] src/components/Header.tsx (5)
+- [x] src/admin/pages/SettingsView.tsx (5)
+- [x] src/components/Footer.tsx (4)
+- [x] server/index.ts (4)
+- [x] server/db.ts (3) *Legacy-migration values stay: see §7 Allowed hits.*
+- [x] src/pages/TrackPage.tsx, ServicesPage.tsx, QuotePage.tsx, ContactPage.tsx (2 each)
+- [x] src/components/ShipmentDocuments.tsx, src/admin/AdminLayout.tsx (2 each)
+- [x] server/seed.ts, server/routes/shipments.ts, index.html, .env.example (2 each)
+- [x] 1 hit each: routingEngine.ts, planningEngine.ts, geocodingService.ts, TrackResultPage.tsx, main.tsx,
       mockShipments.ts, AdminDataContext.tsx, SupportModal.tsx, TrackingEventsView.tsx, EditShipmentModal.tsx,
       server/routes/documents.ts, package.json
-- [ ] 1 hit each in CSS header comments: TrackResultPage.css, ServicesPage.css, HomePage.css, AboutPage.css,
+- [x] 1 hit each in CSS header comments: TrackResultPage.css, ServicesPage.css, HomePage.css, AboutPage.css,
       USJourneyMap.css, TrackingLoadingScreen.css, TrackingEventsView.css, SettingsView.css, QuoteRequestsView.css,
       OperationsCenter.css, DocumentCenterView.css, CreateShipmentView.css, AllShipmentsView.css,
       ShipmentControlModal.css, RecentlyDeletedModal.css, EditShipmentModal.css, DeleteShipmentModal.css,
@@ -133,7 +133,21 @@ grep -rniE "\bUSA\b|United States|\bU\.S\.|1-800|555-01" src server
 grep -rli "duolingo" dist dist-server
 ```
 
-**Allowed hits (document each here):**
+**Allowed hits (document each here):** *Sweep run 2026-09-28 (tracker 1.12) on source and a fresh `npm run build`.*
 | Hit | Why it's allowed |
 |---|---|
-| | |
+| `server/db.ts:9`, `:11` (`OLD_BRAND_SETTINGS`), and the same strings in `dist-server/server/db.js` | Startup migration: finds the old seed's company name and email in an existing `settings` table and rewrites them to SDL values. It has to know the old values to match them. Nothing old is shown to users. |
+| `server/db.ts:31` (`LEGACY_DB_FILE`), and `dist-server/server/db.js` | Only used to warn at startup that an old database file is present and ignored (DEPLOYMENT §4). |
+| `scripts/trackingId.test.ts:56`, `:75`; `scripts/references.test.ts:43` | Negative tests: they assert that old `DXP-` IDs are rejected and that generated references contain no old-brand text. Not part of the build. |
+| `CLAUDE.md`, `PROMPTS.md`, `docs/*.md` | Rebrand documentation that has to name the old strings to describe the job. Internal only; not in `dist/`. Review before the repo goes public. |
+| Binary files: `Public/brand/og-image.jpg`, `Public/images/sdl/hero-home-1024.jpg`, `Public/images/sdl/track-hero-1024.webp` (and their `dist/` copies), `images/free-cc0/locations-hero.webp`, `images/landingimage.png` | False positives: `dxp` matched random bytes in compressed image data (e.g. `LdXP`, `DXP` between binary bytes). No text metadata. |
+| `screens/*.png` (4 files) | False positives in binary data, like the images above. The folder itself is due to leave the repo (§5). |
+| `data/sdl_global.db-wal` | Local dev database (gitignored, never deployed): stale WAL pages still hold pre-rebrand demo rows. CLAUDE.md rule 9: not touched. It clears on the next checkpoint or when the local DB is recreated. |
+| `dex\b` (the tracker 1.12 pattern) | The only real word hit is "FedEx Custom Critical" (`src/pages/HomePage.tsx:142`), a third-party carrier name, not the old brand. Every other hit is `index`/`z-index`/`tabIndex`. That carrier list is invented partner content and belongs to task 3.14. |
+
+**Not allowed, deferred to their own tasks** (US-only wording and placeholder data, not old-brand names; listed so the Phase 6 gate still catches them):
+| Hits (2026-09-28) | Owner task |
+|---|---|
+| `nationwide\|interstate`: 64 lines in `src/` (pages 46, services 10, components 5, admin 3) | 2.2–2.4 (services, `USJourneyMap`), 3.2–3.13 (page copy) |
+| S2 `USA\|United States\|U.S.\|1-800\|555-01`: 84 lines in `src/` | 2.1 (hub data, including the fake `1-800-555-0199` facility phones in `FacilityNetworkMap` and `LocationsPage`), 2.6 (address forms and defaults), 3.x (copy), 3.12 (documents print "USA") |
+| `(212) 555-01xx` pet/vet presets in `CreateShipmentView.tsx`, `DocumentCenterView.tsx:428` sender-phone fallback | 3.12 (admin and document defaults). 555-01xx is the reserved fictional range, so these are not real numbers. |

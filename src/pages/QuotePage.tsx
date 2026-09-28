@@ -23,6 +23,7 @@ import {
 import { api } from '../services/api';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { COMPANY } from '../config/brand';
 import './QuotePage.css';
 
 interface QuotePageProps {
@@ -245,7 +246,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
               <div className="check-badge-icon"><CheckCircle2 size={48} className="text-emerald" /></div>
               <h2>Rate Request Successfully Submitted</h2>
               <p>
-                Your consignment tariff application <strong className="font-mono text-accent">{createdQuoteId}</strong> has been logged in the Duolingo Express dispatch ledger.
+                Your consignment tariff application <strong className="font-mono text-accent">{createdQuoteId}</strong> has been logged in the {COMPANY} dispatch ledger.
               </p>
             </div>
 
@@ -255,7 +256,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 <h4>How Rate Publishing & Certification Works:</h4>
               </div>
               <p>
-                Duolingo Express maintains verified tariff transparency without surge markups. Our central dispatch desk reviews corridor linehaul availability, certified scale weight, and required transit speed. Once certified, your official rate is published to your account and sent directly to <strong>{customerEmail || 'your email'}</strong>.
+                {COMPANY} maintains verified tariff transparency without surge markups. Our central dispatch desk reviews corridor linehaul availability, certified scale weight, and required transit speed. Once certified, your official rate is published to your account and sent directly to <strong>{customerEmail || 'your email'}</strong>.
               </p>
             </div>
 

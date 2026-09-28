@@ -20,6 +20,7 @@ import {
   Compass
 } from 'lucide-react';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { COMPANY, COMPANY_SHORT } from '../config/brand';
 import './AboutPage.css';
 
 interface AboutPageProps {
@@ -47,7 +48,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           </h1>
 
           <p className="about-hero-lead animate-fade-in">
-            Duolingo Express was founded on a singular principle: commercial shippers deserve authentic, real-time visibility and guaranteed point-to-point courier execution across nationwide trade corridors.
+            {COMPANY} was founded on a singular principle: commercial shippers deserve authentic, real-time visibility and guaranteed point-to-point courier execution across nationwide trade corridors.
           </p>
 
           <div className="about-hero-credentials animate-fade-in">
@@ -113,13 +114,13 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         <div className="sdl-container-wide">
           <div className="about-story-grid">
             <div className="about-story-content">
-              <span className="section-eyebrow">THE DUOLINGO EXPRESS STANDARD</span>
+              <span className="section-eyebrow">THE {COMPANY_SHORT} STANDARD</span>
               <h2>Moving What Matters with Authentic Transparency</h2>
               <p className="lead-p">
                 Traditional shipping providers often leave commercial clients stranded between fragmented handoffs, unresponsive call centers, and opaque status updates.
               </p>
               <p>
-                At <strong>Duolingo Express</strong>, we engineered our courier network around a zero-compromise chain-of-custody model. From initial dock tender to recipient handoff, every milestone is time-verified, barcode-audited, and managed by dedicated dispatch professionals who know your cargo by name.
+                At <strong>{COMPANY}</strong>, we engineered our courier network around a zero-compromise chain-of-custody model. From initial dock tender to recipient handoff, every milestone is time-verified, barcode-audited, and managed by dedicated dispatch professionals who know your cargo by name.
               </p>
 
               <div className="about-pillars-grid">
@@ -169,7 +170,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               <div className="about-visual-card">
                 <img
                   src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=1000&auto=format&fit=crop&q=80"
-                  alt="Duolingo Express Gateway Cross-Dock Operations"
+                  alt={`${COMPANY} gateway cross-dock operations`}
                   className="about-terminal-img"
                 />
                 <div className="about-floating-badge">
@@ -275,7 +276,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
         <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">PROVENANCE & EVOLUTION</span>
-            <h2>The Evolution of Duolingo Express</h2>
+            <h2>The Evolution of {COMPANY}</h2>
             <p className="section-desc-sub">
               From regional point-to-point courier routes to an accredited nationwide linehaul distribution network.
             </p>
@@ -356,7 +357,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               <span className="section-eyebrow light">VERIFIED CARRIER STANDARDS</span>
               <h3>Committed to Absolute Regulatory Safety & Compliance</h3>
               <p>
-                Every driver, vehicle, and terminal in the Duolingo Express network operates under stringent federal guidelines and commercial insurance protocols.
+                Every driver, vehicle, and terminal in the {COMPANY} network operates under stringent federal guidelines and commercial insurance protocols.
               </p>
             </div>
 

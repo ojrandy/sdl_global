@@ -49,7 +49,7 @@ import {
 import { Shipment, TrackingEvent, RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { Barcode } from '../components/Barcode';
 import { USJourneyMap } from '../components/USJourneyMap';
-import { OPERATIONS_CENTRE } from '../config/brand';
+import { COMPANY_SHORT, OPERATIONS_CENTRE } from '../config/brand';
 import { SupportModal } from '../components/SupportModal';
 import { calculateRouteGeometry } from '../services/routingEngine';
 import { simulationEngine } from '../services/simulationEngine';
@@ -581,7 +581,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         <div className="sdl-hero-backdrop-img">
           <img
             src="/images/tracking/truck_highway_hero.jpg"
-            alt="Duolingo Express Commercial Linehaul Highway Hauler"
+            alt={`${COMPANY_SHORT} freight vehicle`}
             className="hero-bg-photo"
           />
           <div className="sdl-hero-overlay" />
