@@ -16,13 +16,24 @@
 .about-hero-section {
   position: relative;
   min-height: 540px;
-  background-image: url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1920&auto=format&fit=crop&q=85');
-  background-size: cover;
-  background-position: center;
+  background-color: var(--sdl-ink-950);
   display: flex;
   align-items: center;
   padding: 5.5rem 0 5.5rem;
   overflow: hidden;
+}
+
+/* Hero photo (<ResponsiveImage>) sits behind the overlay. */
+.about-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.about-hero-media .about-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .about-hero-overlay {
@@ -146,6 +157,14 @@
   letter-spacing: -0.02em;
 }
 
+/* Word values ("Air · Ocean · Road") stay on one line at the numbers' height. */
+.stat-value.is-long {
+  font-size: 1.5rem;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
 .stat-title {
   font-size: 0.9375rem;
   font-weight: 800;
@@ -201,6 +220,11 @@
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
   margin-top: 2rem;
+}
+
+/* Five approach points: the last one spans the row. */
+.about-pillars-grid .pillar-item:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 .pillar-item {
@@ -281,7 +305,11 @@
   height: 560px;
 }
 
-.about-terminal-img {
+.about-visual-card .about-terminal-media {
+  height: 100%;
+}
+
+.about-visual-card .about-terminal-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -595,11 +623,9 @@
 }
 
 .compliance-banner {
-  background-image: 
-    linear-gradient(135deg, rgba(var(--sdl-ink-rgb), 0.72) 0%, rgba(var(--sdl-ink-rgb), 0.55) 100%),
-    url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1600&auto=format&fit=crop&q=85');
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--sdl-ink-950);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--sdl-radius-2xl);
   padding: 3.5rem;
@@ -609,6 +635,33 @@
   gap: 3.5rem;
   align-items: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* Photo (<ResponsiveImage>) + dark gradient behind the banner content. */
+.compliance-banner .compliance-banner-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.compliance-banner-media .compliance-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.compliance-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(135deg, rgba(var(--sdl-ink-rgb), 0.86) 0%, rgba(var(--sdl-ink-rgb), 0.72) 100%);
+}
+
+.compliance-text-block,
+.compliance-badges-grid {
+  position: relative;
+  z-index: 2;
 }
 
 .section-eyebrow.light {

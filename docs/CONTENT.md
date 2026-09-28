@@ -198,6 +198,10 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 - **Hero eyebrow:** `OUR SERVICES` · **H1:** `Every mode. Every border. One accountable team.`
 - **Sub:** `Choose the speed, security and mode that fit your cargo. We'll handle the route, the paperwork and the hand-offs.`
 - **Tier selector heading:** `Choose a service to see how it works`
+- **Hero stat pills** (reuse approved stats from §2.7/§2.9): **5** "Continents served" · **Air · Ocean · Road** "Modes connected" · **8-character** "Tracking ID" · **24/7** "Operations desk"
+- **Hero image:** `services-hero` (12:5 top band of `images/landingimage.png`)
+- **Section eyebrows** (labels added 2026-09-28, owner to confirm): `SERVICE TIERS` · `COMPARE` · `INDUSTRIES` · `ADD-ONS` · `HOW IT WORKS`
+- **Tier panel labels:** `Highlights` · `Service specifications` · buttons `Get a Rate Quote` · `Track a Shipment`
 
 ### 3.1 Service tiers (specs marked [confirm] need the owner's sign-off)
 
@@ -224,6 +228,14 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 ### 3.2 Comparison table
 - **H2:** `Compare speed and capability`
 - Rows: Transit speed · Modes · Max weight · Tracking detail · Signature · Best for (use the values from 3.1)
+- Values (Transit speed and Modes are derived from the §3.1 wording, **[confirm]**):
+
+| Service | Transit speed | Modes | Max weight | Tracking detail | Signature | Best for |
+|---|---|---|---|---|---|---|
+| Priority Express Courier | Fastest available routing [confirm] | Air, door to door [confirm] | 70 kg per piece [confirm] | Every scan, live | Always | Contracts, samples, spare parts, urgent e-commerce orders |
+| Scheduled Freight & Linehaul | Fixed departures, predictable transit [confirm] | Air · Ocean · Road | Full container/truckload | Milestone updates at every gateway | At delivery | Stock replenishment, manufacturing inputs, distributor supply |
+| Vehicle Shipping & Transport | Scheduled vessel or carrier departures [confirm] | Container · RoRo · Enclosed carrier | Cars, SUVs, motorcycles, light commercial [confirm] | Milestones plus vessel/carrier status | Condition report sign-off | Dealers, exporters, relocations, fleet moves |
+| Secure Vault & High-Value | Door to door, restricted hand-offs [confirm] | Sealed, door to door [confirm] | 30 kg per piece [confirm] | Every hand-off, with the seal number | ID-verified, named recipient only | Legal and financial documents, jewellery, pharmaceuticals, prototypes |
 
 ### 3.3 Industries (4)
 - **H2:** `Solutions tailored to your industry`
@@ -231,6 +243,7 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 - **Technology & Electronics:** Secure vault options, protected packing guidance and signature-only release.
 - **Automotive & Fleet:** Parts express to keep lines moving, plus complete vehicle shipping.
 - **Commercial & Retail Distribution:** Scheduled consolidations, cross-border e-commerce and linked returns.
+- *Bullets per tab:* reuse the §2.6 bullets (Healthcare, Technology, Automotive; Commercial & Retail uses the E-Commerce bullets). Images: the matching `industry-*` photos. Button: `Get a Rate Quote`.
 
 ### 3.4 Add-ons
 - **H2:** `Extra care when you need it`
@@ -242,6 +255,7 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 ### 3.5 Process strip
 - **H3:** `How every shipment moves through SDL`
 - Digital Booking & Labels → Gateway Scan → Linehaul & Border Crossing → Signed Proof of Delivery
+- *Intro and step text:* reuse §2.3 (intro `Four stages, one tracking ID, and full visibility from the first scan to the final signature.` and the four step bodies, in order).
 
 ### 3.6 CTA (also used on About)
 - **H2:** `Ready to ship with SDL?`
@@ -255,14 +269,18 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 - **Hero eyebrow:** `ABOUT SDL` · **H1:** `Moving what matters, with nothing hidden.`
 - **Sub:** `SDL Global Logistics connects businesses and people to the world with express, freight and secure transport, and with the one thing logistics often forgets: accountability.`
 
-**Our approach (5 points)**
+- **Hero image:** `about-hero` (12:5 bottom band of `images/landingimage.png`). The credentials row shows only the admin "regulatory line" when it is set.
+
+**Stat cards** (reuse approved stats; no invented figures): **24/7** "Global operations desk" · `Our desk follows the sun across time zones.` — **1** "Tracking ID from start to finish" · `One team accountable from the first mile to the last.` — **5** "Continents served" · `Gateways across Africa, Europe, the Middle East, Asia and the Americas.` — **Air · Ocean · Road** "Modes connected" · `Air, ocean and road, connected.`
+
+**Our approach (5 points)** (shown under the story text, eyebrow `OUR STORY`; photo `about-operations` with the caption **24/7 Global operations desk** · `Our desk follows the sun across time zones.`)
 1. **Milestone Visibility.** Every scan and hand-off is recorded and visible to you.
 2. **Direct Routing.** The fewest possible hand-offs between origin and destination.
 3. **Secure Custody.** Seals, scans and named releases for anything of value.
 4. **Proactive Support.** We contact you first when plans change.
 5. **Round-the-Clock Operations.** Our desk follows the sun across time zones.
 
-**Our divisions:** the four services with their one-line summaries from §3.1.
+**Our divisions:** the four services with their one-line summaries from §3.1. Eyebrow `DIVISIONS` · H2 `Our divisions`; each card lists the first three §3.1 highlights.
 
 **Our story** (replaces "The Evolution of Duolingo Express"). **H2:** `How SDL came to be`
 `SDL Global Logistics started with a simple frustration: once cargo crossed a border, shippers lost sight of it. Calls went unanswered, updates arrived late, and nobody owned the problem. We built SDL to fix that, joining express, freight and secure transport into one network, with one tracking ID and one team accountable from the first mile to the last.`
@@ -273,9 +291,11 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 - **Cross-Border Freight:** scheduled air, ocean and road departures.
 - **Piece-Level Tracking:** every carton barcoded and scanned.
 - **Global Gateway Network:** partner gateways across five continents.
+- *Section header while undated* (added 2026-09-28, owner to confirm): eyebrow `WHAT WE'VE BUILT` · H2 `Express, freight and secure transport under one roof` (from §2.4). Year badges appear per card only once real dates are supplied.
 
 **Compliance block.** **H3:** `Committed to safety and compliance`
 `We follow the export, import, security and dangerous-goods rules on every lane we operate, and we work only with vetted carriers and agents. Ask us for our compliance documents at any time.` *(Name specific licences only if SDL holds them.)*
+Eyebrow `SAFETY & COMPLIANCE`. Badge tiles reuse §2.8: **Compliance First** · **Vetted Handlers** · **Privacy by Design** · **Digital Documents** (plus the admin regulatory line when set). Background: `callback-banner` photo under the dark overlay.
 
 **CTA:** as §3.6.
 
@@ -440,6 +460,8 @@ Several SDL photos show the logo lettered as "SOL" (AI-generated artwork), so th
 |---|---|---|
 | hero-home / hero-home-mobile | images/landingimage(-mobile).png | SDL Global Logistics truck at a container port at sunset, with a cargo ship, cranes and an SDL aircraft overhead |
 | callback-banner | images/landingimage.png (3:1 crop) | (decorative background behind the callback form, empty alt) |
+| services-hero | images/landingimage.png (12:5, top band) | SDL aircraft taking off over port cranes and container stacks at sunset |
+| about-hero | images/landingimage.png (12:5, bottom band) | SDL truck and container ship on the quay at sunset |
 | track-hero | images/landingimage.png (2:1 crop) | SDL truck, cargo ship and aircraft at a container port at sunset |
 | locations-hero | images/free-cc0/locations-hero.webp | Aerial view of rows of shipping containers at a port terminal |
 | service-priority-express | images/brand-img1.PNG | Ground crew loading palletised air cargo into an SDL aircraft at sunset |

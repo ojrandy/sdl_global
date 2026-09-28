@@ -16,13 +16,24 @@
 .services-hero-section {
   position: relative;
   min-height: 540px;
-  background-image: url('https://images.unsplash.com/photo-1553413077-190dd305871c?w=1920&auto=format&fit=crop&q=85');
-  background-size: cover;
-  background-position: center 35%;
+  background-color: var(--sdl-ink-950);
   display: flex;
   align-items: center;
   padding: 5.5rem 0 5.5rem;
   overflow: hidden;
+}
+
+/* Hero photo (<ResponsiveImage>) sits behind the overlay. */
+.services-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.services-hero-media .services-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .services-hero-overlay {
@@ -303,6 +314,18 @@
   font-size: 0.875rem;
   color: var(--sdl-slate-700);
   margin-bottom: 0.625rem;
+}
+
+/* The ghost button is styled for dark heroes; on this white card it needs a dark outline. */
+.showcase-actions-row .btn-corp-ghost {
+  color: var(--sdl-ink-900);
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-300);
+}
+
+.showcase-actions-row .btn-corp-ghost:hover {
+  border-color: var(--sdl-ink-900);
+  background: var(--sdl-slate-50);
 }
 
 .showcase-actions-row {
@@ -612,7 +635,11 @@
   border: 1px solid var(--sdl-slate-200);
 }
 
-.ind-showcase-img {
+.ind-visual-box .ind-visual-media {
+  height: 100%;
+}
+
+.ind-visual-box .ind-showcase-img {
   width: 100%;
   height: 100%;
   object-fit: cover;

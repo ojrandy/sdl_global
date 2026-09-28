@@ -2,23 +2,23 @@ import React from 'react';
 import {
   ShieldCheck,
   Eye,
-  Clock,
   ArrowRight,
   Truck,
   Package,
   CheckCircle2,
   Lock,
   Zap,
-  Award,
-  BarChart3,
-  Building2,
-  Users,
   Car,
   Headphones,
-  Phone,
-  FileCheck,
-  Compass
+  Compass,
+  Clock,
+  Globe,
+  ScanBarcode,
+  Shield,
+  Users,
+  FileText
 } from 'lucide-react';
+import { ResponsiveImage } from '../components/ResponsiveImage';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
 import './AboutPage.css';
@@ -27,159 +27,173 @@ interface AboutPageProps {
   onNavigate: (page: string) => void;
 }
 
+// Copy: docs/CONTENT.md §4 (stats, divisions, badges and CTA reuse approved text from §2/§3).
+const STATS = [
+  { value: '24/7', title: 'Global operations desk', sub: 'Our desk follows the sun across time zones.' },
+  { value: '1', title: 'Tracking ID from start to finish', sub: 'One team accountable from the first mile to the last.' },
+  { value: '5', title: 'Continents served', sub: 'Gateways across Africa, Europe, the Middle East, Asia and the Americas.' },
+  { value: 'Air · Ocean · Road', title: 'Modes connected', sub: 'Air, ocean and road, connected.' }
+];
+
+const APPROACH: { title: string; body: string; icon: React.ReactNode; tone: string }[] = [
+  { title: 'Milestone Visibility', body: 'Every scan and hand-off is recorded and visible to you.', icon: <Eye size={22} />, tone: 'accent' },
+  { title: 'Direct Routing', body: 'The fewest possible hand-offs between origin and destination.', icon: <Compass size={22} />, tone: 'emerald' },
+  { title: 'Secure Custody', body: 'Seals, scans and named releases for anything of value.', icon: <Lock size={22} />, tone: 'sky' },
+  { title: 'Proactive Support', body: 'We contact you first when plans change.', icon: <Headphones size={22} />, tone: 'navy' },
+  { title: 'Round-the-Clock Operations', body: 'Our desk follows the sun across time zones.', icon: <Clock size={22} />, tone: 'accent' }
+];
+
+const DIVISIONS: { title: string; summary: string; bullets: string[]; icon: React.ReactNode; tone: string }[] = [
+  {
+    title: 'Priority Express Courier',
+    summary: 'Our fastest door-to-door service for urgent documents and parcels, worldwide.',
+    bullets: ['Same-day collection when booked before the cut-off', 'Fastest available air routing', 'Customs pre-alert and pre-clearance where possible'],
+    icon: <Zap size={26} />,
+    tone: 'accent'
+  },
+  {
+    title: 'Scheduled Freight & Linehaul',
+    summary: 'Air, ocean and road freight on fixed departures, built for regular volumes and predictable transit.',
+    bullets: ['Air freight consolidations', 'Ocean FCL and LCL', 'Cross-border road linehaul'],
+    icon: <Truck size={26} />,
+    tone: 'emerald'
+  },
+  {
+    title: 'Vehicle Shipping & Transport',
+    summary: 'International and domestic shipping for cars, motorcycles and fleet vehicles.',
+    bullets: ['Container or RoRo shipping', 'Enclosed carrier option', 'Export/import documentation'],
+    icon: <Car size={26} />,
+    tone: 'sky'
+  },
+  {
+    title: 'Secure Vault & High-Value',
+    summary: 'Sealed, tamper-evident transport with restricted hand-offs for valuables and sensitive cargo.',
+    bullets: ['Tamper-evident sealed pouches and cases', 'Restricted, named hand-offs', 'Photo and seal-number verification at each stage'],
+    icon: <Package size={26} />,
+    tone: 'navy'
+  }
+];
+
+// Shown as capabilities until the owner supplies real dates; a card shows its year only when `year` is set.
+const MILESTONES: { title: string; body: string; icon: React.ReactNode; tone: string; year?: string }[] = [
+  { title: 'Express Courier Lines', body: 'Where we began, with urgent door-to-door delivery.', icon: <Compass size={22} />, tone: 'accent' },
+  { title: 'Cross-Border Freight', body: 'Scheduled air, ocean and road departures.', icon: <Truck size={22} />, tone: 'emerald' },
+  { title: 'Piece-Level Tracking', body: 'Every carton barcoded and scanned.', icon: <ScanBarcode size={22} />, tone: 'sky' },
+  { title: 'Global Gateway Network', body: 'Partner gateways across five continents.', icon: <Globe size={22} />, tone: 'amber' }
+];
+
+const COMPLIANCE_BADGES: { title: string; body: string; icon: React.ReactNode }[] = [
+  { title: 'Compliance First', body: 'Export, import and dangerous-goods rules are respected on every lane.', icon: <Shield size={28} className="text-accent" /> },
+  { title: 'Vetted Handlers', body: 'Every driver, agent and handler in our chain is vetted and accountable.', icon: <Users size={28} className="text-emerald" /> },
+  { title: 'Privacy by Design', body: 'Public tracking masks names and addresses. Your data stays yours.', icon: <Lock size={28} className="text-sky" /> },
+  { title: 'Digital Documents', body: 'Waybills, invoices and proof of delivery, available online at any time.', icon: <FileText size={28} className="text-amber" /> }
+];
+
 export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
-  // Empty regulatory line hides its element (no invented licence numbers).
-  const { regulatoryLine: dotNumber } = useCompanyContact();
+  // The admin "regulatory line" (Settings) shows only when set; no invented licence numbers.
+  const { regulatoryLine } = useCompanyContact();
   return (
     <div className="sdl-page-about">
       {/* =========================================================================
-          1. CINEMATIC EXECUTIVE HERO SECTION
+          1. HERO (CONTENT.md §4)
           ========================================================================= */}
       <section className="about-hero-section">
+        <ResponsiveImage
+          name="about-hero"
+          alt="SDL truck and container ship on the quay at sunset"
+          eager
+          sizes="100vw"
+          className="about-hero-media"
+          imgClassName="about-hero-img"
+        />
         <div className="about-hero-overlay" />
         <div className="sdl-container-wide about-hero-inner">
-            <div className="about-hero-badge animate-fade-in">
-              <span className="about-badge-dot" />
-              <span>{dotNumber ? `${dotNumber} · ` : ''}AUTHORIZED U.S. MOTOR CARRIER</span>
-            </div>
+          <div className="about-hero-badge animate-fade-in">
+            <span className="about-badge-dot" />
+            <span>ABOUT {COMPANY_SHORT}</span>
+          </div>
 
           <h1 className="about-hero-title animate-fade-in">
-            Pioneering Speed, Precision, & Integrity in <span className="about-highlight-accent">American Courier Logistics.</span>
+            Moving what matters, <br /><span className="about-highlight-accent">with nothing hidden.</span>
           </h1>
 
           <p className="about-hero-lead animate-fade-in">
-            {COMPANY} was founded on a singular principle: commercial shippers deserve authentic, real-time visibility and guaranteed point-to-point courier execution across nationwide trade corridors.
+            {COMPANY} connects businesses and people to the world with express, freight and secure transport, and with the one thing logistics often forgets: accountability.
           </p>
 
-          <div className="about-hero-credentials animate-fade-in">
-            {dotNumber && (
-              <>
-                <div className="cred-badge">
-                  <ShieldCheck size={16} className="text-accent" />
-                  <span>{dotNumber} Verified</span>
-                </div>
-                <div className="cred-divider" />
-              </>
-            )}
-            <div className="cred-badge">
-              <FileCheck size={16} className="text-emerald" />
-              <span>FMCSA Carrier #MC-948201</span>
+          {regulatoryLine && (
+            <div className="about-hero-credentials animate-fade-in">
+              <div className="cred-badge">
+                <ShieldCheck size={16} className="text-accent" />
+                <span>{regulatoryLine}</span>
+              </div>
             </div>
-            <div className="cred-divider" />
-            <div className="cred-badge">
-              <Lock size={16} className="text-sky" />
-              <span>$1,000,000 Cargo Liability Insured</span>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
       {/* =========================================================================
-          2. KEY PERFORMANCE INDICATORS (KPI STRIP)
+          2. STAT CARDS (approved stats only)
           ========================================================================= */}
       <section className="about-stats-section">
         <div className="sdl-container-wide">
           <div className="about-stats-grid">
-            <div className="about-stat-card">
-              <span className="stat-value font-mono">99.4%</span>
-              <strong className="stat-title">On-Time Transit Velocity</strong>
-              <p className="stat-subtitle">Across all scheduled linehaul corridors and priority dispatches.</p>
-            </div>
-
-            <div className="about-stat-card">
-              <span className="stat-value font-mono">50+</span>
-              <strong className="stat-title">Regional Distribution Hubs</strong>
-              <p className="stat-subtitle">Connecting primary metropolitan markets coast-to-coast.</p>
-            </div>
-
-            <div className="about-stat-card">
-              <span className="stat-value font-mono">100%</span>
-              <strong className="stat-title">Chain of Custody Provenance</strong>
-              <p className="stat-subtitle">Every piece audited with linear Code 128 scans and schedule-based position telemetry.</p>
-            </div>
-
-            <div className="about-stat-card">
-              <span className="stat-value font-mono">24/7/365</span>
-              <strong className="stat-title">Dedicated Human Dispatch</strong>
-              <p className="stat-subtitle">Direct telephone access to experienced logistics coordinators.</p>
-            </div>
+            {STATS.map((stat) => (
+              <div key={stat.title} className="about-stat-card">
+                <span className={`stat-value font-mono ${stat.value.length > 6 ? 'is-long' : ''}`}>{stat.value}</span>
+                <strong className="stat-title">{stat.title}</strong>
+                <p className="stat-subtitle">{stat.sub}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          3. OUR MISSION & CORE OPERATING PRINCIPLES
+          3. OUR STORY + OUR APPROACH
           ========================================================================= */}
       <section className="about-story-section">
         <div className="sdl-container-wide">
           <div className="about-story-grid">
             <div className="about-story-content">
-              <span className="section-eyebrow">THE {COMPANY_SHORT} STANDARD</span>
-              <h2>Moving What Matters with Authentic Transparency</h2>
+              <span className="section-eyebrow">OUR STORY</span>
+              <h2>How {COMPANY_SHORT} came to be</h2>
               <p className="lead-p">
-                Traditional shipping providers often leave commercial clients stranded between fragmented handoffs, unresponsive call centers, and opaque status updates.
+                {COMPANY} started with a simple frustration: once cargo crossed a border, shippers lost sight of it. Calls went unanswered, updates arrived late, and nobody owned the problem.
               </p>
               <p>
-                At <strong>{COMPANY}</strong>, we engineered our courier network around a zero-compromise chain-of-custody model. From initial dock tender to recipient handoff, every milestone is time-verified, barcode-audited, and managed by dedicated dispatch professionals who know your cargo by name.
+                We built {COMPANY_SHORT} to fix that, joining express, freight and secure transport into one network, with one tracking ID and one team accountable from the first mile to the last.
               </p>
 
               <div className="about-pillars-grid">
-                <div className="pillar-item">
-                  <div className="pillar-icon-box accent">
-                    <Eye size={22} />
+                {APPROACH.map((item) => (
+                  <div key={item.title} className="pillar-item">
+                    <div className={`pillar-icon-box ${item.tone}`}>{item.icon}</div>
+                    <div>
+                      <h4>{item.title}</h4>
+                      <p>{item.body}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4>Milestone Provenance</h4>
-                    <p>Accurate timestamps, scan operator IDs, and physical facility checkpoints logged at every step.</p>
-                  </div>
-                </div>
-
-                <div className="pillar-item">
-                  <div className="pillar-icon-box emerald">
-                    <Compass size={22} />
-                  </div>
-                  <div>
-                    <h4>Point-to-Point Routing</h4>
-                    <p>Optimized highway corridors minimize unnecessary hub sorting, reducing damage and transit lag.</p>
-                  </div>
-                </div>
-
-                <div className="pillar-item">
-                  <div className="pillar-icon-box sky">
-                    <Lock size={22} />
-                  </div>
-                  <div>
-                    <h4>Secure Custody Controls</h4>
-                    <p>High-security linear Code 128 piece barcoding, tamper-evident seals, and signed digital PODs.</p>
-                  </div>
-                </div>
-
-                <div className="pillar-item">
-                  <div className="pillar-icon-box navy">
-                    <Headphones size={22} />
-                  </div>
-                  <div>
-                    <h4>24/7 Proactive Support</h4>
-                    <p>Direct line to live logistics coordinators who proactively monitor weather, traffic, and arrival windows.</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
             <div className="about-visual-column">
               <div className="about-visual-card">
-                <img
-                  src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=1000&auto=format&fit=crop&q=80"
-                  alt={`${COMPANY} gateway cross-dock operations`}
-                  className="about-terminal-img"
+                <ResponsiveImage
+                  name="about-operations"
+                  alt="SDL warehouse staff member checking stacked, labelled cartons on a tablet"
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="about-terminal-media"
+                  imgClassName="about-terminal-img"
                 />
                 <div className="about-floating-badge">
                   <div className="floating-badge-header">
                     <span className="live-pulse-dot" />
-                    <span className="font-mono text-xs font-bold text-white">CENTRAL OPERATIONS CENTER</span>
+                    <span className="font-mono text-xs font-bold text-white">ROUND-THE-CLOCK OPERATIONS</span>
                   </div>
-                  <h4>Continuous Nationwide Dispatch</h4>
-                  <p>Coordinating over 1,400 daily linehaul and express courier routes nationwide.</p>
+                  <h4>24/7 Global operations desk</h4>
+                  <p>Our desk follows the sun across time zones.</p>
                 </div>
               </div>
             </div>
@@ -188,98 +202,41 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          4. OUR 4 SPECIALIZED TRANSPORT DIVISIONS
+          4. OUR DIVISIONS (CONTENT.md §4 → §3.1)
           ========================================================================= */}
       <section className="about-divisions-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">SPECIALIZED CAPABILITIES</span>
-            <h2>Our Core Courier & Transportation Divisions</h2>
-            <p className="section-desc-sub">
-              Precision ground and express transportation services engineered for commercial enterprise shippers.
-            </p>
+            <span className="section-eyebrow">DIVISIONS</span>
+            <h2>Our divisions</h2>
             <div className="section-header-line" />
           </div>
 
           <div className="about-divisions-grid">
-            {/* Division 1 */}
-            <div className="division-card">
-              <div className="division-icon-wrap accent">
-                <Zap size={26} />
+            {DIVISIONS.map((division) => (
+              <div key={division.title} className="division-card">
+                <div className={`division-icon-wrap ${division.tone}`}>{division.icon}</div>
+                <h3>{division.title}</h3>
+                <p>{division.summary}</p>
+                <ul className="division-specs">
+                  {division.bullets.map((bullet) => (
+                    <li key={bullet}><CheckCircle2 size={15} className="text-emerald" /> {bullet}</li>
+                  ))}
+                </ul>
               </div>
-              <h3>Priority Express Courier</h3>
-              <p>
-                Point-to-point same-day and next-day courier delivery for urgent parcels, legal contracts, laboratory specimens, and mission-critical tenders.
-              </p>
-              <ul className="division-specs">
-                <li><CheckCircle2 size={15} className="text-emerald" /> Guaranteed Cutoff & Arrival Times</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Direct Hand-to-Hand Recipient Signature</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Continuous Driver Telemetry</li>
-              </ul>
-            </div>
-
-            {/* Division 2 */}
-            <div className="division-card">
-              <div className="division-icon-wrap emerald">
-                <Truck size={26} />
-              </div>
-              <h3>Scheduled Commercial Linehaul</h3>
-              <p>
-                Fixed-departure interstate linehaul relays connecting regional sortation hubs and distribution centers with strict transit predictability.
-              </p>
-              <ul className="division-specs">
-                <li><CheckCircle2 size={15} className="text-emerald" /> Coast-to-Coast Dedicated Corridors</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Team-Driven Expedited Highway Transit</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Piece-Level Code 128 Scan Ingest</li>
-              </ul>
-            </div>
-
-            {/* Division 3 */}
-            <div className="division-card">
-              <div className="division-icon-wrap sky">
-                <Car size={26} />
-              </div>
-              <h3>Auto & Vehicle Transport</h3>
-              <p>
-                Specialized open and enclosed vehicle logistics for dealerships, corporate fleets, and private luxury automobile relocations across all 48 states.
-              </p>
-              <ul className="division-specs">
-                <li><CheckCircle2 size={15} className="text-emerald" /> Enclosed Soft-Tie Luxury Carriers</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Comprehensive Condition Reports</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Full Auto In-Transit Valuation Coverage</li>
-              </ul>
-            </div>
-
-            {/* Division 4 */}
-            <div className="division-card">
-              <div className="division-icon-wrap navy">
-                <Package size={26} />
-              </div>
-              <h3>Time-Critical Secure Vault</h3>
-              <p>
-                Climate-controlled, high-security parcel transit with chain-of-custody protocols for sensitive medical reagents, electronics, and luxury goods.
-              </p>
-              <ul className="division-specs">
-                <li><CheckCircle2 size={15} className="text-emerald" /> Validated Temperature Loggers (2°C–8°C)</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Tamper-Evident High-Security Seals</li>
-                <li><CheckCircle2 size={15} className="text-emerald" /> Priority Escalation Dispatch Desk</li>
-              </ul>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          5. EXECUTIVE OPERATIONS TIMELINE
+          5. WHAT WE'VE BUILT (timeline cards, undated until the owner supplies dates)
           ========================================================================= */}
       <section className="about-timeline-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">PROVENANCE & EVOLUTION</span>
-            <h2>The Evolution of {COMPANY}</h2>
-            <p className="section-desc-sub">
-              From regional point-to-point courier routes to an accredited nationwide linehaul distribution network.
-            </p>
+            <span className="section-eyebrow">WHAT WE'VE BUILT</span>
+            <h2>Express, freight and secure transport under one roof</h2>
             <div className="section-header-line" />
           </div>
 
@@ -287,130 +244,75 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             <div className="timeline-connector-bar" />
 
             <div className="timeline-cards-grid">
-              {/* Step 1 */}
-              <div className="timeline-card">
-                <div className="timeline-year-badge font-mono">2018</div>
-                <div className="timeline-icon-bubble accent">
-                  <Compass size={22} />
-                </div>
-                <span className="timeline-stage-tag font-mono">FOUNDATION</span>
-                <h3>Regional Courier Lines</h3>
-                <p>
-                  Established direct point-to-point same-day courier dispatch across the Northeast corridor with strict hand-to-hand custody protocols.
-                </p>
-                <div className="timeline-milestone-stat font-mono">12 Metro Routes</div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="timeline-card">
-                <div className="timeline-year-badge font-mono">2021</div>
-                <div className="timeline-icon-bubble emerald">
-                  <Truck size={22} />
-                </div>
-                <span className="timeline-stage-tag font-mono">EXPANSION</span>
-                <h3>Nationwide Linehaul Relays</h3>
-                <p>
-                  Launched dedicated team-driven linehaul corridors connecting Chicago, Dallas, Atlanta, and the East Coast on fixed departure schedules.
-                </p>
-                <div className="timeline-milestone-stat font-mono">18 Interstate Lanes</div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="timeline-card">
-                <div className="timeline-year-badge font-mono">2024</div>
-                <div className="timeline-icon-bubble sky">
-                  <Zap size={22} />
-                </div>
-                <span className="timeline-stage-tag font-mono">INFRASTRUCTURE</span>
-                <h3>Piece Barcoding & Telemetry</h3>
-                <p>
-                  Implemented linear Code 128 piece-level scan auditing and schedule-based vehicle position telemetry for certified milestone tracking.
-                </p>
-                <div className="timeline-milestone-stat font-mono">100% Scan Auditing</div>
-              </div>
-
-              {/* Step 4 */}
-              <div className="timeline-card active">
-                <div className="timeline-year-badge font-mono active">2026</div>
-                <div className="timeline-icon-bubble amber">
-                  <Award size={22} />
-                </div>
-                <span className="timeline-stage-tag font-mono active">SCALE & RELIABILITY</span>
-                <h3>50+ Hub Gateway Network</h3>
-                <p>
-                  Operating over 50 regional sortation hubs coordinating 1,400+ daily courier runs with 99.4% verified on-time transit performance.
-                </p>
-                <div className="timeline-milestone-stat font-mono active">50+ Regional Hubs</div>
-              </div>
+              {MILESTONES.map((m, i) => {
+                const isLast = i === MILESTONES.length - 1;
+                return (
+                  <div key={m.title} className={`timeline-card ${isLast ? 'active' : ''}`}>
+                    {m.year && <div className={`timeline-year-badge font-mono ${isLast ? 'active' : ''}`}>{m.year}</div>}
+                    <div className={`timeline-icon-bubble ${m.tone}`}>{m.icon}</div>
+                    <h3>{m.title}</h3>
+                    <p>{m.body}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          6. REGULATORY COMPLIANCE & SAFETY STANDARDS
+          6. SAFETY & COMPLIANCE (CONTENT.md §4)
           ========================================================================= */}
       <section className="about-compliance-section">
         <div className="sdl-container-wide">
           <div className="compliance-banner">
+            <ResponsiveImage
+              name="callback-banner"
+              alt=""
+              sizes="(max-width: 1440px) 100vw, 1400px"
+              className="compliance-banner-media"
+              imgClassName="compliance-banner-img"
+            />
             <div className="compliance-text-block">
-              <span className="section-eyebrow light">VERIFIED CARRIER STANDARDS</span>
-              <h3>Committed to Absolute Regulatory Safety & Compliance</h3>
+              <span className="section-eyebrow light">SAFETY & COMPLIANCE</span>
+              <h3>Committed to safety and compliance</h3>
               <p>
-                Every driver, vehicle, and terminal in the {COMPANY} network operates under stringent federal guidelines and commercial insurance protocols.
+                We follow the export, import, security and dangerous-goods rules on every lane we operate, and we work only with vetted carriers and agents. Ask us for our compliance documents at any time.
               </p>
             </div>
 
             <div className="compliance-badges-grid">
-              {dotNumber && (
+              {regulatoryLine && (
                 <div className="c-badge-item">
                   <ShieldCheck size={28} className="text-accent" />
                   <div>
-                    <strong>{dotNumber}</strong>
-                    <span>Active & Verified Carrier Authority</span>
+                    <strong>{regulatoryLine}</strong>
                   </div>
                 </div>
               )}
-
-              <div className="c-badge-item">
-                <FileCheck size={28} className="text-emerald" />
-                <div>
-                  <strong>FMCSA #MC-948201</strong>
-                  <span>Interstate Operating License</span>
+              {COMPLIANCE_BADGES.map((badge) => (
+                <div key={badge.title} className="c-badge-item">
+                  {badge.icon}
+                  <div>
+                    <strong>{badge.title}</strong>
+                    <span>{badge.body}</span>
+                  </div>
                 </div>
-              </div>
-
-              <div className="c-badge-item">
-                <Award size={28} className="text-sky" />
-                <div>
-                  <strong>$1,000,000 Cargo</strong>
-                  <span>Primary Commercial Insurance Policy</span>
-                </div>
-              </div>
-
-              <div className="c-badge-item">
-                <Users size={28} className="text-amber" />
-                <div>
-                  <strong>100% Background Check</strong>
-                  <span>Strict DOT Driver Screening</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          6. BOTTOM CALL TO ACTION
+          7. CTA (CONTENT.md §3.6)
           ========================================================================= */}
       <section className="about-bottom-cta">
         <div className="sdl-container-wide">
           <div className="about-cta-card">
             <div className="about-cta-content">
-              <h2>Ready to Experience Reliable Courier Logistics?</h2>
-              <p>
-                Calculate instant commercial shipping rates or speak directly with our senior logistics coordination desk.
-              </p>
+              <h2>Ready to ship with {COMPANY_SHORT}?</h2>
+              <p>Get a rate in minutes, or talk to a coordinator about your lane.</p>
             </div>
 
             <div className="about-cta-action-row">
@@ -419,16 +321,16 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
                 className="btn-corp-primary"
                 onClick={() => onNavigate('quote')}
               >
-                <span>Request a Rate Quote</span>
+                <span>Get a Quote</span>
                 <ArrowRight size={16} />
               </button>
 
               <button
                 type="button"
                 className="btn-corp-ghost"
-                onClick={() => onNavigate('track')}
+                onClick={() => onNavigate('contact')}
               >
-                <span>Track a Shipment</span>
+                <span>Contact Us</span>
               </button>
             </div>
           </div>

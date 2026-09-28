@@ -152,6 +152,9 @@ const PHOTOS = [
   { name: 'locations-hero', src: 'free-cc0/locations-hero.webp', kind: 'hero', aspect: 2 / 1 },
   // Wide strip behind the Home callback banner (only the landing image is large enough).
   { name: 'callback-banner', src: 'landingimage.png', kind: 'hero', aspect: 3 / 1 },
+  // Services and About heroes: two different bands of the landing image until dedicated photos exist.
+  { name: 'services-hero', src: 'landingimage.png', kind: 'hero', aspect: 12 / 5, position: 'top' },
+  { name: 'about-hero', src: 'landingimage.png', kind: 'hero', aspect: 12 / 5, position: 'bottom' },
   { name: 'service-priority-express', src: 'brand-img1.PNG', kind: 'card' },
   { name: 'service-freight-linehaul', src: 'brand-img2.PNG', kind: 'card' },
   { name: 'service-vehicle-transport', src: 'free-cc0/service-vehicle-transport.webp', kind: 'card' },
@@ -166,10 +169,11 @@ const PHOTOS = [
   { name: 'about-team', src: 'brand-img7.PNG', kind: 'card', crop: { left: 0, top: 40, width: 262, height: 262 } },
 ];
 
-async function writeVariants(pipelineFactory, name, width, height) {
+// `position` picks which part of the source a cover crop keeps (sharp: 'centre', 'top', 'bottom', ...).
+async function writeVariants(pipelineFactory, name, width, height, position = 'centre') {
   const base = path.join(PHOTO_OUT, `${name}-${width}`);
-  await pipelineFactory().resize(width, height, { fit: 'cover' }).webp({ quality: 78 }).toFile(`${base}.webp`);
-  await pipelineFactory().resize(width, height, { fit: 'cover' }).flatten({ background: '#ffffff' })
+  await pipelineFactory().resize(width, height, { fit: 'cover', position }).webp({ quality: 78 }).toFile(`${base}.webp`);
+  await pipelineFactory().resize(width, height, { fit: 'cover', position }).flatten({ background: '#ffffff' })
     .jpeg({ quality: 80, mozjpeg: true, progressive: true }).toFile(`${base}.jpg`);
 }
 
@@ -201,7 +205,7 @@ async function buildPhotos() {
       const widths = STEP_WIDTHS.filter(w => w <= cropW);
       if (!widths.includes(cropW) && (widths.length === 0 || cropW - widths[widths.length - 1] > 200)) widths.push(cropW);
       for (const w of widths) {
-        await writeVariants(factory, p.name, w, Math.round(w / p.aspect));
+        await writeVariants(factory, p.name, w, Math.round(w / p.aspect), p.position);
         variants.push(w);
       }
       manifest[p.name] = { width: cropW, height: cropH, widths: variants };

@@ -12,6 +12,8 @@ export const SDL_IMAGES = {
   'track-hero': { width: 1672, height: 836, widths: [640, 1024, 1600] },
   'locations-hero': { width: 1024, height: 512, widths: [640, 1024] },
   'callback-banner': { width: 1672, height: 557, widths: [640, 1024, 1600] },
+  'services-hero': { width: 1672, height: 697, widths: [640, 1024, 1600] },
+  'about-hero': { width: 1672, height: 697, widths: [640, 1024, 1600] },
   'service-priority-express': { width: 340, height: 340, widths: [340] },
   'service-freight-linehaul': { width: 340, height: 340, widths: [340] },
   'service-vehicle-transport': { width: 340, height: 340, widths: [340] },
