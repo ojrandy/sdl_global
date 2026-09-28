@@ -2686,3 +2686,9 @@
 }
 
 
+
+/* Units toggle at the top of the cargo step (tracker 2.7) */
+.admin-units-bar {
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}

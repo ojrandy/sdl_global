@@ -19,11 +19,13 @@ function formatQuote(row: any, includeInternalNotes: boolean = true) {
   const origin = JSON.parse(row.origin_json || '{}');
   const destination = JSON.parse(row.destination_json || '{}');
   let dims = row.dimensions_json ? JSON.parse(row.dimensions_json) : {};
-  let dimensionsStr = '12 × 12 × 12 in';
+  // Canonical inches (tracker 2.7). `dimensions` stays a display string for older views;
+  // `dimensionsIn` is the structured value the unit-aware views format.
+  let dimensionsStr = '';
   if (typeof dims === 'string') {
     dimensionsStr = dims;
   } else if (dims && typeof dims === 'object' && (dims.length !== undefined || dims.width !== undefined)) {
-    dimensionsStr = `${dims.length || 12} × ${dims.width || 12} × ${dims.height || 12} in`;
+    dimensionsStr = `${dims.length || '—'} × ${dims.width || '—'} × ${dims.height || '—'} in`;
   }
 
   return {
@@ -42,12 +44,16 @@ function formatQuote(row: any, includeInternalNotes: boolean = true) {
     recipientName: 'Designated Consignee',
     origin,
     originCity: origin.city || 'New York',
-    originState: origin.state || 'NY',
-    originZip: origin.postalCode || '10001',
+    originState: origin.state || '',
+    originZip: origin.postalCode || '',
+    originCountry: origin.country || '',
+    originCountryCode: origin.countryCode || '',
     destination,
     destCity: destination.city || 'Los Angeles',
-    destState: destination.state || 'CA',
-    destZip: destination.postalCode || '90021',
+    destState: destination.state || '',
+    destZip: destination.postalCode || '',
+    destCountry: destination.country || '',
+    destCountryCode: destination.countryCode || '',
     requestedService: row.service,
     service: row.service,
     shipmentType: row.shipment_type,
@@ -58,6 +64,8 @@ function formatQuote(row: any, includeInternalNotes: boolean = true) {
     quantity: row.pieces || 1,
     pieces: row.pieces || 1,
     dimensions: dimensionsStr,
+    dimensionsIn: dims && typeof dims === 'object' ? dims : undefined,
+    transportMode: parseTransportMode(row.transport_mode),
     declaredValue: row.declared_value,
     specialRequirements: row.special_instructions,
     specialInstructions: row.special_instructions,
@@ -109,10 +117,10 @@ quotesRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
 
     const customerName = q.customerName || q.requesterName || 'Prospective Customer';
     const customerEmail = q.customerEmail || q.requesterEmail || 'client@example.com';
-    const customerPhone = q.customerPhone || q.requesterPhone || '(555) 000-0000';
+    const customerPhone = q.customerPhone || q.requesterPhone || '';
     const company = q.company || q.requesterCompany || null;
-    const origin = q.origin || { city: q.originCity || 'New York', state: q.originState || 'NY', postalCode: q.originZip || '10001' };
-    const destination = q.destination || { city: q.destCity || 'Los Angeles', state: q.destState || 'CA', postalCode: q.destZip || '90021' };
+    const origin = q.origin || { city: q.originCity || '', state: q.originState || '', postalCode: q.originZip || '' };
+    const destination = q.destination || { city: q.destCity || '', state: q.destState || '', postalCode: q.destZip || '' };
     const service = q.service || q.requestedService || 'Standard';
     const shipmentType = q.shipmentType || q.cargoType || 'Parcel';
     const cargoDescription = q.cargoDescription || 'Commercial Freight Cargo';
@@ -127,8 +135,8 @@ quotesRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         id, created_at, status, customer_name, customer_email, customer_phone,
         company, origin_json, destination_json, service, shipment_type,
         cargo_description, weight_lbs, pieces, dimensions_json, declared_value,
-        special_instructions, pricing_json, internal_notes, created_at_ts
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        special_instructions, pricing_json, internal_notes, created_at_ts, transport_mode
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       createdAt,
@@ -149,7 +157,8 @@ quotesRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       specialInstructions,
       null,
       null,
-      Date.now()
+      Date.now(),
+      parseTransportMode(q.transportMode) ?? null
     );
 
     const created = db.prepare('SELECT * FROM quote_requests WHERE id = ?').get(id);
@@ -276,13 +285,13 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
       email: q.customerEmail,
       city: q.origin.city,
       state: q.origin.state,
-      postalCode: q.origin.postalCode || '10001'
+      postalCode: q.origin.postalCode || ''
     };
     const recipient = s.recipient && typeof s.recipient === 'object' ? s.recipient : {
       name: q.recipientName,
       city: q.destination.city,
       state: q.destination.state,
-      postalCode: q.destination.postalCode || '90021'
+      postalCode: q.destination.postalCode || ''
     };
     const dimensions = s.dimensions && typeof s.dimensions === 'object' ? s.dimensions : rawQuoteDims;
 
@@ -317,13 +326,13 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
       s.totalPieces !== undefined ? s.totalPieces : q.pieces,
       s.declaredValue !== undefined ? s.declaredValue : (q.declaredValue || 0),
       origin.city || 'New York',
-      origin.state || 'NY',
+      origin.state || '',
       origin.lat || 40.7128, origin.lng || -74.006,
       destination.city || 'Los Angeles',
-      destination.state || 'CA',
+      destination.state || '',
       destination.lat || 34.0522, destination.lng || -118.2437,
       origin.city || 'New York',
-      origin.state || 'NY',
+      origin.state || '',
       origin.lat || 40.7128, origin.lng || -74.006,
       origin.facility || 'Origin Gateway Hub',
       JSON.stringify(sender),
@@ -331,7 +340,7 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
       JSON.stringify(dimensions && Object.keys(dimensions).length ? dimensions : { length: 12, width: 12, height: 12 }),
       Date.now(),
       Date.now(),
-      parseTransportMode(s.transportMode) ?? null
+      parseTransportMode(s.transportMode) ?? parseTransportMode(quoteRow.transport_mode) ?? null
     );
 
     // 2. Create pieces

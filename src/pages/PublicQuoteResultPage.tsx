@@ -24,6 +24,10 @@ import { QuoteRequest } from '../types/admin';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY, DOMAIN, LEGAL_NAME, LOGO, LOGO_ALT } from '../config/brand';
+import { useCurrency } from '../utils/useCurrency';
+import { useUnitSystem } from '../utils/useUnitSystem';
+import { formatDimensions as formatDims, formatWeight } from '../shared/units';
+import { TRANSPORT_MODE_LABELS } from '../shared/transportMode';
 import './PublicQuoteResultPage.css';
 
 interface PublicQuoteResultPageProps {
@@ -43,6 +47,12 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   const companyName = settings.companyName || LEGAL_NAME;
   const [copiedId, setCopiedId] = useState(false);
   const [accepted, setAccepted] = useState(quote.status === 'ACCEPTED' || quote.status === 'CONVERTED');
+  const money = useCurrency();
+  const [units] = useUnitSystem();
+  // Weight is stored in pounds; shown in the viewer's units. No invented fallback weight.
+  const weightText = formatWeight(quote.totalWeightLbs || (quote as any).weightLbs, units) || '—';
+  const routeText = [quote.originCity, quote.destCity].every(Boolean) ? `${quote.originCity} → ${quote.destCity}` : '';
+  const modeText = quote.transportMode ? TRANSPORT_MODE_LABELS[quote.transportMode] : 'Line-haul';
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(quote.id);
@@ -53,13 +63,13 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   const isPublished = quote.status === 'QUOTE_PUBLISHED' || quote.status === 'ACCEPTED' || quote.status === 'CONVERTED' || (quote.pricing && quote.pricing.finalPrice > 0);
   const isPending = quote.status === 'NEW' || quote.status === 'UNDER_REVIEW';
 
+  // Structured inches when the quote has them (converted to the viewer's units), otherwise the
+  // stored display string of older quotes; '—' when nothing was given.
   const formatDimensions = (dims: any) => {
-    if (!dims) return '72 × 24 × 18 in';
-    if (typeof dims === 'string') return dims;
-    if (typeof dims === 'object') {
-      return `${dims.length || 12} × ${dims.width || 12} × ${dims.height || 12} in`;
-    }
-    return String(dims);
+    const structured = quote.dimensionsIn || (dims && typeof dims === 'object' ? dims : null);
+    if (structured) return formatDims(structured, units) || '—';
+    if (typeof dims === 'string' && dims.trim()) return dims;
+    return '—';
   };
 
   const finalPrice = quote.pricing?.finalPrice || 350;
@@ -118,7 +128,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                 </h3>
                 <p>
                   {isPublished
-                    ? `Your custom rate of $${Number(finalPrice).toFixed(2)} USD has been approved. Guaranteed valid until ${quote.pricing?.validUntil || '14 days from issue'}.`
+                    ? `Your custom rate of ${money.format(finalPrice)} has been approved. Guaranteed valid until ${quote.pricing?.validUntil || '14 days from issue'}.`
                     : 'Our Central Tariff Desk is verifying weight-scale parameters and linehaul routing availability. Check back shortly using this Quote ID.'}
                 </p>
               </div>
@@ -141,11 +151,10 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                     <div>
                       <span className="rate-card-label">APPROVED ALL-INCLUSIVE PRICE</span>
                       <div className="rate-big-figure">
-                        <span className="curr">$</span>
                         <strong className="amount font-mono">
-                          {Number(finalPrice).toFixed(2)}
+                          {money.format(finalPrice)}
                         </strong>
-                        <span className="currency-code">USD</span>
+                        <span className="currency-code">{money.currency}</span>
                       </div>
                     </div>
 
@@ -162,21 +171,21 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                     <span className="deck-title">OFFICIAL CHARGES BREAKDOWN</span>
                     <div className="charges-table">
                       <div className="charge-row">
-                        <span>Interstate Linehaul Transport ({quote.originCity || 'NY'} → {quote.destCity || 'CA'})</span>
-                        <strong className="font-mono">${Number(baseShipping).toFixed(2)}</strong>
+                        <span>{modeText} Transport{routeText ? ` (${routeText})` : ''}</span>
+                        <strong className="font-mono">{money.format(baseShipping)}</strong>
                       </div>
                       <div className="charge-row">
                         <span>Oversize / Dimensional Handling</span>
-                        <strong className="font-mono">${Number(oversizeHandling).toFixed(2)}</strong>
+                        <strong className="font-mono">{money.format(oversizeHandling)}</strong>
                       </div>
                       <div className="charge-row">
                         <span>Terminal Sorting & Security Screening</span>
-                        <strong className="font-mono">${Number(specialHandling).toFixed(2)}</strong>
+                        <strong className="font-mono">{money.format(specialHandling)}</strong>
                       </div>
                       <div className="charge-row total">
                         <strong>Total Guaranteed Tariff</strong>
                         <strong className="total-amount font-mono text-emerald">
-                          ${Number(finalPrice).toFixed(2)} USD
+                          {money.format(finalPrice)} {money.currency}
                         </strong>
                       </div>
                     </div>
@@ -280,7 +289,7 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                   </div>
                   <div className="spec-box">
                     <small>Gross Scale Weight</small>
-                    <strong>{quote.totalWeightLbs || (quote as any).weightLbs || 45} lbs</strong>
+                    <strong>{weightText}</strong>
                   </div>
                   <div className="spec-box">
                     <small>Declared Pieces</small>
@@ -448,9 +457,9 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
               <td><strong>{quote.cargoDescription || 'Commercial Consignment'}</strong></td>
               <td>{quote.cargoType || (quote as any).shipmentType || 'Vehicle Part'}</td>
               <td>{typeof (quote as any).pieces === 'number' ? (quote as any).pieces : quote.quantity || 1} Unit(s)</td>
-              <td>{quote.totalWeightLbs || (quote as any).weightLbs || 45} lbs</td>
+              <td>{weightText}</td>
               <td className="font-mono">{formatDimensions(quote.dimensions)}</td>
-              <td className="text-right font-mono">${Number((quote as any).declaredValue || 850).toFixed(2)} USD</td>
+              <td className="text-right font-mono">{(quote as any).declaredValue ? money.format((quote as any).declaredValue) : '—'}</td>
             </tr>
           </tbody>
         </table>
@@ -462,31 +471,31 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
             <tr>
               <th>TARIFF CHARGE COMPONENT</th>
               <th>RATE BASIS</th>
-              <th className="text-right">AMOUNT (USD)</th>
+              <th className="text-right">AMOUNT ({money.currency})</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Interstate Linehaul Line Transport ({quote.originCity || 'NY'} → {quote.destCity || 'CA'})</td>
+              <td>{modeText} Transport{routeText ? ` (${routeText})` : ''}</td>
               <td>Contract Tariff Rate</td>
-              <td className="text-right font-mono">${Number(baseShipping).toFixed(2)}</td>
+              <td className="text-right font-mono">{money.format(baseShipping)}</td>
             </tr>
             <tr>
               <td>Oversize / Dimensional Handling Surcharge</td>
               <td>Scale & Cube Verified</td>
-              <td className="text-right font-mono">${Number(oversizeHandling).toFixed(2)}</td>
+              <td className="text-right font-mono">{money.format(oversizeHandling)}</td>
             </tr>
             <tr>
               <td>Terminal Sorting, Screening & Origin Dispatch Processing</td>
               <td>Facility Protocol</td>
-              <td className="text-right font-mono">${Number(specialHandling).toFixed(2)}</td>
+              <td className="text-right font-mono">{money.format(specialHandling)}</td>
             </tr>
             <tr className="print-total-row">
               <td colSpan={2}>
                 <strong>TOTAL GUARANTEED TARIFF (ALL INCLUSIVE)</strong>
               </td>
               <td className="text-right font-mono print-grand-total">
-                ${Number(finalPrice).toFixed(2)} USD
+                {money.format(finalPrice)} {money.currency}
               </td>
             </tr>
           </tbody>

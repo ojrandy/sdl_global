@@ -23,27 +23,82 @@ import {
 } from 'lucide-react';
 import { Barcode } from '../components/Barcode';
 import { useAdminData } from '../context/AdminDataContext';
-import { resolveLocation } from '../services/geocodingService';
+import { resolveAddressPrecise } from '../services/geocodingService';
 import './ShipPage.css';
 import { pieceLabel } from '../shared/trackingId';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
+import { CountrySelect } from '../components/forms/CountrySelect';
+import { PhoneInput } from '../components/forms/PhoneInput';
+import { MeasureInput, MoneyInput, UnitToggle, useUnitLabels } from '../components/forms/UnitControls';
+import { getCountry, postcodeLabel, regionLabel, shortRegion } from '../data/countries';
+import { formatDimensions, formatWeight } from '../shared/units';
+import { TRANSPORT_MODE_LABELS, type TransportMode } from '../shared/transportMode';
+import { useCurrency } from '../utils/useCurrency';
 
 interface ShipPageProps {
   onTrack: (trackingNumber: string) => void;
   onNavigate: (page: string) => void;
 }
 
+// Weight in pounds and dimensions in inches (canonical); the inputs show the viewer's units.
 interface PieceItem {
   id: string;
-  weight: string;
-  length: string;
-  width: string;
-  height: string;
+  weight: number | '';
+  length: number | '';
+  width: number | '';
+  height: number | '';
   description: string;
 }
 
+interface AddressFieldsProps {
+  idPrefix: string;
+  country: string;
+  onCountry: (code: string) => void;
+  city: string;
+  onCity: (v: string) => void;
+  region: string;
+  onRegion: (v: string) => void;
+  postcode: string;
+  onPostcode: (v: string) => void;
+  cityPlaceholder: string;
+}
+
+// Country first (searchable), then city, then the optional region and postcode for that country.
+const AddressFields: React.FC<AddressFieldsProps> = (f) => (
+  <>
+    <div className="form-group">
+      <label htmlFor={`${f.idPrefix}-country`}>Country *</label>
+      <CountrySelect id={`${f.idPrefix}-country`} value={f.country} onChange={f.onCountry} className="sdl-input" required />
+    </div>
+    <div className="form-group">
+      <label htmlFor={`${f.idPrefix}-city`}>City *</label>
+      <input id={`${f.idPrefix}-city`} type="text" required value={f.city} onChange={(e) => f.onCity(e.target.value)} className="sdl-input" placeholder={f.cityPlaceholder} />
+    </div>
+    <div className="form-group">
+      <label htmlFor={`${f.idPrefix}-region`}>{regionLabel(f.country)} <span className="sdl-field-optional">(optional)</span></label>
+      <input id={`${f.idPrefix}-region`} type="text" value={f.region} onChange={(e) => f.onRegion(e.target.value)} className="sdl-input" />
+    </div>
+    <div className="form-group">
+      <label htmlFor={`${f.idPrefix}-postcode`}>{postcodeLabel(f.country)} <span className="sdl-field-optional">(optional)</span></label>
+      <input id={`${f.idPrefix}-postcode`} type="text" value={f.postcode} onChange={(e) => f.onPostcode(e.target.value)} className="sdl-input font-mono" />
+    </div>
+  </>
+);
+
+// "Houston, TX" / "Lagos, Nigeria" for summaries
+const placeText = (city: string, region: string, countryCode: string) =>
+  [city, countryCode === 'US' ? region.trim().toUpperCase() : getCountry(countryCode)?.name].filter(Boolean).join(', ');
+
+const PICKUP_WINDOWS = [
+  'Today, 2:00 PM – 5:00 PM (local time)',
+  'Tomorrow morning, 8:00 AM – 12:00 PM (local time)',
+  'Tomorrow afternoon, 1:00 PM – 5:00 PM (local time)'
+];
+
 export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
   const { createShipment, generateDocument } = useAdminData();
+  const units = useUnitLabels();
+  const money = useCurrency();
 
   // Multi-step form flow
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -54,17 +109,19 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
   const [senderContact, setSenderContact] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
   const [senderAddress, setSenderAddress] = useState('');
+  const [senderCountry, setSenderCountry] = useState('');
   const [senderCity, setSenderCity] = useState('');
   const [senderState, setSenderState] = useState('');
   const [senderZip, setSenderZip] = useState('');
   const [pickupType, setPickupType] = useState<'pickup' | 'dropoff'>('pickup');
-  const [pickupWindow, setPickupWindow] = useState('Today 2:00 PM - 5:00 PM ET');
+  const [pickupWindow, setPickupWindow] = useState(PICKUP_WINDOWS[0]);
 
   // Form State - Recipient (Destination)
   const [recipientCompany, setRecipientCompany] = useState('');
   const [recipientContact, setRecipientContact] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientCountry, setRecipientCountry] = useState('');
   const [recipientCity, setRecipientCity] = useState('');
   const [recipientState, setRecipientState] = useState('');
   const [recipientZip, setRecipientZip] = useState('');
@@ -84,7 +141,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
   // Form State - Service Selection (Strictly 4 authentic core tiers, ZERO freight/ship/train)
   const [selectedService, setSelectedService] = useState<'courier' | 'linehaul' | 'auto' | 'vault'>('courier');
-  const [declaredValue, setDeclaredValue] = useState('');
+  // '' = let SDL recommend
+  const [transportMode, setTransportMode] = useState<TransportMode | ''>('');
+  const [declaredValue, setDeclaredValue] = useState<number | ''>('');
   const [requireSignature, setRequireSignature] = useState(true);
   const [saturdayDelivery, setSaturdayDelivery] = useState(false);
 
@@ -95,7 +154,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
   const [copiedTracking, setCopiedTracking] = useState(false);
 
   // Calculations
-  const totalWeight = piecesList.reduce((acc, curr) => acc + (parseFloat(curr.weight) || 0), 0);
+  const totalWeight = piecesList.reduce((acc, curr) => acc + (curr.weight === '' ? 0 : curr.weight), 0);
   const totalPieces = piecesList.length;
 
   const handleAddPiece = () => {
@@ -119,9 +178,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     }
   };
 
-  const handleUpdatePiece = (index: number, field: keyof PieceItem, val: string) => {
+  const handleUpdatePiece = <K extends keyof PieceItem>(index: number, field: K, val: PieceItem[K]) => {
     const updated = [...piecesList];
-    updated[index][field] = val;
+    updated[index] = { ...updated[index], [field]: val };
     setPiecesList(updated);
   };
 
@@ -129,19 +188,20 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
   const validateStep = (step: number): boolean => {
     setFormError(null);
     if (step === 1) {
-      if (!senderContact.trim() || !senderPhone.trim() || !senderAddress.trim() || !senderCity.trim() || !senderState.trim() || !senderZip.trim()) {
-        setFormError('Please fill out all required sender and pickup address fields before continuing.');
+      // State/region and postcode are optional (not every country has them).
+      if (!senderContact.trim() || !senderPhone.trim() || !senderAddress.trim() || !senderCountry || !senderCity.trim()) {
+        setFormError('Please fill out all required sender and pickup address fields (name, phone, street, country and city) before continuing.');
         return false;
       }
     } else if (step === 2) {
-      if (!recipientContact.trim() || !recipientPhone.trim() || !recipientAddress.trim() || !recipientCity.trim() || !recipientState.trim() || !recipientZip.trim()) {
-        setFormError('Please fill out all required destination recipient fields before continuing.');
+      if (!recipientContact.trim() || !recipientPhone.trim() || !recipientAddress.trim() || !recipientCountry || !recipientCity.trim()) {
+        setFormError('Please fill out all required recipient fields (name, phone, street, country and city) before continuing.');
         return false;
       }
     } else if (step === 3) {
       for (const p of piecesList) {
-        if (!p.weight || parseFloat(p.weight) <= 0) {
-          setFormError('Each piece must have a valid scale weight in pounds (lbs).');
+        if (p.weight === '' || p.weight <= 0) {
+          setFormError(`Each piece must have a valid scale weight (${units.weight}).`);
           return false;
         }
       }
@@ -179,6 +239,28 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
     setIsSubmitting(true);
 
+    const originRegion = shortRegion(senderCountry, senderState);
+    const destRegion = shortRegion(recipientCountry, recipientState);
+    const originLabel = [senderCity.trim(), originRegion].filter(Boolean).join(', ');
+    // Inches; 0 = side not given (shown as "—"), never an invented size.
+    const dimensionsOf = (piece: PieceItem) => ({
+      length: piece.length === '' ? 0 : piece.length,
+      width: piece.width === '' ? 0 : piece.width,
+      height: piece.height === '' ? 0 : piece.height
+    });
+    const party = (company: string, name: string, phone: string, street: string, city: string, region: string, postcode: string, countryCode: string) => ({
+      company,
+      name,
+      phone,
+      addressLine: street,
+      city: city.trim(),
+      state: shortRegion(countryCode, region),
+      region: region.trim() || undefined,
+      postalCode: postcode.trim() || undefined,
+      country: getCountry(countryCode)?.name || '',
+      countryCode
+    });
+
     // Piece ids and labels (DLSxxxxx-NN) are stamped from the server-assigned ID in createShipment.
     const piecesFormatted = piecesList.map((p, idx) => ({
       id: '',
@@ -187,17 +269,23 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       trackingNumber: '',
       status: 'AWAITING_PICKUP' as const,
       statusText: 'Consignment Tender Staged for Intake',
-      currentLocation: `${senderCity}, ${senderState}`,
-      weightLbs: parseFloat(p.weight) || 5.0,
-      dimensions: {
-        length: parseFloat(p.length) || 12,
-        width: parseFloat(p.width) || 12,
-        height: parseFloat(p.height) || 12
-      }
+      currentLocation: originLabel,
+      weightLbs: p.weight === '' ? 0 : p.weight,
+      dimensions: dimensionsOf(p)
     }));
 
-    const originGeo = resolveLocation([senderCity.trim(), senderState.trim()].filter(Boolean).join(', ')) || resolveLocation(senderCity.trim()) || resolveLocation(senderState.trim());
-    const destGeo = resolveLocation([recipientCity.trim(), recipientState.trim()].filter(Boolean).join(', ')) || resolveLocation(recipientCity.trim()) || resolveLocation(recipientState.trim());
+    // Coordinates for the route map, from the country-aware lookup (live geocoder when the
+    // offline tables only have a guess). An address we can't place at all stops the booking.
+    const [originGeo, destGeo] = await Promise.all([
+      resolveAddressPrecise({ street: senderAddress, city: senderCity, region: senderState, countryCode: senderCountry }, getCountry(senderCountry)?.name),
+      resolveAddressPrecise({ street: recipientAddress, city: recipientCity, region: recipientState, countryCode: recipientCountry }, getCountry(recipientCountry)?.name)
+    ]);
+    if (!originGeo || !destGeo) {
+      const missing = !originGeo ? `${senderCity}, ${getCountry(senderCountry)?.name}` : `${recipientCity}, ${getCountry(recipientCountry)?.name}`;
+      setFormError(`We couldn't find ${missing}. Check the city and country, then try again.`);
+      setIsSubmitting(false);
+      return;
+    }
 
     // Register into persistent application state & backend database. The server assigns the
     // tracking ID; the confirmation and the BOL below use the one it returned.
@@ -212,53 +300,32 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
         lastUpdated: 'Just now',
         createdAt: 'Today',
         service: getServiceName(),
+        transportMode: transportMode || undefined,
         shipmentType: 'Parcel',
         cargoCategory: 'Commercial Goods',
         cargoDescription: piecesList[0]?.description || 'Commercial Express Consignment',
         totalWeightLbs: totalWeight,
         totalPieces: totalPieces,
-        declaredValue: parseFloat(declaredValue) || 1000,
-        dimensions: {
-          length: parseFloat(piecesList[0]?.length) || 18,
-          width: parseFloat(piecesList[0]?.width) || 14,
-          height: parseFloat(piecesList[0]?.height) || 10
-        },
+        declaredValue: declaredValue === '' ? 0 : declaredValue,
+        dimensions: dimensionsOf(piecesList[0]),
         origin: {
-          city: senderCity,
-          state: senderState,
-          country: 'United States',
-          lat: originGeo?.lat || 31.9686,
-          lng: originGeo?.lng || -99.9018
+          city: senderCity.trim(),
+          state: originRegion,
+          country: getCountry(senderCountry)?.name || '',
+          lat: originGeo.lat,
+          lng: originGeo.lng
         },
         destination: {
-          city: recipientCity,
-          state: recipientState,
-          country: 'United States',
-          lat: destGeo?.lat || 38.9072,
-          lng: destGeo?.lng || -77.0369
+          city: recipientCity.trim(),
+          state: destRegion,
+          country: getCountry(recipientCountry)?.name || '',
+          lat: destGeo.lat,
+          lng: destGeo.lng
         },
-        currentLocation: `${senderCity}, ${senderState}`,
-        currentFacility: `${senderCity} Regional Gateway`,
-        sender: {
-          company: senderCompany,
-          name: senderContact,
-          phone: senderPhone,
-          addressLine: senderAddress,
-          city: senderCity,
-          state: senderState,
-          postalCode: senderZip,
-          country: 'United States'
-        },
-        recipient: {
-          company: recipientCompany,
-          name: recipientContact,
-          phone: recipientPhone,
-          addressLine: recipientAddress,
-          city: recipientCity,
-          state: recipientState,
-          postalCode: recipientZip,
-          country: 'United States'
-        },
+        currentLocation: originLabel,
+        currentFacility: `${senderCity.trim()} Regional Gateway`,
+        sender: party(senderCompany, senderContact, senderPhone, senderAddress, senderCity, senderState, senderZip, senderCountry),
+        recipient: party(recipientCompany, recipientContact, recipientPhone, recipientAddress, recipientCity, recipientState, recipientZip, recipientCountry),
         estimatedDelivery: '2-3 Business Days',
         estimatedDeliveryDetail: 'by 5:00 PM',
         pieces: piecesFormatted,
@@ -270,10 +337,10 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
             displayTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             status: 'AWAITING_PICKUP',
             title: 'Consignment Tender Registered & Barcodes Provisioned',
-            location: `${senderCity}, ${senderState}`,
-            facility: `${senderCity} Intake Hub`,
-            city: senderCity,
-            state: senderState,
+            location: originLabel,
+            facility: `${senderCity.trim()} Intake Hub`,
+            city: senderCity.trim(),
+            state: originRegion,
             description: `Shipment tendered via customer intake portal. Courier scheduled for pickup: ${pickupWindow}. Official BOL manifest and labels will be issued by agency dispatch.`,
             isCompleted: true,
             isCurrent: true,
@@ -298,14 +365,14 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       senderCompany: senderCompany,
       senderAddress: senderAddress,
       senderCity: senderCity,
-      senderState: senderState,
+      senderState: originRegion,
       senderZip: senderZip,
       senderPhone: senderPhone,
       recipientName: recipientContact,
       recipientCompany: recipientCompany,
       recipientAddress: recipientAddress,
       recipientCity: recipientCity,
-      recipientState: recipientState,
+      recipientState: destRegion,
       recipientZip: recipientZip,
       recipientPhone: recipientPhone,
       cargoDescription: piecesList[0]?.description || 'Commercial Express Consignment',
@@ -313,8 +380,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       service: getServiceName(),
       weightLbs: totalWeight,
       pieces: totalPieces,
-      dimensions: `${piecesList[0]?.length || 18} × ${piecesList[0]?.width || 14} × ${piecesList[0]?.height || 10} in`,
-      declaredValue: parseFloat(declaredValue) || 1000,
+      // Documents keep the canonical unit (inches)
+      dimensions: formatDimensions(piecesList[0], 'imperial'),
+      declaredValue: declaredValue === '' ? 0 : declaredValue,
       charges: {
         baseAmount: 185,
         oversizeFee: totalWeight > 50 ? 45 : 0,
@@ -422,8 +490,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               </div>
 
               <div className="barcode-block-meta">
-                <div><strong>Route:</strong> {senderCity}, {senderState} → {recipientCity}, {recipientState}</div>
-                <div><strong>Pieces:</strong> {totalPieces} ({totalWeight.toFixed(1)} lbs gross)</div>
+                <div><strong>Route:</strong> {placeText(senderCity, senderState, senderCountry)} → {placeText(recipientCity, recipientState, recipientCountry)}</div>
+                <div><strong>Pieces:</strong> {totalPieces} ({formatWeight(totalWeight, units.system)} gross)</div>
+                {transportMode && <div><strong>Mode:</strong> {TRANSPORT_MODE_LABELS[transportMode]}</div>}
                 <div><strong>Tender Mode:</strong> {pickupType === 'pickup' ? 'Courier Pickup Scheduled' : 'Origin Hub Drop-off'}</div>
               </div>
             </div>
@@ -434,7 +503,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 <div key={piece.id} className="confirm-piece-card">
                   <div className="piece-card-header">
                     <span className="font-bold">PIECE {piece.id} of {piecesList.length.toString().padStart(2, '0')}</span>
-                    <small>{piece.weight} lbs • {piece.length}×{piece.width}×{piece.height} in</small>
+                    <small>{[formatWeight(piece.weight, units.system), formatDimensions(piece, units.system)].filter(Boolean).join(' • ')}</small>
                   </div>
                   <div className="piece-barcode-render">
                     <Barcode
@@ -496,6 +565,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 className="btn-corp-ghost"
                 onClick={() => {
                   setSubmittedBooking(false);
+                  setTransportMode('');
                   setCurrentStep(1);
                 }}
               >
@@ -518,7 +588,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <span className="step-num">{currentStep > 1 ? '✓' : '1'}</span>
                   <div className="step-label-group">
                     <span className="step-title">Origin & Sender</span>
-                    <span className="step-sub">{senderCity ? `${senderCity}, ${senderState}` : 'Pickup'}</span>
+                    <span className="step-sub">{senderCity ? placeText(senderCity, senderState, senderCountry) : 'Pickup'}</span>
                   </div>
                 </button>
 
@@ -530,7 +600,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <span className="step-num">{currentStep > 2 ? '✓' : '2'}</span>
                   <div className="step-label-group">
                     <span className="step-title">Destination</span>
-                    <span className="step-sub">{recipientCity ? `${recipientCity}, ${recipientState}` : 'Delivery'}</span>
+                    <span className="step-sub">{recipientCity ? placeText(recipientCity, recipientState, recipientCountry) : 'Delivery'}</span>
                   </div>
                 </button>
 
@@ -542,7 +612,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <span className="step-num">{currentStep > 3 ? '✓' : '3'}</span>
                   <div className="step-label-group">
                     <span className="step-title">Pieces & Weight</span>
-                    <span className="step-sub">{totalPieces} Pcs • {totalWeight.toFixed(1)} lbs</span>
+                    <span className="step-sub">{totalPieces} Pcs • {formatWeight(totalWeight, units.system)}</span>
                   </div>
                 </button>
 
@@ -566,7 +636,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <strong>
                     {currentStep === 1 && 'Origin & Pickup Location'}
                     {currentStep === 2 && 'Destination Recipient'}
-                    {currentStep === 3 && `Pieces (${totalPieces} Pcs • ${totalWeight.toFixed(1)} lbs)`}
+                    {currentStep === 3 && `Pieces (${totalPieces} Pcs • ${formatWeight(totalWeight, units.system)})`}
                     {currentStep === 4 && 'Service Tier & Tender Review'}
                   </strong>
                 </div>
@@ -619,15 +689,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>Phone Number *</label>
-                      <input
-                        type="text"
-                        required
-                        value={senderPhone}
-                        onChange={(e) => setSenderPhone(e.target.value)}
-                        className="sdl-input"
-                        placeholder="e.g. (212) 555-0148"
-                      />
+                      <label htmlFor="sender-phone">Phone Number *</label>
+                      <PhoneInput id="sender-phone" required value={senderPhone} onChange={setSenderPhone} defaultCountry={senderCountry || 'US'} className="sdl-input" />
                     </div>
 
                     <div className="form-group span-2">
@@ -642,42 +705,18 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>City *</label>
-                      <input
-                        type="text"
-                        required
-                        value={senderCity}
-                        onChange={(e) => setSenderCity(e.target.value)}
-                        className="sdl-input"
-                        placeholder="e.g. New York"
-                      />
-                    </div>
-
-                    <div className="form-group mini">
-                      <label>State *</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={2}
-                        value={senderState}
-                        onChange={(e) => setSenderState(e.target.value.toUpperCase())}
-                        className="sdl-input uppercase font-mono"
-                        placeholder="NY"
-                      />
-                    </div>
-
-                    <div className="form-group mini">
-                      <label>ZIP Code *</label>
-                      <input
-                        type="text"
-                        required
-                        value={senderZip}
-                        onChange={(e) => setSenderZip(e.target.value)}
-                        className="sdl-input font-mono"
-                        placeholder="10007"
-                      />
-                    </div>
+                    <AddressFields
+                      idPrefix="sender"
+                      country={senderCountry}
+                      onCountry={setSenderCountry}
+                      city={senderCity}
+                      onCity={setSenderCity}
+                      region={senderState}
+                      onRegion={setSenderState}
+                      postcode={senderZip}
+                      onPostcode={setSenderZip}
+                      cityPlaceholder="e.g. Lagos"
+                    />
                   </div>
 
                   {/* Tender Method Toggle */}
@@ -715,9 +754,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                           onChange={(e) => setPickupWindow(e.target.value)}
                           className="sdl-input"
                         >
-                          <option value="Today 2:00 PM - 5:00 PM ET">Today 2:00 PM - 5:00 PM ET</option>
-                          <option value="Tomorrow Morning 8:00 AM - 12:00 PM ET">Tomorrow Morning 8:00 AM - 12:00 PM ET</option>
-                          <option value="Tomorrow Afternoon 1:00 PM - 5:00 PM ET">Tomorrow Afternoon 1:00 PM - 5:00 PM ET</option>
+                          {PICKUP_WINDOWS.map((w) => (
+                            <option key={w} value={w}>{w}</option>
+                          ))}
                         </select>
                       </div>
                     )}
@@ -772,15 +811,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>Recipient Phone Number *</label>
-                      <input
-                        type="text"
-                        required
-                        value={recipientPhone}
-                        onChange={(e) => setRecipientPhone(e.target.value)}
-                        className="sdl-input"
-                        placeholder="e.g. (213) 555-0199"
-                      />
+                      <label htmlFor="recipient-phone">Recipient Phone Number *</label>
+                      <PhoneInput id="recipient-phone" required value={recipientPhone} onChange={setRecipientPhone} defaultCountry={recipientCountry || senderCountry || 'US'} className="sdl-input" />
                     </div>
 
                     <div className="form-group span-2">
@@ -795,42 +827,18 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>City *</label>
-                      <input
-                        type="text"
-                        required
-                        value={recipientCity}
-                        onChange={(e) => setRecipientCity(e.target.value)}
-                        className="sdl-input"
-                        placeholder="e.g. Los Angeles"
-                      />
-                    </div>
-
-                    <div className="form-group mini">
-                      <label>State *</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={2}
-                        value={recipientState}
-                        onChange={(e) => setRecipientState(e.target.value.toUpperCase())}
-                        className="sdl-input uppercase font-mono"
-                        placeholder="CA"
-                      />
-                    </div>
-
-                    <div className="form-group mini">
-                      <label>ZIP Code *</label>
-                      <input
-                        type="text"
-                        required
-                        value={recipientZip}
-                        onChange={(e) => setRecipientZip(e.target.value)}
-                        className="sdl-input font-mono"
-                        placeholder="90017"
-                      />
-                    </div>
+                    <AddressFields
+                      idPrefix="recipient"
+                      country={recipientCountry}
+                      onCountry={setRecipientCountry}
+                      city={recipientCity}
+                      onCity={setRecipientCity}
+                      region={recipientState}
+                      onRegion={setRecipientState}
+                      postcode={recipientZip}
+                      onPostcode={setRecipientZip}
+                      cityPlaceholder="e.g. London"
+                    />
 
                     <div className="form-group span-2">
                       <label>Special Delivery Instructions</label>
@@ -875,6 +883,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       <div>
                         <h3>Step 3: Multi-Piece Consignment Builder</h3>
                         <p>Configure individual cartons or pieces with piece-level Code 128 barcodes.</p>
+                        <UnitToggle className="ship-unit-toggle" />
                       </div>
                       <button
                         type="button"
@@ -906,44 +915,51 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         <div className="piece-inputs-col">
                           <div className="piece-dim-grid">
                             <div className="p-field">
-                              <label>Weight (lbs) *</label>
-                              <input
-                                type="number"
+                              <label htmlFor={`piece-${index}-weight`}>Weight ({units.weight}) *</label>
+                              <MeasureInput
+                                id={`piece-${index}-weight`}
+                                kind="weight"
                                 step="0.1"
                                 min="0.1"
                                 required
                                 value={piece.weight}
-                                onChange={(e) => handleUpdatePiece(index, 'weight', e.target.value)}
+                                onChange={(v) => handleUpdatePiece(index, 'weight', v)}
                                 className="sdl-input"
                               />
                             </div>
 
                             <div className="p-field">
-                              <label>Length (in)</label>
-                              <input
-                                type="number"
+                              <label htmlFor={`piece-${index}-length`}>Length ({units.length})</label>
+                              <MeasureInput
+                                id={`piece-${index}-length`}
+                                kind="length"
+                                min="0"
                                 value={piece.length}
-                                onChange={(e) => handleUpdatePiece(index, 'length', e.target.value)}
+                                onChange={(v) => handleUpdatePiece(index, 'length', v)}
                                 className="sdl-input"
                               />
                             </div>
 
                             <div className="p-field">
-                              <label>Width (in)</label>
-                              <input
-                                type="number"
+                              <label htmlFor={`piece-${index}-width`}>Width ({units.length})</label>
+                              <MeasureInput
+                                id={`piece-${index}-width`}
+                                kind="length"
+                                min="0"
                                 value={piece.width}
-                                onChange={(e) => handleUpdatePiece(index, 'width', e.target.value)}
+                                onChange={(v) => handleUpdatePiece(index, 'width', v)}
                                 className="sdl-input"
                               />
                             </div>
 
                             <div className="p-field">
-                              <label>Height (in)</label>
-                              <input
-                                type="number"
+                              <label htmlFor={`piece-${index}-height`}>Height ({units.length})</label>
+                              <MeasureInput
+                                id={`piece-${index}-height`}
+                                kind="length"
+                                min="0"
                                 value={piece.height}
-                                onChange={(e) => handleUpdatePiece(index, 'height', e.target.value)}
+                                onChange={(v) => handleUpdatePiece(index, 'height', v)}
                                 className="sdl-input"
                               />
                             </div>
@@ -1023,7 +1039,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       </div>
                       <div className="serv-transit">2 - 3 Business Days</div>
                       <div className="serv-rate-status font-mono">RATE PUBLISHED BY ADMIN</div>
-                      <small>Interstate highway relay & sortation network</small>
+                      <small>Scheduled road relay & sortation network</small>
                     </div>
 
                     <div
@@ -1051,6 +1067,22 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       <div className="serv-rate-status font-mono">RATE PUBLISHED BY ADMIN</div>
                       <small>Armored chain-of-custody for high-value tenders</small>
                     </div>
+                  </div>
+
+                  {/* Transport mode (tracker 2.8) */}
+                  <div className="transport-mode-row">
+                    <label htmlFor="ship-mode" className="section-sublabel">Transport Mode</label>
+                    <select
+                      id="ship-mode"
+                      value={transportMode}
+                      onChange={(e) => setTransportMode(e.target.value as TransportMode | '')}
+                      className="sdl-input"
+                    >
+                      <option value="">Let {COMPANY} recommend</option>
+                      <option value="Air">{TRANSPORT_MODE_LABELS.Air}</option>
+                      <option value="Sea">{TRANSPORT_MODE_LABELS.Sea}</option>
+                      <option value="Road">{TRANSPORT_MODE_LABELS.Road}</option>
+                    </select>
                   </div>
 
                   {/* Value Add-ons */}
@@ -1082,13 +1114,14 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="declared-value-row">
-                      <label>Declared Consignment Value (USD for Insurance Coverage)</label>
+                      <label htmlFor="ship-declared-value">Declared Consignment Value ({money.currency}, for insurance cover)</label>
                       <div className="value-input-wrap">
-                        <span className="curr-sym">$</span>
-                        <input
-                          type="number"
+                        <span className="curr-sym">{money.symbol}</span>
+                        <MoneyInput
+                          id="ship-declared-value"
+                          min="0"
                           value={declaredValue}
-                          onChange={(e) => setDeclaredValue(e.target.value)}
+                          onChange={setDeclaredValue}
                           className="sdl-input font-mono"
                         />
                       </div>
@@ -1141,7 +1174,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     <MapPin size={16} className="text-accent" />
                     <div>
                       <small>ORIGIN</small>
-                      <strong>{senderCity || 'Origin'}, {senderState || 'US'}</strong>
+                      <strong>{senderCity ? placeText(senderCity, senderState, senderCountry) : 'Origin'}</strong>
                     </div>
                   </div>
                   <div className="route-arrow-line">
@@ -1152,7 +1185,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     <MapPin size={16} className="text-accent" />
                     <div>
                       <small>DESTINATION</small>
-                      <strong>{recipientCity || 'Destination'}, {recipientState || 'US'}</strong>
+                      <strong>{recipientCity ? placeText(recipientCity, recipientState, recipientCountry) : 'Destination'}</strong>
                     </div>
                   </div>
                 </div>
@@ -1164,13 +1197,17 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   </div>
                   <div className="spec-row">
                     <span>Gross Scale Weight:</span>
-                    <strong>{totalWeight.toFixed(1)} lbs</strong>
+                    <strong>{formatWeight(totalWeight, units.system) || '—'}</strong>
                   </div>
                   <div className="spec-row">
                     <span>Service Tier:</span>
                     <strong className="text-accent">
                       {getServiceName()}
                     </strong>
+                  </div>
+                  <div className="spec-row">
+                    <span>Transport Mode:</span>
+                    <strong>{transportMode ? TRANSPORT_MODE_LABELS[transportMode] : `${COMPANY_SHORT} recommends`}</strong>
                   </div>
                   <div className="spec-row">
                     <span>Tender Mode:</span>
@@ -1210,7 +1247,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
           <div className="section-center-header">
             <span className="section-eyebrow">OPERATIONAL PROVENANCE</span>
             <h2>How Consignment Tender Works</h2>
-            <p className="section-desc-sub">From initial registration to hub ingestion, highway relay, and final direct recipient signature.</p>
+            <p className="section-desc-sub">From initial registration to hub ingestion, line-haul by air, sea or road, and final direct recipient signature.</p>
             <div className="section-header-line" />
           </div>
 
@@ -1229,7 +1266,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
             <div className="p-step-card">
               <div className="step-badge">03</div>
-              <h4>Interstate Highway Relay</h4>
+              <h4>Air, Sea or Road Relay</h4>
               <p>Consignment travels across verified corridor sortation hubs with real-time waypoint checkpoint scans.</p>
             </div>
 

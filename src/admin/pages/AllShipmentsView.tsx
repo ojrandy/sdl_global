@@ -35,6 +35,7 @@ import { EditShipmentModal } from '../components/EditShipmentModal';
 import { DeleteShipmentModal } from '../components/DeleteShipmentModal';
 import { RecentlyDeletedModal } from '../components/RecentlyDeletedModal';
 import './AllShipmentsView.css';
+import { WeightText } from '../../components/forms/UnitControls';
 
 interface AllShipmentsViewProps {
   onOpenShipmentDetail: (trackingNumber: string) => void;
@@ -541,7 +542,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
                           <div className="consignment-text-wrap">
                             <strong className="consignment-code font-mono">{s.trackingNumber}</strong>
                             <span className="consignment-specs">
-                              {piecesCount} {piecesCount === 1 ? 'pc' : 'pcs'}{weight > 0 ? ` (${weight} lbs)` : ''}
+                              {piecesCount} {piecesCount === 1 ? 'pc' : 'pcs'}{weight > 0 ? <> (<WeightText lbs={weight} />)</> : ''}
                             </span>
                           </div>
                         </div>

@@ -341,6 +341,8 @@ export function initDatabase() {
   try { db.exec(`ALTER TABLE shipments ADD COLUMN transport_mode TEXT;`); } catch (e) {}
   try { db.exec(`ALTER TABLE tracking_events ADD COLUMN occurred_at_ts INTEGER;`); } catch (e) {}
   try { db.exec(`ALTER TABLE tracking_events ADD COLUMN time_zone TEXT;`); } catch (e) {}
+  // Mode the customer asked for on a quote (tracker 2.8); carried onto the shipment on convert.
+  try { db.exec(`ALTER TABLE quote_requests ADD COLUMN transport_mode TEXT;`); } catch (e) {}
 
   // Backfill existing rows so they don't all collapse to "unknown, sort last": preserve
   // today's best-effort relative order (by rowid, which reflects insertion order) as a

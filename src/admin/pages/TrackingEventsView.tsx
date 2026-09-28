@@ -38,6 +38,7 @@ import { resolveLocation, resolveLocationPrecise } from '../../services/geocodin
 import './TrackingEventsView.css';
 import { ADMIN_ROLE_LABEL, COMPANY_SHORT, displayOperator } from '../../config/brand';
 import { GATEWAYS } from '../../data/gateways';
+import { WeightText } from '../../components/forms/UnitControls';
 import { formatInZone, isValidTimeZone, timeZoneForPlace, utcOffsetLabel, zonedTimeToUtc } from '../../shared/timeZones';
 
 // Preset event locations: the global gateway network, each with its IANA time zone.
@@ -561,7 +562,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               </div>
               <div className="meta-pair">
                 <span className="m-label">CARGO</span>
-                <strong>{currentShipment.cargoDescription || currentShipment.shipmentType} ({currentShipment.totalWeightLbs} lb)</strong>
+                <strong>{currentShipment.cargoDescription || currentShipment.shipmentType} (<WeightText lbs={currentShipment.totalWeightLbs} />)</strong>
               </div>
               <div className="meta-pair">
                 <span className="m-label">ROUTE</span>

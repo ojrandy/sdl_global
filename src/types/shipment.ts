@@ -85,8 +85,14 @@ export interface ShipmentParty {
   postalCode?: string;
   maskedName?: string;
   city: string;
+  /** Short region shown after the city: state code for U.S. addresses, ISO country code elsewhere. */
   state: string;
+  /** Full state/province/region as entered (optional). */
+  region?: string;
   country: string;
+  /** ISO 3166-1 alpha-2 */
+  countryCode?: string;
+  /** International format with calling code, e.g. "+234 803 123 4567" (older records may lack it). */
   phone?: string;
   maskedPhone?: string;
   email?: string;

@@ -364,17 +364,19 @@ function getTimezoneForState(stateCode: string): string {
  * Asynchronously geocodes free text anywhere in the world using the live OpenStreetMap
  * provider, with in-memory caching and fallback to the offline tables.
  */
-export async function geocodeAddressLive(query: string): Promise<GeoLocationResult | null> {
+export async function geocodeAddressLive(query: string, countryCode?: string): Promise<GeoLocationResult | null> {
   const cleanQuery = (query || '').trim();
   if (!cleanQuery) return null;
+  const countryFilter = (countryCode || '').trim().toLowerCase();
 
-  const cacheKey = cleanQuery.toLowerCase();
+  const cacheKey = `${countryFilter}|${cleanQuery.toLowerCase()}`;
   if (GEOCODE_CACHE.has(cacheKey)) {
     return GEOCODE_CACHE.get(cacheKey)!;
   }
 
   // Check local offline tables first for instant response
-  const localMatch = resolveLocation(cleanQuery);
+  // The offline U.S. parser can't be trusted for a query already known to be outside the U.S.
+  const localMatch = countryFilter && countryFilter !== 'us' ? null : resolveLocation(cleanQuery);
 
   try {
     const encoded = encodeURIComponent(cleanQuery);
@@ -382,7 +384,7 @@ export async function geocodeAddressLive(query: string): Promise<GeoLocationResu
     const timeoutId = setTimeout(() => controller.abort(), 2200); // 2.2s timeout
 
     const resp = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&addressdetails=1&limit=1&accept-language=en`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&addressdetails=1&limit=1&accept-language=en${countryFilter ? `&countrycodes=${countryFilter}` : ''}`,
       {
         signal: controller.signal,
         headers: { 'Accept': 'application/json' }
@@ -727,4 +729,57 @@ export function resolveLocation(input: string): GeoLocationResult | null {
     country: 'United States',
     isExactCoordinate: false
   };
+}
+
+export interface AddressQuery {
+  city: string;
+  /** State / region as typed (optional). */
+  region?: string;
+  /** ISO 3166-1 alpha-2 (the form's country picker). */
+  countryCode: string;
+  /** Street line (optional), used only by the live geocoder. */
+  street?: string;
+}
+
+/**
+ * Offline lookup for a structured address (country picked from a list, tracker 2.6). U.S.
+ * addresses use the U.S. tables exactly as before; elsewhere a gateway city in that country
+ * matches exactly, and any other town gets that country's gateway as a flagged guess
+ * (isExactCoordinate: false). Returns null when the country has no gateway — the live geocoder
+ * is then needed. A non-U.S. region is never read as a U.S. state ("Montreal, CA" is Canada).
+ */
+export function resolveAddress(query: AddressQuery): GeoLocationResult | null {
+  const city = (query.city || '').trim();
+  const code = (query.countryCode || '').trim().toUpperCase();
+  if (!city) return null;
+  if (!code || code === 'US') {
+    const region = (query.region || '').trim();
+    return resolveLocation(region ? `${city}, ${region}` : city);
+  }
+
+  const gateway = resolveGatewayLocation(`${city}, ${code}`);
+  if (gateway) return { ...gateway, city };
+
+  const countryGateway = GATEWAYS.find((g) => g.iso === code);
+  if (countryGateway) {
+    return { ...gatewayToLocation(countryGateway), city, facilityName: `${city} Terminal`, isExactCoordinate: false };
+  }
+  return null;
+}
+
+/**
+ * resolveAddress(), falling through to the live geocoder (restricted to the chosen country)
+ * whenever the offline answer is missing or only a guess. The result's region follows the
+ * app's convention: state code for U.S. addresses, ISO country code elsewhere.
+ */
+export async function resolveAddressPrecise(query: AddressQuery, countryName?: string): Promise<GeoLocationResult | null> {
+  const local = resolveAddress(query);
+  if (local?.isExactCoordinate) return local;
+  const code = (query.countryCode || '').trim().toUpperCase();
+  const text = [query.street, query.city, query.region, countryName || code].map((s) => (s || '').trim()).filter(Boolean).join(', ');
+  const live = await geocodeAddressLive(text, code || undefined);
+  if (live && code && code !== 'US') {
+    return { ...live, city: query.city.trim() || live.city, state: code, countryCode: code };
+  }
+  return live || local;
 }

@@ -31,9 +31,16 @@ import {
 import { useAdminData } from '../../context/AdminDataContext';
 import { QuoteRequest, QuoteRequestStatus, QuoteRequestPricing } from '../../types/admin';
 import './QuoteRequestsView.css';
+import { MoneyInput } from '../../components/forms/UnitControls';
+import { useCurrency } from '../../utils/useCurrency';
+import { useUnitSystem } from '../../utils/useUnitSystem';
+import { formatDimensions, formatWeight } from '../../shared/units';
+import { TRANSPORT_MODE_LABELS } from '../../shared/transportMode';
 
 export const QuoteRequestsView: React.FC = () => {
   const { quoteRequests, publishQuote, updateQuoteStatus, convertQuoteToShipment, settings } = useAdminData();
+  const money = useCurrency();
+  const [units] = useUnitSystem();
 
   // The admin's "Quote Validity (Days)" setting only ever affected re-opening an already-
   // EXPIRED quote — the actual "publish a new quote" path below (both the default here and
@@ -112,7 +119,7 @@ export const QuoteRequestsView: React.FC = () => {
 
     publishQuote(selectedQuote.id, pricing, internalNotes);
     setShowPublishConfirmModal(false);
-    setSuccessToast(`Quote ${selectedQuote.id} published successfully for $${Number(finalPrice).toFixed(2)} USD!`);
+    setSuccessToast(`Quote ${selectedQuote.id} published successfully for ${money.format(finalPrice)}!`);
     setTimeout(() => setSuccessToast(null), 4000);
   };
 
@@ -157,13 +164,13 @@ export const QuoteRequestsView: React.FC = () => {
     }
   };
 
-  const formatDims = (dims: any) => {
-    if (!dims) return '12 × 12 × 12 in';
-    if (typeof dims === 'string') return dims;
-    if (typeof dims === 'object') {
-      return `${dims.length || 12} × ${dims.width || 12} × ${dims.height || 12} in`;
-    }
-    return String(dims);
+  // Structured inches when the quote has them (converted to the viewer's units), otherwise the
+  // stored display string of older quotes; '—' when nothing was given.
+  const formatDims = (dims: any, structured?: QuoteRequest['dimensionsIn']) => {
+    const inches = structured || (dims && typeof dims === 'object' ? dims : null);
+    if (inches) return formatDimensions(inches, units) || '—';
+    if (typeof dims === 'string' && dims.trim()) return dims;
+    return '—';
   };
 
   return (
@@ -299,15 +306,15 @@ export const QuoteRequestsView: React.FC = () => {
                     </div>
                     <div className="metric-cell">
                       <span className="m-lbl">SCALE WEIGHT</span>
-                      <strong>{selectedQuote.totalWeightLbs} lb</strong>
+                      <strong>{formatWeight(selectedQuote.totalWeightLbs, units) || '—'}</strong>
                     </div>
                     <div className="metric-cell">
                       <span className="m-lbl">DIMENSIONS</span>
-                      <strong className="font-mono">{formatDims(selectedQuote.dimensions)}</strong>
+                      <strong className="font-mono">{formatDims(selectedQuote.dimensions, selectedQuote.dimensionsIn)}</strong>
                     </div>
                     <div className="metric-cell">
                       <span className="m-lbl">SERVICE TIER</span>
-                      <strong className="text-blue">{selectedQuote.requestedService}</strong>
+                      <strong className="text-blue">{selectedQuote.requestedService}{selectedQuote.transportMode ? ` · ${TRANSPORT_MODE_LABELS[selectedQuote.transportMode]}` : ''}</strong>
                     </div>
                   </div>
                 </div>
@@ -336,15 +343,13 @@ export const QuoteRequestsView: React.FC = () => {
               <div className="pricing-body">
                 {/* Single Simple Price Input */}
                 <div className="single-price-box">
-                  <label className="price-box-label">TOTAL QUOTE PRICE ($ USD)</label>
+                  <label className="price-box-label">TOTAL QUOTE PRICE ({money.currency})</label>
                   <div className="single-price-input-wrap">
-                    <span className="price-dollar-sign">$</span>
-                    <input
-                      type="number"
+                    <span className="price-dollar-sign">{money.symbol}</span>
+                    <MoneyInput
                       step="0.01"
                       value={finalPrice}
-                      onChange={e => setFinalPrice(parseFloat(e.target.value) || 0)}
-                      placeholder="350.00"
+                      onChange={v => setFinalPrice(v === '' ? 0 : v)}
                       className="single-price-input font-mono"
                     />
                   </div>
@@ -391,7 +396,7 @@ export const QuoteRequestsView: React.FC = () => {
                         onClick={() => setShowPublishConfirmModal(true)}
                       >
                         <Send size={16} />
-                        <span>Publish Final Quote (${Number(finalPrice).toFixed(2)})</span>
+                        <span>Publish Final Quote ({money.format(finalPrice)})</span>
                       </button>
                       {selectedQuote.status === 'NEW' && (
                         <button
@@ -412,7 +417,7 @@ export const QuoteRequestsView: React.FC = () => {
                       <div className="pub-status-alert">
                         <CheckCircle2 size={16} className="text-emerald" />
                         <div>
-                          <strong>Quote Published: ${selectedQuote.pricing?.finalPrice.toFixed(2)} USD</strong>
+                          <strong>Quote Published: {money.format(selectedQuote.pricing?.finalPrice)}</strong>
                           <p>Valid until {selectedQuote.pricing?.validUntil}. Awaiting customer decision.</p>
                         </div>
                       </div>
@@ -447,7 +452,7 @@ export const QuoteRequestsView: React.FC = () => {
                       <div className="accept-banner">
                         <CheckCircle2 size={18} className="text-emerald" />
                         <div>
-                          <strong>Quote Accepted by Customer (${selectedQuote.pricing?.finalPrice.toFixed(2)} USD)</strong>
+                          <strong>Quote Accepted by Customer ({money.format(selectedQuote.pricing?.finalPrice)})</strong>
                           <p>Ready for physical shipment provisioning.</p>
                         </div>
                       </div>
@@ -661,8 +666,8 @@ export const QuoteRequestsView: React.FC = () => {
                       {/* Specs */}
                       <td>
                         <div className="specs-cell">
-                          <strong>{quote.totalWeightLbs || (quote as any).weightLbs || 0} lb</strong>
-                          <small className="font-mono">{formatDims(quote.dimensions)}</small>
+                          <strong>{formatWeight(quote.totalWeightLbs || (quote as any).weightLbs, units) || '—'}</strong>
+                          <small className="font-mono">{formatDims(quote.dimensions, quote.dimensionsIn)}</small>
                         </div>
                       </td>
 
@@ -726,7 +731,7 @@ export const QuoteRequestsView: React.FC = () => {
                 </div>
                 <div className="c-row highlight">
                   <span>Final Amount:</span>
-                  <strong className="font-mono text-emerald">${Number(finalPrice).toFixed(2)} USD</strong>
+                  <strong className="font-mono text-emerald">{money.format(finalPrice)} {money.currency}</strong>
                 </div>
                 <div className="c-row">
                   <span>Valid Until:</span>

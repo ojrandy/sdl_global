@@ -41,6 +41,7 @@ import { Barcode } from '../../components/Barcode';
 import { COMPANY, COMPANY_SHORT, LEGAL_NAME, LOGO, LOGO_ALT } from '../../config/brand';
 import { generateReference, referenceFor } from '../../shared/references';
 import './DocumentCenterView.css';
+import { formatWeightBoth } from '../../shared/units';
 
 interface DocumentCenterViewProps {
   onOpenShipmentDetail?: (trackingNumber: string) => void;
@@ -1176,7 +1177,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                           <td><strong>{previewDoc.cargoDescription}</strong></td>
                           <td>{previewDoc.shipmentType}</td>
                           <td>{previewDoc.service}</td>
-                          <td className="font-mono">{previewDoc.weightLbs} lb</td>
+                          <td className="font-mono">{formatWeightBoth(previewDoc.weightLbs)}</td>
                           <td className="font-mono">{previewDoc.pieces}</td>
                         </tr>
                       </tbody>
@@ -1308,7 +1309,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                             <div className="text-xs text-slate">{previewDoc.dimensions || '72 × 24 × 18 in'}</div>
                           </td>
                           <td>{previewDoc.senderCity}, {previewDoc.senderState} → {previewDoc.recipientCity}, {previewDoc.recipientState}</td>
-                          <td className="font-mono">{previewDoc.weightLbs} lb</td>
+                          <td className="font-mono">{formatWeightBoth(previewDoc.weightLbs)}</td>
                           <td className="font-mono">{previewDoc.pieces}</td>
                           <td className="font-mono" style={{ textAlign: 'right' }}>
                             ${(previewDoc.charges?.baseAmount || 300).toFixed(2)}
@@ -1440,7 +1441,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                           <td>
                             <strong>{previewDoc.cargoDescription}</strong>
                           </td>
-                          <td className="font-mono font-bold text-center">{previewDoc.weightLbs} lb</td>
+                          <td className="font-mono font-bold text-center">{formatWeightBoth(previewDoc.weightLbs)}</td>
                           <td className="font-mono text-center">{previewDoc.dimensions || '72 × 24 × 18 in'}</td>
                         </tr>
                       </tbody>
@@ -1590,7 +1591,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                         <tr>
                           <td><strong>{previewDoc.cargoDescription}</strong></td>
                           <td>{previewDoc.shipmentType}</td>
-                          <td className="font-mono">{previewDoc.weightLbs} lb</td>
+                          <td className="font-mono">{formatWeightBoth(previewDoc.weightLbs)}</td>
                           <td className="font-mono">{previewDoc.pieces}</td>
                         </tr>
                       </tbody>
@@ -1831,7 +1832,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <div><span>Shipper:</span> <strong>{targetShipment.sender.name} ({targetShipment.origin.city}, {targetShipment.origin.state})</strong></div>
                       <div><span>Consignee:</span> <strong>{targetShipment.recipient.name} ({targetShipment.destination.city}, {targetShipment.destination.state})</strong></div>
                       <div><span>Cargo:</span> <strong>{targetShipment.cargoDescription}</strong></div>
-                      <div><span>Weight / Pieces:</span> <strong>{targetShipment.totalWeightLbs} lb · {targetShipment.totalPieces} pcs</strong></div>
+                      <div><span>Weight / Pieces:</span> <strong>{formatWeightBoth(targetShipment.totalWeightLbs)} · {targetShipment.totalPieces} pcs</strong></div>
                     </div>
                   </div>
                 ) : null;

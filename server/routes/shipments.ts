@@ -231,15 +231,15 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       s.totalPieces || 1,
       s.declaredValue || 0,
       s.origin?.city || 'New York',
-      s.origin?.state || 'NY',
+      s.origin?.state || '',
       s.origin?.lat || 40.7128,
       s.origin?.lng || -74.006,
       s.destination?.city || 'Los Angeles',
-      s.destination?.state || 'CA',
+      s.destination?.state || '',
       s.destination?.lat || 34.0522,
       s.destination?.lng || -118.2437,
       s.currentLocation?.city || s.origin?.city || 'New York',
-      s.currentLocation?.state || s.origin?.state || 'NY',
+      s.currentLocation?.state || s.origin?.state || '',
       s.currentLocation?.lat || s.origin?.lat || 40.7128,
       s.currentLocation?.lng || s.origin?.lng || -74.006,
       s.currentFacility || s.currentLocation?.facility || 'Intake Terminal',
@@ -283,7 +283,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         totalPieces: 1,
         status: s.status || 'RECEIVED',
         statusText: 'Consignment Staged',
-        currentLocation: `${s.origin?.city || 'New York'}, ${s.origin?.state || 'NY'}`,
+        currentLocation: [s.origin?.city || 'New York', s.origin?.state].filter(Boolean).join(', '),
         weightLbs: s.totalWeightLbs || 10,
         dimensions: s.dimensions || { length: 12, width: 12, height: 12 }
       }
@@ -300,7 +300,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         p.totalPieces || pieces.length,
         p.status || s.status || 'RECEIVED',
         p.statusText || 'Scanned & Registered',
-        p.currentLocation || `${s.origin?.city || 'New York'}, ${s.origin?.state || 'NY'}`,
+        p.currentLocation || [s.origin?.city || 'New York', s.origin?.state].filter(Boolean).join(', '),
         p.weightLbs || (s.totalWeightLbs ? s.totalWeightLbs / pieces.length : 10),
         JSON.stringify(p.dimensions || s.dimensions || {})
       );
@@ -315,7 +315,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const originLabel = `${s.origin?.city || 'New York'}, ${s.origin?.state || 'NY'}`;
+    const originLabel = [s.origin?.city || 'New York', s.origin?.state].filter(Boolean).join(', ');
     const createdTime = eventTime(originLabel, { lat: s.origin?.lat, lng: s.origin?.lng });
     insertEvent.run(
       `e-${Date.now()}`,

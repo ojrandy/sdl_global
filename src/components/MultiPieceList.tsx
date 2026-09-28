@@ -2,6 +2,7 @@ import React from 'react';
 import { PackagePiece } from '../types/shipment';
 import { Barcode } from './Barcode';
 import './MultiPieceList.css';
+import { WeightText } from './forms/UnitControls';
 
 interface MultiPieceListProps {
   pieces: PackagePiece[];
@@ -50,7 +51,7 @@ export const MultiPieceList: React.FC<MultiPieceListProps> = ({
 
             {/* Piece Specs */}
             <div className="piece-specs">
-              <span>{piece.weightLbs} lb</span>
+              <span><WeightText lbs={piece.weightLbs} /></span>
               <span className="spec-dot">•</span>
               <span>{piece.dimensions.length} x {piece.dimensions.width} x {piece.dimensions.height} in</span>
             </div>

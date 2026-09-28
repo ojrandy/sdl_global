@@ -1415,3 +1415,16 @@
     gap: 0.375rem;
   }
 }
+
+/* Units toggle and transport mode (tracker 2.7/2.8) */
+.ship-unit-toggle {
+  margin-top: 0.5rem;
+}
+
+.transport-mode-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 1.25rem 0;
+  max-width: 360px;
+}

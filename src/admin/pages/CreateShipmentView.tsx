@@ -44,7 +44,17 @@ import {
   PawPrint,
   Heart
 } from 'lucide-react';
-import { resolveLocation, resolveLocationPrecise, STATE_NAMES } from '../../services/geocodingService';
+import { resolveAddress, resolveAddressPrecise, resolveLocation, STATE_NAMES } from '../../services/geocodingService';
+import { CountrySelect } from '../../components/forms/CountrySelect';
+import { PhoneInput } from '../../components/forms/PhoneInput';
+import { MeasureInput, MoneyInput, UnitToggle, useUnitLabels } from '../../components/forms/UnitControls';
+import { getCountry, postcodeLabel, regionLabel, shortRegion } from '../../data/countries';
+import { formatDimensions, formatLength, formatWeight } from '../../shared/units';
+
+// Weight text saved into event descriptions: kg first with lb alongside, readable in either system.
+const bothUnits = (lbs: unknown) => `${formatWeight(lbs, 'metric')} (${formatWeight(lbs, 'imperial')})`;
+import { TRANSPORT_MODE_LABELS } from '../../shared/transportMode';
+import { useCurrency } from '../../utils/useCurrency';
 import { calculateRouteGeometry, inferTransportMode, type TransportMode } from '../../services/routingEngine';
 import { generateShipmentPlan } from '../../services/planningEngine';
 import { useAdminData } from '../../context/AdminDataContext';
@@ -92,6 +102,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // 'Auto' leaves the mode to inference (road within ~1,500 mi or North America, sea for
   // containers/freight, otherwise air); the server applies the same rule on read.
   const [transportModeChoice, setTransportModeChoice] = useState<'Auto' | TransportMode>('Auto');
+  const units = useUnitLabels();
+  const money = useCurrency();
   const [customerRef, setCustomerRef] = useState('PO-45821');
   const [invoiceRef, setInvoiceRef] = useState('INV-2026-892');
   const [internalRef, setInternalRef] = useState('INT-CORP-01');
@@ -230,6 +242,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   const [senderEmail, setSenderEmail] = useState('');
   const [senderPhone, setSenderPhone] = useState('');
   const [senderAddress, setSenderAddress] = useState('');
+  const [senderCountry, setSenderCountry] = useState('');
   const [senderCity, setSenderCity] = useState('');
   const [senderState, setSenderState] = useState('');
   const [senderZip, setSenderZip] = useState('');
@@ -239,6 +252,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientCountry, setRecipientCountry] = useState('');
   const [recipientCity, setRecipientCity] = useState('');
   const [recipientState, setRecipientState] = useState('');
   const [recipientZip, setRecipientZip] = useState('');
@@ -255,13 +269,13 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     return Object.values(STATE_NAMES).some(name => name.toUpperCase() === val);
   };
   const senderStateWarning = React.useMemo(() => {
-    if (isRecognizedState(senderState)) return null;
+    if (senderCountry !== 'US' || isRecognizedState(senderState)) return null;
     return `"${senderState}" isn't a recognized US state — did you mean the state, not a city or county? Unrecognized states silently route to the middle of the country on the map.`;
-  }, [senderState]);
+  }, [senderState, senderCountry]);
   const recipientStateWarning = React.useMemo(() => {
-    if (isRecognizedState(recipientState)) return null;
+    if (recipientCountry !== 'US' || isRecognizedState(recipientState)) return null;
     return `"${recipientState}" isn't a recognized US state — did you mean the state, not a city or county? Unrecognized states silently route to the middle of the country on the map.`;
-  }, [recipientState]);
+  }, [recipientState, recipientCountry]);
 
   // ----------------------------------------------------
   // STEP 3: Packages (For Non-Vehicle Cargo)
@@ -339,12 +353,10 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // letting the admin type their own override, which is honored once touched.
   const previewEstimatedDeliveryDate = React.useMemo(() => {
     try {
-      const originGeo = resolveLocation([senderCity, senderState].filter(Boolean).join(', ').trim())
-        || resolveLocation(senderCity.trim())
-        || { city: senderCity || 'Origin', state: senderState || 'US', lat: 31.9686, lng: -99.9018, facilityName: `${senderCity || 'Origin'} Hub` };
-      const destGeo = resolveLocation([recipientCity, recipientState].filter(Boolean).join(', ').trim())
-        || resolveLocation(recipientCity.trim())
-        || { city: recipientCity || 'Destination', state: recipientState || 'US', lat: 38.9072, lng: -77.0369, facilityName: `${recipientCity || 'Destination'} Facility` };
+      // Offline, country-aware lookup; no estimate until both ends can be placed.
+      const originGeo = resolveAddress({ city: senderCity, region: senderState, countryCode: senderCountry });
+      const destGeo = resolveAddress({ city: recipientCity, region: recipientState, countryCode: recipientCountry });
+      if (!originGeo || !destGeo) return null;
       const routeFrom = { lat: originGeo.lat, lng: originGeo.lng, name: originGeo.city };
       const routeTo = { lat: destGeo.lat, lng: destGeo.lng, name: destGeo.city };
       const routePlan = calculateRouteGeometry(
@@ -363,7 +375,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     } catch {
       return null;
     }
-  }, [senderCity, senderState, recipientCity, recipientState, service, pickupDate, transportModeChoice, shipmentType]);
+  }, [senderCity, senderState, senderCountry, recipientCity, recipientState, recipientCountry, service, pickupDate, transportModeChoice, shipmentType]);
 
   useEffect(() => {
     if (!expectedDeliveryDateTouched && previewEstimatedDeliveryDate) {
@@ -462,6 +474,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     setRecipientEmail(senderEmail);
     setRecipientPhone(senderPhone);
     setRecipientAddress(senderAddress);
+    setRecipientCountry(senderCountry);
     setRecipientCity(senderCity);
     setRecipientState(senderState);
     setRecipientZip(senderZip);
@@ -471,7 +484,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   // Autonomous Geocoding on ZIP code change
   const handleSenderZipChange = (zip: string) => {
     setSenderZip(zip);
-    if (zip.trim().length >= 5) {
+    if (senderCountry === 'US' && zip.trim().length >= 5) {
       const geo = resolveLocation(zip);
       if (geo) {
         setSenderCity(geo.city);
@@ -482,7 +495,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
 
   const handleRecipientZipChange = (zip: string) => {
     setRecipientZip(zip);
-    if (zip.trim().length >= 5) {
+    if (recipientCountry === 'US' && zip.trim().length >= 5) {
       const geo = resolveLocation(zip);
       if (geo) {
         setRecipientCity(geo.city);
@@ -741,7 +754,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             trackingNumber: '',
             status: (initialLocationMode === 'NOT_RECEIVED' ? 'BOOKED' : 'RECEIVED') as ShipmentStatus,
             statusText: initialLocationMode === 'NOT_RECEIVED' ? 'Vehicle Manifest Created' : 'Vehicle Ingested & Inspected',
-            currentLocation: `${senderCity}, ${senderState}`,
+            currentLocation: [senderCity.trim(), shortRegion(senderCountry, senderState)].filter(Boolean).join(', '),
             weightLbs: parseFloat(vehWeightLbs) || 4445,
             dimensions: {
               length: parseFloat(vehLengthIn) || 213,
@@ -852,34 +865,26 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           }
         }));
 
-    const originQuery = [senderCity.trim(), senderState.trim()].filter(Boolean).join(', ') || senderZip.trim();
-    const destQuery = [recipientCity.trim(), recipientState.trim()].filter(Boolean).join(', ') || recipientZip.trim();
-
-    // resolveLocationPrecise gives an instant, accurate result for the ~80 major metros
-    // already in the offline table, and only reaches out to a live geocoding API for
-    // anything else — so a shipment to a smaller town gets that town's real coordinates
-    // instead of silently landing on its state's rough centroid.
-    const originGeo = (await resolveLocationPrecise(originQuery)) || {
-      city: senderCity.trim() || 'Origin City',
-      state: senderState.trim() || 'US',
-      stateFull: 'United States',
-      zip: senderZip.trim() || '75201',
-      lat: 31.9686,
-      lng: -99.9018,
-      timezone: 'America/Chicago',
-      facilityName: `${senderCity.trim() || 'Origin'} Hub`
-    };
-
-    const destGeo = (await resolveLocationPrecise(destQuery)) || {
-      city: recipientCity.trim() || 'Destination City',
-      state: recipientState.trim() || 'US',
-      stateFull: 'United States',
-      zip: recipientZip.trim() || '20001',
-      lat: 38.9072,
-      lng: -77.0369,
-      timezone: 'America/New_York',
-      facilityName: `${recipientCity.trim() || 'Destination'} Facility`
-    };
+    // Country is picked from the list; the country-aware lookup is instant for gateways and
+    // U.S. metros and asks the live geocoder (restricted to that country) for anything else.
+    // An address that can't be placed stops here instead of landing somewhere made up.
+    if (!senderCountry || !recipientCountry || !senderCity.trim() || !recipientCity.trim()) {
+      setErrors({ submit: 'Choose the country and enter the city for both the sender and the recipient (step 2).' });
+      setIsCreatingShipment(false);
+      return;
+    }
+    const [originGeo, destGeo] = await Promise.all([
+      resolveAddressPrecise({ street: senderAddress, city: senderCity, region: senderState, countryCode: senderCountry }, getCountry(senderCountry)?.name),
+      resolveAddressPrecise({ street: recipientAddress, city: recipientCity, region: recipientState, countryCode: recipientCountry }, getCountry(recipientCountry)?.name)
+    ]);
+    if (!originGeo || !destGeo) {
+      const missing = !originGeo ? `${senderCity}, ${getCountry(senderCountry)?.name}` : `${recipientCity}, ${getCountry(recipientCountry)?.name}`;
+      setErrors({ submit: `Couldn't locate ${missing}. Check the city and country (step 2) and try again.` });
+      setIsCreatingShipment(false);
+      return;
+    }
+    const originRegion = shortRegion(senderCountry, senderState) || originGeo.state || '';
+    const destRegion = shortRegion(recipientCountry, recipientState) || destGeo.state || '';
     const routeFrom = { lat: originGeo.lat, lng: originGeo.lng, name: originGeo.city };
     const routeTo = { lat: destGeo.lat, lng: destGeo.lng, name: destGeo.city };
     const chosenMode = transportModeChoice === 'Auto' ? undefined : transportModeChoice;
@@ -928,13 +933,13 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
               : shipmentType === 'Pallet'
               ? `${palletCount} skids (${palletStandard}) verified. Stackability: ${palletStackable ? 'Stackable' : 'Non-Stackable (Top-Tier)'}. ISPM-15 compliant.`
               : shipmentType === 'Container'
-              ? `Container ${containerNumber} received at terminal. Bolt Seal: ${containerBoltSeal}. VGM: ${containerVgmWeight} lbs.`
+              ? `Container ${containerNumber} received at terminal. Bolt Seal: ${containerBoltSeal}. VGM: ${bothUnits(containerVgmWeight)}.`
               : shipmentType === 'Freight'
               ? `Heavy freight (${freightClass}, ${freightNmfcCode}) received via commercial raised dock. Liftgate delivery: ${freightLiftgateDelivery ? 'Yes' : 'No'}.`
               : shipmentType === 'Document'
               ? `Security Pouch Sealed (${docSealNumber}). Direct consignee signature directive active.`
               : shipmentType === 'Pets'
-              ? `Live animal ${petName} (${petBreed}, ${petWeightLbs} lbs) received. Microchip ${petMicrochip} verified against CVI #${petHealthCertNumber}. Dual dishes & climate kennel confirmed.`
+              ? `Live animal ${petName} (${petBreed}, ${bothUnits(petWeightLbs)}) received. Microchip ${petMicrochip} verified against CVI #${petHealthCertNumber}. Dual dishes & climate kennel confirmed.`
               : `Shipment physically received at ${originGeo.city}, ${originGeo.state}. Code 128 barcode applied.`),
         isCurrent: true,
         isCompleted: true,
@@ -949,16 +954,16 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       statusMessage: shipmentType === 'Vehicle'
         ? `Vehicle Cargo (${vehYear} ${vehMake} ${vehModel}) received. VIN: ${vehVin}. Operable.`
         : shipmentType === 'Pallet'
-        ? `Pallet Cargo (${palletCount} Skids, ${totalWeight.toFixed(0)} lbs). ${palletStackable ? 'Stackable' : 'Non-Stackable (Top-Tier Only)'}.`
+        ? `Pallet Cargo (${palletCount} Skids, ${bothUnits(totalWeight)}). ${palletStackable ? 'Stackable' : 'Non-Stackable (Top-Tier Only)'}.`
         : shipmentType === 'Container'
-        ? `Container ${containerNumber} (${containerIsoSize.split(' ')[0]}). Seal: ${containerBoltSeal}. VGM: ${containerVgmWeight} lbs.`
+        ? `Container ${containerNumber} (${containerIsoSize.split(' ')[0]}). Seal: ${containerBoltSeal}. VGM: ${bothUnits(containerVgmWeight)}.`
         : shipmentType === 'Freight'
-        ? `Heavy Freight (${freightClass}, ${freightNmfcCode}). Weight: ${totalWeight} lbs.`
+        ? `Heavy Freight (${freightClass}, ${freightNmfcCode}). Weight: ${bothUnits(totalWeight)}.`
         : shipmentType === 'Document'
         ? `Secure Document (${docEnvelopeType.split(' ')[0]}). Seal: ${docSealNumber}. Direct In-Person Signature Required.`
         : shipmentType === 'Pets'
         ? `Live Pet Cargo: ${petName} (${petBreed}). Microchip: ${petMicrochip}. CVI: ${petHealthCertNumber}. Active Climate Hold Guaranteed.`
-        : `Consignment provisioned. ${totalPieces} package(s) totalling ${totalWeight.toFixed(1)} lbs.`,
+        : `Consignment provisioned. ${totalPieces} package(s) totalling ${bothUnits(totalWeight)}.`,
       health: 'ON_TRACK',
       healthExplanation: 'Consignment created on schedule with verified physical barcodes.',
       progressPercent: initialLocationMode === 'NOT_RECEIVED' ? 0 : 5,
@@ -1044,8 +1049,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       estimatedDelivery: expectedDeliveryDate || shipmentPlan.estimatedDeliveryDate,
       estimatedDeliveryDetail: 'by ' + shipmentPlan.estimatedDeliveryTime,
       currentLocation: {
-        city: originGeo.city,
-        state: originGeo.state,
+        city: senderCity.trim() || originGeo.city,
+        state: originRegion,
         lat: originGeo.lat,
         lng: originGeo.lng,
         facility: initialLocationMode === 'CUSTOM' ? customInitialLocation : originGeo.facilityName
@@ -1056,16 +1061,16 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       nextStepLocation: `${originGeo.city} Sort Gateway`,
       origin: {
         city: senderCity.trim() || originGeo.city,
-        state: senderState.trim() || originGeo.state,
-        country: 'United States',
+        state: originRegion,
+        country: getCountry(senderCountry)?.name || '',
         lat: originGeo.lat,
         lng: originGeo.lng,
         facility: originGeo.facilityName
       } as any,
       destination: {
         city: recipientCity.trim() || destGeo.city,
-        state: recipientState.trim() || destGeo.state,
-        country: 'United States',
+        state: destRegion,
+        country: getCountry(recipientCountry)?.name || '',
         lat: destGeo.lat,
         lng: destGeo.lng,
         facility: destGeo.facilityName
@@ -1075,22 +1080,26 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         company: senderCompany.trim(),
         addressLine: senderAddress.trim(),
         city: senderCity.trim() || originGeo.city,
-        state: senderState.trim() || originGeo.state || '',
-        postalCode: senderZip.trim() || originGeo.zip,
+        state: originRegion,
+        region: senderState.trim() || undefined,
+        postalCode: senderZip.trim() || undefined,
         phone: senderPhone.trim(),
         email: senderEmail.trim(),
-        country: 'United States'
+        country: getCountry(senderCountry)?.name || '',
+        countryCode: senderCountry
       },
       recipient: {
         name: recipientName.trim() || 'Consignee / Recipient',
         company: recipientCompany.trim(),
         addressLine: recipientAddress.trim(),
         city: recipientCity.trim() || destGeo.city,
-        state: recipientState.trim() || destGeo.state || '',
-        postalCode: recipientZip.trim() || destGeo.zip,
+        state: destRegion,
+        region: recipientState.trim() || undefined,
+        postalCode: recipientZip.trim() || undefined,
         phone: recipientPhone.trim(),
         email: recipientEmail.trim(),
-        country: 'United States'
+        country: getCountry(recipientCountry)?.name || '',
+        countryCode: recipientCountry
       },
       totalWeightLbs: totalWeight,
       totalPieces: totalPieces,
@@ -1322,7 +1331,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
             </div>
             <div className="spec-item">
               <span className="s-label">TOTAL WEIGHT</span>
-              <strong>{totalWeight.toFixed(1)} lbs</strong>
+              <strong>{formatWeight(totalWeight, units.system)}</strong>
             </div>
           </div>
 
@@ -1668,12 +1677,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     />
                   </div>
                   <div className="input-field">
-                    <label>Phone (Optional)</label>
-                    <input
-                      type="text"
+                    <label htmlFor="sender-phone">Phone (Optional)</label>
+                    <PhoneInput
+                      id="sender-phone"
                       value={senderPhone}
-                      onChange={e => setSenderPhone(e.target.value)}
-                      placeholder="(555) 000-0000"
+                      onChange={setSenderPhone}
+                      defaultCountry={senderCountry || 'US'}
                     />
                   </div>
                 </div>
@@ -1688,25 +1697,33 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                   />
                 </div>
 
-                <div className="input-grid-3">
+                <div className="input-grid-2">
                   <div className="input-field">
-                    <label>City or State</label>
+                    <label htmlFor="sender-country">Country *</label>
+                    <CountrySelect id="sender-country" value={senderCountry} onChange={setSenderCountry} />
+                  </div>
+                  <div className="input-field">
+                    <label htmlFor="sender-city">City *</label>
                     <input
+                      id="sender-city"
                       type="text"
                       value={senderCity}
                       onChange={e => setSenderCity(e.target.value)}
-                      placeholder="Origin City or State (e.g. Texas, Austin)"
+                      placeholder="e.g. Lagos"
                     />
                   </div>
+                </div>
+
+                <div className="input-grid-2">
                   <div className="input-field">
-                    <label>State</label>
+                    <label htmlFor="sender-region">{regionLabel(senderCountry)} (Optional)</label>
                     <input
+                      id="sender-region"
                       type="text"
-                      list="us-states-list"
+                      list={senderCountry === 'US' ? 'us-states-list' : undefined}
                       value={senderState}
-                      onChange={e => setSenderState(e.target.value.toUpperCase())}
-                      placeholder="ST / State (e.g. TX)"
-                      maxLength={35}
+                      onChange={e => setSenderState(senderCountry === 'US' ? e.target.value.toUpperCase() : e.target.value)}
+                      maxLength={60}
                     />
                     {senderStateWarning && (
                       <span className="field-hint-txt" style={{ fontSize: '0.65rem', color: '#dc2626', display: 'block', marginTop: '0.2rem' }}>
@@ -1715,12 +1732,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     )}
                   </div>
                   <div className="input-field">
-                    <label>ZIP Code (Optional)</label>
+                    <label htmlFor="sender-postcode">{postcodeLabel(senderCountry)} (Optional)</label>
                     <input
+                      id="sender-postcode"
                       type="text"
                       value={senderZip}
                       onChange={e => handleSenderZipChange(e.target.value)}
-                      placeholder="ZIP Code (Optional)"
                     />
                   </div>
                 </div>
@@ -1763,12 +1780,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     />
                   </div>
                   <div className="input-field">
-                    <label>Phone (Optional)</label>
-                    <input
-                      type="text"
+                    <label htmlFor="recipient-phone">Phone (Optional)</label>
+                    <PhoneInput
+                      id="recipient-phone"
                       value={recipientPhone}
-                      onChange={e => setRecipientPhone(e.target.value)}
-                      placeholder="(555) 000-0000"
+                      onChange={setRecipientPhone}
+                      defaultCountry={recipientCountry || senderCountry || 'US'}
                     />
                   </div>
                 </div>
@@ -1783,25 +1800,33 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                   />
                 </div>
 
-                <div className="input-grid-3">
+                <div className="input-grid-2">
                   <div className="input-field">
-                    <label>City or State</label>
+                    <label htmlFor="recipient-country">Country *</label>
+                    <CountrySelect id="recipient-country" value={recipientCountry} onChange={setRecipientCountry} />
+                  </div>
+                  <div className="input-field">
+                    <label htmlFor="recipient-city">City *</label>
                     <input
+                      id="recipient-city"
                       type="text"
                       value={recipientCity}
                       onChange={e => setRecipientCity(e.target.value)}
-                      placeholder="Destination City or State (e.g. Washington DC)"
+                      placeholder="e.g. London"
                     />
                   </div>
+                </div>
+
+                <div className="input-grid-2">
                   <div className="input-field">
-                    <label>State</label>
+                    <label htmlFor="recipient-region">{regionLabel(recipientCountry)} (Optional)</label>
                     <input
+                      id="recipient-region"
                       type="text"
-                      list="us-states-list"
+                      list={recipientCountry === 'US' ? 'us-states-list' : undefined}
                       value={recipientState}
-                      onChange={e => setRecipientState(e.target.value.toUpperCase())}
-                      placeholder="ST / State (e.g. DC)"
-                      maxLength={35}
+                      onChange={e => setRecipientState(recipientCountry === 'US' ? e.target.value.toUpperCase() : e.target.value)}
+                      maxLength={60}
                     />
                     {recipientStateWarning && (
                       <span className="field-hint-txt" style={{ fontSize: '0.65rem', color: '#dc2626', display: 'block', marginTop: '0.2rem' }}>
@@ -1810,12 +1835,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     )}
                   </div>
                   <div className="input-field">
-                    <label>ZIP Code (Optional)</label>
+                    <label htmlFor="recipient-postcode">{postcodeLabel(recipientCountry)} (Optional)</label>
                     <input
+                      id="recipient-postcode"
                       type="text"
                       value={recipientZip}
-                      onChange={e => setRecipientZip(e.target.value)}
-                      placeholder="ZIP Code (Optional)"
+                      onChange={e => handleRecipientZipChange(e.target.value)}
                     />
                   </div>
                 </div>
@@ -1824,10 +1849,14 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
           )}
 
           {/* ---------------------------------------------------- */}
-          {/* STEP 3: SMART ADAPTIVE CARGO SPECIFICATIONS */}
+          {/* STEP 3: SMART ADAPTIVE CARGO SPECIFICATIONS (units: see the toggle) */}
           {/* ---------------------------------------------------- */}
           {currentStep === 3 && (
             <div className="step-inner-content animate-fade-in">
+              <div className="sdl-heading-with-units admin-units-bar">
+                <span className="dim-label">Weights and dimensions in</span>
+                <UnitToggle />
+              </div>
               {/* CASE A: VEHICLE CARGO SPECIFICATION */}
               {shipmentType === 'Vehicle' ? (
                 <div className="vehicle-cargo-builder-deck">
@@ -1988,38 +2017,38 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     </div>
 
                     <div className="dim-row-group" style={{ marginTop: '0.75rem' }}>
-                      <span className="dim-label">Dimensions:</span>
+                      <span className="dim-label">Dimensions ({units.length}):</span>
                       <div className="dim-input-group">
-                        <input
-                          type="number"
+                        <MeasureInput
+                          kind="length"
                           value={vehLengthIn}
-                          onChange={e => setVehLengthIn(e.target.value)}
+                          onChange={val => setVehLengthIn(val === '' ? '' : String(val))}
                           placeholder="Length"
                         />
                         <span className="dim-x">×</span>
-                        <input
-                          type="number"
+                        <MeasureInput
+                          kind="length"
                           value={vehWidthIn}
-                          onChange={e => setVehWidthIn(e.target.value)}
+                          onChange={val => setVehWidthIn(val === '' ? '' : String(val))}
                           placeholder="Width"
                         />
                         <span className="dim-x">×</span>
-                        <input
-                          type="number"
+                        <MeasureInput
+                          kind="length"
                           value={vehHeightIn}
-                          onChange={e => setVehHeightIn(e.target.value)}
+                          onChange={val => setVehHeightIn(val === '' ? '' : String(val))}
                           placeholder="Height"
                         />
                         <span className="dim-label" style={{ marginLeft: '0.5rem' }}>in</span>
                       </div>
 
                       <div className="dim-input-group" style={{ marginLeft: '1rem' }}>
-                        <span className="dim-label">Curb Weight:</span>
-                        <input
-                          type="number"
+                        <span className="dim-label">Curb Weight ({units.weight}):</span>
+                        <MeasureInput
+                          kind="weight"
                           style={{ width: '80px' }}
                           value={vehWeightLbs}
-                          onChange={e => setVehWeightLbs(e.target.value)}
+                          onChange={val => setVehWeightLbs(val === '' ? '' : String(val))}
                         />
                         <span className="dim-label">lb</span>
                       </div>
@@ -2196,23 +2225,23 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         />
                       </div>
                       <div className="input-field">
-                        <label>Weight Per Skid (lbs) *</label>
-                        <input
-                          type="number"
+                        <label>Weight Per Skid ({units.weight}) *</label>
+                        <MeasureInput
+                          kind="weight"
                           min="10"
                           step="10"
                           value={palletWeightPerSkid}
-                          onChange={e => setPalletWeightPerSkid(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPalletWeightPerSkid(val === '' ? 0 : val)}
                         />
                       </div>
                       <div className="input-field">
-                        <label>Total Skid Height (in) *</label>
-                        <input
-                          type="number"
+                        <label>Total Skid Height ({units.length}) *</label>
+                        <MeasureInput
+                          kind="length"
                           min="12"
                           max="96"
                           value={palletHeightIn}
-                          onChange={e => setPalletHeightIn(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPalletHeightIn(val === '' ? 0 : val)}
                         />
                       </div>
                     </div>
@@ -2220,7 +2249,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     <div className="pallet-live-calc-strip">
                       <div className="calc-metric-pill">
                         <span>TOTAL PAYLOAD WEIGHT:</span>
-                        <strong className="font-mono text-emerald">{(palletCount * palletWeightPerSkid).toLocaleString()} lbs</strong>
+                        <strong className="font-mono text-emerald">{formatWeight(palletCount * palletWeightPerSkid, units.system)}</strong>
                       </div>
                       <div className="calc-metric-pill">
                         <span>ESTIMATED CUBIC VOLUME:</span>
@@ -2374,15 +2403,14 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
 
                     <div className="input-grid-3">
                       <div className="input-field">
-                        <label>Verified Gross Mass (VGM Scale Weight) *</label>
-                        <input
-                          type="number"
+                        <label>Verified Gross Mass (VGM, {units.weight}) *</label>
+                        <MeasureInput
+                          kind="weight"
                           className="font-mono"
                           value={containerVgmWeight}
-                          onChange={e => setContainerVgmWeight(e.target.value)}
-                          placeholder="48200"
+                          onChange={val => setContainerVgmWeight(val === '' ? '' : String(val))}
                         />
-                        <span className="field-hint-txt" style={{ fontSize: '0.65rem' }}>Total certified scale weight in lbs (SOLAS convention)</span>
+                        <span className="field-hint-txt" style={{ fontSize: '0.65rem' }}>Total certified scale weight (SOLAS VGM)</span>
                       </div>
                       <div className="input-field">
                         <label>Port / Rail Ramp Terminal</label>
@@ -2504,12 +2532,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         />
                       </div>
                       <div className="input-field">
-                        <label>Total Scale Weight (lbs) *</label>
-                        <input
-                          type="number"
+                        <label>Total Scale Weight ({units.weight}) *</label>
+                        <MeasureInput
+                          kind="weight"
                           step="10"
                           value={freightTotalWeightLbs}
-                          onChange={e => setFreightTotalWeightLbs(parseFloat(e.target.value) || 0)}
+                          onChange={val => setFreightTotalWeightLbs(val === '' ? 0 : val)}
                         />
                       </div>
                     </div>
@@ -2877,12 +2905,12 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         </select>
                       </div>
                       <div className="input-field">
-                        <label>Pet Net Weight (lbs) *</label>
-                        <input
-                          type="number"
+                        <label>Pet Net Weight ({units.weight}) *</label>
+                        <MeasureInput
+                          kind="weight"
                           step="0.5"
                           value={petWeightLbs}
-                          onChange={e => setPetWeightLbs(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPetWeightLbs(val === '' ? 0 : val)}
                         />
                       </div>
                       <div className="input-field">
@@ -2953,39 +2981,39 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         </select>
                       </div>
                       <div className="input-field">
-                        <label>Kennel Tare Weight (lbs) *</label>
-                        <input
-                          type="number"
+                        <label>Kennel Tare Weight ({units.weight}) *</label>
+                        <MeasureInput
+                          kind="weight"
                           step="0.5"
                           value={petCrateWeightLbs}
-                          onChange={e => setPetCrateWeightLbs(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPetCrateWeightLbs(val === '' ? 0 : val)}
                         />
                       </div>
                     </div>
 
                     <div className="input-grid-3" style={{ marginTop: '0.75rem' }}>
                       <div className="input-field">
-                        <label>Crate Length (in) *</label>
-                        <input
-                          type="number"
+                        <label>Crate Length ({units.length}) *</label>
+                        <MeasureInput
+                          kind="length"
                           value={petCrateLength}
-                          onChange={e => setPetCrateLength(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPetCrateLength(val === '' ? 0 : val)}
                         />
                       </div>
                       <div className="input-field">
-                        <label>Crate Width (in) *</label>
-                        <input
-                          type="number"
+                        <label>Crate Width ({units.length}) *</label>
+                        <MeasureInput
+                          kind="length"
                           value={petCrateWidth}
-                          onChange={e => setPetCrateWidth(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPetCrateWidth(val === '' ? 0 : val)}
                         />
                       </div>
                       <div className="input-field">
-                        <label>Crate Height (in) *</label>
-                        <input
-                          type="number"
+                        <label>Crate Height ({units.length}) *</label>
+                        <MeasureInput
+                          kind="length"
                           value={petCrateHeight}
-                          onChange={e => setPetCrateHeight(parseFloat(e.target.value) || 0)}
+                          onChange={val => setPetCrateHeight(val === '' ? 0 : val)}
                         />
                       </div>
                     </div>
@@ -2994,7 +3022,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     <div className="pet-weight-calc-pill">
                       <PawPrint size={14} className="text-rose" />
                       <span>
-                        Live Scaled Manifest Weight: <strong>{petWeightLbs} lbs (Pet Net)</strong> + <strong>{petCrateWeightLbs} lbs (Crate Tare)</strong> = <strong className="font-mono text-emerald">{totalWeight.toFixed(1)} lbs Total Scaled Weight</strong>
+                        Live Scaled Manifest Weight: <strong>{formatWeight(petWeightLbs, units.system)} (Pet Net)</strong> + <strong>{formatWeight(petCrateWeightLbs, units.system)} (Crate Tare)</strong> = <strong className="font-mono text-emerald">{totalWeight.toFixed(1)} lbs Total Scaled Weight</strong>
                       </span>
                     </div>
                   </div>
@@ -3159,7 +3187,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                         <div className="pkg-card-head">
                           <div className="pkg-head-left">
                             <span className="pkg-num-badge">PIECE 0{idx + 1}</span>
-                            <span className="pkg-preview-meta">{pkg.weightLbs} lb • {pkg.length}×{pkg.width}×{pkg.height} in</span>
+                            <span className="pkg-preview-meta">{[formatWeight(pkg.weightLbs, units.system), formatDimensions(pkg, units.system)].filter(Boolean).join(' • ')}</span>
                           </div>
                           {packagesList.length > 1 && (
                             <button
@@ -3188,13 +3216,13 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                               </select>
                             </div>
                             <div className="input-field">
-                              <label>Weight (lb) *</label>
-                              <input
-                                type="number"
+                              <label>Weight ({units.weight}) *</label>
+                              <MeasureInput
+                                kind="weight"
                                 step="0.1"
                                 min="0.1"
                                 value={pkg.weightLbs}
-                                onChange={e => handleUpdatePackage(pkg.id, 'weightLbs', parseFloat(e.target.value) || 0)}
+                                onChange={v => handleUpdatePackage(pkg.id, 'weightLbs', v === '' ? 0 : v)}
                               />
                             </div>
                             <div className="input-field">
@@ -3209,34 +3237,37 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                           </div>
 
                           <div className="dim-row-group">
-                            <span className="dim-label">Dimensions (in):</span>
+                            <span className="dim-label">Dimensions ({units.length}):</span>
                             <div className="dim-input-group">
-                              <input
-                                type="number"
-                                min="1"
+                              <MeasureInput
+                                kind="length"
+                                min="0"
+                                aria-label={`Length (${units.length})`}
                                 value={pkg.length}
-                                onChange={e => handleUpdatePackage(pkg.id, 'length', parseFloat(e.target.value) || 0)}
+                                onChange={v => handleUpdatePackage(pkg.id, 'length', v === '' ? 0 : v)}
                                 placeholder="Length"
                               />
                               <span className="dim-x">×</span>
-                              <input
-                                type="number"
-                                min="1"
+                              <MeasureInput
+                                kind="length"
+                                min="0"
+                                aria-label={`Width (${units.length})`}
                                 value={pkg.width}
-                                onChange={e => handleUpdatePackage(pkg.id, 'width', parseFloat(e.target.value) || 0)}
+                                onChange={v => handleUpdatePackage(pkg.id, 'width', v === '' ? 0 : v)}
                                 placeholder="Width"
                               />
                               <span className="dim-x">×</span>
-                              <input
-                                type="number"
-                                min="1"
+                              <MeasureInput
+                                kind="length"
+                                min="0"
+                                aria-label={`Height (${units.length})`}
                                 value={pkg.height}
-                                onChange={e => handleUpdatePackage(pkg.id, 'height', parseFloat(e.target.value) || 0)}
+                                onChange={v => handleUpdatePackage(pkg.id, 'height', v === '' ? 0 : v)}
                                 placeholder="Height"
                               />
                             </div>
                             <span className="dim-calc-tag font-mono">
-                              {((pkg.length * pkg.width * pkg.height) / 139).toFixed(1)} dim lb
+                              {formatWeight((pkg.length * pkg.width * pkg.height) / 139, units.system)} dim.
                             </span>
                           </div>
                         </div>
@@ -3252,7 +3283,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     </div>
                     <div className="total-stat-unit">
                       <span>Total Scale Weight:</span>
-                      <strong>{totalWeight.toFixed(1)} lb</strong>
+                      <strong>{formatWeight(totalWeight, units.system)}</strong>
                     </div>
                   </div>
                 </div>
@@ -3327,9 +3358,9 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                 <div className="service-radio-grid">
                   {([
                     { id: 'Auto', label: 'Auto', desc: 'Chosen from distance and cargo' },
-                    { id: 'Road', label: 'Road', desc: 'Truck on real roads' },
-                    { id: 'Air', label: 'Air', desc: 'Flight between gateways' },
-                    { id: 'Sea', label: 'Sea', desc: 'Ocean freight between ports' }
+                    { id: 'Road', label: TRANSPORT_MODE_LABELS.Road, desc: 'Truck on real roads' },
+                    { id: 'Air', label: TRANSPORT_MODE_LABELS.Air, desc: 'Flight between gateways' },
+                    { id: 'Sea', label: TRANSPORT_MODE_LABELS.Sea, desc: 'Ocean freight between ports' }
                   ] as const).map(m => (
                     <label
                       key={m.id}
@@ -3476,54 +3507,49 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
               {/* Pricing Line Items */}
               <div className="pricing-calculator-card">
                 <div className="pricing-row-input">
-                  <label>Base Linehaul Rate ($)</label>
-                  <input
-                    type="number"
+                  <label>Base Linehaul Rate ({money.symbol})</label>
+                  <MoneyInput
                     step="0.01"
                     value={baseRate}
-                    onChange={e => setBaseRate(parseFloat(e.target.value) || 0)}
+                    onChange={val => setBaseRate(val === '' ? 0 : val)}
                   />
                 </div>
                 <div className="pricing-row-input">
-                  <label>Additional Charges / Handling ($)</label>
-                  <input
-                    type="number"
+                  <label>Additional Charges / Handling ({money.symbol})</label>
+                  <MoneyInput
                     step="0.01"
                     value={additionalCharges}
-                    onChange={e => setAdditionalCharges(parseFloat(e.target.value) || 0)}
+                    onChange={val => setAdditionalCharges(val === '' ? 0 : val)}
                   />
                 </div>
                 <div className="pricing-row-input">
-                  <label>Distance / Fuel Surcharges ($)</label>
-                  <input
-                    type="number"
+                  <label>Distance / Fuel Surcharges ({money.symbol})</label>
+                  <MoneyInput
                     step="0.01"
                     value={surcharges}
-                    onChange={e => setSurcharges(parseFloat(e.target.value) || 0)}
+                    onChange={val => setSurcharges(val === '' ? 0 : val)}
                   />
                 </div>
                 <div className="pricing-row-input">
-                  <label>Discount ($)</label>
-                  <input
-                    type="number"
+                  <label>Discount ({money.symbol})</label>
+                  <MoneyInput
                     step="0.01"
                     value={discount}
-                    onChange={e => setDiscount(parseFloat(e.target.value) || 0)}
+                    onChange={val => setDiscount(val === '' ? 0 : val)}
                   />
                 </div>
                 <div className="pricing-row-input">
-                  <label>Manual Adjustment ($)</label>
-                  <input
-                    type="number"
+                  <label>Manual Adjustment ({money.symbol})</label>
+                  <MoneyInput
                     step="0.01"
                     value={manualAdjustment}
-                    onChange={e => setManualAdjustment(parseFloat(e.target.value) || 0)}
+                    onChange={val => setManualAdjustment(val === '' ? 0 : val)}
                   />
                 </div>
 
                 <div className="final-price-strip">
                   <span>FINAL SHIPPING PRICE</span>
-                  <strong className="font-mono text-blue">${finalPrice.toFixed(2)} USD</strong>
+                  <strong className="font-mono text-blue">{money.format(finalPrice)} {money.currency}</strong>
                 </div>
               </div>
 
@@ -3605,7 +3631,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                       </div>
                       <div>
                         <small>Skids / Units:</small>
-                        <strong>{palletCount} Skids ({palletWeightPerSkid} lbs/skid • {palletHeightIn}"H)</strong>
+                        <strong>{palletCount} Skids ({formatWeight(palletWeightPerSkid, units.system)}/skid • {formatLength(palletHeightIn, units.system)} high)</strong>
                       </div>
                     </div>
                     <div className="seg-grid-2" style={{ marginTop: '0.4rem' }}>
@@ -3644,7 +3670,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                       </div>
                       <div>
                         <small>SOLAS VGM Scale Weight:</small>
-                        <strong className="font-mono">{containerVgmWeight} lbs</strong>
+                        <strong className="font-mono">{formatWeight(containerVgmWeight, units.system)}</strong>
                       </div>
                     </div>
                     <div className="seg-grid-2" style={{ marginTop: '0.4rem' }}>
@@ -3747,11 +3773,11 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     <div className="seg-grid-2" style={{ marginTop: '0.4rem' }}>
                       <div>
                         <small>Travel Kennel / Crate:</small>
-                        <span>{petCrateType} ({petCrateLength}×{petCrateWidth}×{petCrateHeight}" • Tare {petCrateWeightLbs} lbs)</span>
+                        <span>{petCrateType} ({formatDimensions({ length: petCrateLength, width: petCrateWidth, height: petCrateHeight }, units.system)} • Tare {formatWeight(petCrateWeightLbs, units.system)})</span>
                       </div>
                       <div>
                         <small>Total Live Scaled Weight:</small>
-                        <strong className="font-mono">{totalWeight.toFixed(1)} lbs (Pet: {petWeightLbs} lbs + Crate: {petCrateWeightLbs} lbs)</strong>
+                        <strong className="font-mono">{formatWeight(totalWeight, units.system)} (Pet: {formatWeight(petWeightLbs, units.system)} + Crate: {formatWeight(petCrateWeightLbs, units.system)})</strong>
                       </div>
                     </div>
                     <div className="seg-grid-2" style={{ marginTop: '0.4rem' }}>
@@ -3823,7 +3849,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                     </div>
                     <div>
                       <small>Total Weight:</small>
-                      <strong>{totalWeight.toFixed(1)} lb total</strong>
+                      <strong>{formatWeight(totalWeight, units.system)} total</strong>
                     </div>
                   </div>
                 </div>
@@ -3861,7 +3887,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                   <div className="seg-grid-2">
                     <div>
                       <small>Internal Final Price:</small>
-                      <strong className="text-emerald font-mono">${finalPrice.toFixed(2)} USD</strong>
+                      <strong className="text-emerald font-mono">{money.format(finalPrice)} {money.currency}</strong>
                     </div>
                     <div>
                       <small>Service Level:</small>
@@ -4038,18 +4064,17 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
 
               <div className="summary-line-item">
                 <span className="s-prop">Scale Weight</span>
-                <strong className="s-val font-mono">{totalWeight.toFixed(1)} lbs</strong>
+                <strong className="s-val font-mono">{formatWeight(totalWeight, units.system)}</strong>
               </div>
             </div>
 
             <div className="summary-price-box">
               <div className="price-label-row">
                 <span className="price-lead-label">COMMERCIAL TARIFF TOTAL</span>
-                <span className="price-currency-tag">USD</span>
+                <span className="price-currency-tag">{money.currency}</span>
               </div>
               <div className="price-big-amount">
-                <span className="currency-symbol">$</span>
-                <span className="amount-number font-mono">{finalPrice.toFixed(2)}</span>
+                <span className="amount-number font-mono">{money.format(finalPrice)}</span>
               </div>
             </div>
 

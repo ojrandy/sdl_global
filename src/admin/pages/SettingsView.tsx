@@ -24,6 +24,8 @@ import {
 import { COMPANY_SHORT, EMAIL, LEGAL_NAME } from '../../config/brand';
 import { useAdminData } from '../../context/AdminDataContext';
 import './SettingsView.css';
+import { CURRENCY_NAMES, DISPLAY_CURRENCIES, formatMoney, resolveCurrency, type DisplayCurrency } from '../../shared/currency';
+import { MeasureInput, useUnitLabels } from '../../components/forms/UnitControls';
 
 export const SettingsView: React.FC = () => {
   const { settings, updateSettings } = useAdminData();
@@ -45,7 +47,18 @@ export const SettingsView: React.FC = () => {
   // Pricing & Tariff Defaults
   const [fuelRate, setFuelRate] = useState((settings.defaultFuelSurchargeRate ? settings.defaultFuelSurchargeRate * 100 : 8.5).toString());
   const [quoteValidityDays, setQuoteValidityDays] = useState(String(settings.quoteValidityDays ?? 14));
-  const [oversizeLengthThreshold, setOversizeLengthThreshold] = useState(String(settings.oversizeLengthThreshold ?? 60));
+  const [oversizeLengthThreshold, setOversizeLengthThreshold] = useState<number | ''>(settings.oversizeLengthThreshold ?? 60);
+  const units = useUnitLabels();
+
+  // Display currency (tracker 2.7): prices are stored in USD and shown in this currency at the
+  // rate entered here. A non-USD currency without a rate keeps showing USD.
+  const [displayCurrency, setDisplayCurrency] = useState<DisplayCurrency>((settings.displayCurrency as DisplayCurrency) || 'USD');
+  const [exchangeRates, setExchangeRates] = useState<Record<string, string>>(() =>
+    Object.fromEntries(Object.entries(settings.exchangeRates || {}).map(([k, v]) => [k, String(v)])));
+  const currencyPreview = resolveCurrency({
+    displayCurrency,
+    exchangeRates: Object.fromEntries(Object.entries(exchangeRates).map(([k, v]) => [k, parseFloat(v)]))
+  });
 
   // Barcode & Document Automation
   const [barcodeStandard] = useState('Code 128 (High-Density Linear Symbology - No QR)');
@@ -117,7 +130,13 @@ export const SettingsView: React.FC = () => {
       cloakInternalNotes,
       showEstimatedTime,
       quoteValidityDays: parseInt(quoteValidityDays, 10) || 14,
-      oversizeLengthThreshold: parseInt(oversizeLengthThreshold, 10) || 60,
+      oversizeLengthThreshold: oversizeLengthThreshold === '' ? 60 : oversizeLengthThreshold,
+      displayCurrency,
+      exchangeRates: Object.fromEntries(
+        Object.entries(exchangeRates)
+          .map(([k, v]) => [k, parseFloat(v)] as const)
+          .filter(([, v]) => Number.isFinite(v) && v > 0)
+      ),
       autoGenLabel,
       autoGenReceipt,
       signatureStampUrl,
@@ -144,7 +163,8 @@ export const SettingsView: React.FC = () => {
     setShowEstimatedTime(true);
     setFuelRate('8.5');
     setQuoteValidityDays('14');
-    setOversizeLengthThreshold('60');
+    setOversizeLengthThreshold(60);
+    setDisplayCurrency('USD');
     setAutoGenLabel(true);
     setAutoGenReceipt(true);
     setSignatureStampUrl('');
@@ -488,14 +508,52 @@ export const SettingsView: React.FC = () => {
 
               <div className="form-row-2">
                 <div className="settings-field">
-                  <label>Oversize Cargo Dimension Threshold (Inches)</label>
-                  <input
-                    type="number"
+                  <label htmlFor="settings-currency">Display Currency</label>
+                  <select
+                    id="settings-currency"
+                    value={displayCurrency}
+                    onChange={e => setDisplayCurrency(e.target.value as DisplayCurrency)}
+                    className="settings-input"
+                  >
+                    {DISPLAY_CURRENCIES.map(c => (
+                      <option key={c} value={c}>{c} — {CURRENCY_NAMES[c]}</option>
+                    ))}
+                  </select>
+                  <small>Prices are stored in USD and shown to customers and staff in this currency.</small>
+                </div>
+
+                {displayCurrency !== 'USD' && (
+                  <div className="settings-field">
+                    <label htmlFor="settings-rate">Exchange Rate (1 USD = ? {displayCurrency})</label>
+                    <input
+                      id="settings-rate"
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={exchangeRates[displayCurrency] ?? ''}
+                      onChange={e => setExchangeRates(prev => ({ ...prev, [displayCurrency]: e.target.value }))}
+                      className="settings-input font-mono"
+                    />
+                    {currencyPreview.missingRate ? (
+                      <small className="settings-warning-text">Enter the rate to switch prices to {displayCurrency}. Until then they stay in USD.</small>
+                    ) : (
+                      <small>Example: $350.00 is shown as {formatMoney(350, currencyPreview)}. Update the rate when it changes.</small>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-row-2">
+                <div className="settings-field">
+                  <label>Oversize Cargo Dimension Threshold ({units.length})</label>
+                  <MeasureInput
+                    kind="length"
+                    min="0"
                     value={oversizeLengthThreshold}
-                    onChange={e => setOversizeLengthThreshold(e.target.value)}
+                    onChange={setOversizeLengthThreshold}
                     className="settings-input font-mono"
                   />
-                  <small>Items longer than this threshold (e.g. 60 inches / 5 ft truck bumpers) trigger oversize flags.</small>
+                  <small>Items longer than this (e.g. 150 cm / 60 in truck bumpers) trigger oversize flags.</small>
                 </div>
 
                 <div className="settings-field">

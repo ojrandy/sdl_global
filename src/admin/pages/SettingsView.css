@@ -612,3 +612,7 @@ input:checked + .slider-round:before {
     align-items: stretch;
   }
 }
+
+.settings-warning-text {
+  color: var(--sdl-warning-700);
+}

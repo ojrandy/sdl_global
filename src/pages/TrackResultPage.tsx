@@ -53,6 +53,10 @@ import { COMPANY_SHORT, OPERATIONS_CENTRE } from '../config/brand';
 import { SupportModal } from '../components/SupportModal';
 import { calculateRouteGeometry, inferTransportMode } from '../services/routingEngine';
 import { timeZoneForPlace } from '../shared/timeZones';
+import { formatDistance, formatWeight } from '../shared/units';
+import { TRANSPORT_MODE_LABELS } from '../shared/transportMode';
+import { useUnitSystem } from '../utils/useUnitSystem';
+import { UnitToggle } from '../components/forms/UnitControls';
 import { simulationEngine } from '../services/simulationEngine';
 import { api } from '../services/api';
 import { generateShipmentPlan, calculateDynamicTimeProgress, getServiceCommitmentHours } from '../services/planningEngine';
@@ -272,7 +276,10 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   const cargoDescription = liveShipment?.cargoDescription || shipment?.cargoDescription || 'General cargo';
   const shipmentType = cargoType === 'Vehicle' ? 'Freight' : cargoType;
   const transportType = 'Open Auto Carrier';
-  const totalWeight = Number(liveShipment?.totalWeightLbs || shipment?.totalWeightLbs || 435.0);
+  // Stored in pounds; shown in the viewer's units (no invented fallback weight)
+  const totalWeight = Number(liveShipment?.totalWeightLbs || shipment?.totalWeightLbs || 0);
+  const [unitSystem] = useUnitSystem();
+  const totalWeightText = totalWeight > 0 ? formatWeight(totalWeight, unitSystem) : '—';
   const totalPieces = Number(shipment?.totalPieces || 1);
   const dimensions = liveShipment?.dimensions || shipment?.dimensions || { length: 60, width: 20, height: 15 };
 
@@ -667,7 +674,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               </div>
               <div className="hero-metric-text">
                 <span className="hero-metric-lbl">Distance</span>
-                <strong className="hero-metric-val">{routeGeom.distanceMiles.toLocaleString()} miles</strong>
+                <strong className="hero-metric-val">{formatDistance(routeGeom.distanceMiles, unitSystem)}</strong>
               </div>
             </div>
 
@@ -842,7 +849,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 )}
                 <div className="spec-item-row">
                   <span className="s-lbl">Total Weight:</span>
-                  <span className="s-val">{totalWeight.toLocaleString()} lbs</span>
+                  <span className="s-val">{totalWeightText}</span>
                 </div>
               </div>
             </div>
@@ -864,7 +871,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             <div className="corridor-track-wrapper">
               <div className="corridor-meta-badges">
                 <span className="corridor-dist-badge">
-                  <span>{routeGeom.distanceMiles.toLocaleString()} Total Route Miles · {transportMode}</span>
+                  <span>Total route {formatDistance(routeGeom.distanceMiles, unitSystem)} · {TRANSPORT_MODE_LABELS[transportMode]}</span>
                 </span>
                 <span className="corridor-status-badge">
                   {status === 'DELIVERED' ? (
@@ -912,7 +919,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             currentLat={currentLat}
             currentLng={currentLng}
             lastEventDescription={`${isVehicle ? 'Vehicle' : 'Shipment'} — ${timeProgress.activeMilestoneStage} toward ${destCity}.`}
-            totalDistance={`${routeGeom.distanceMiles.toLocaleString()} miles`}
+            totalDistance={formatDistance(routeGeom.distanceMiles, unitSystem)}
             transitTime={`${plan.serviceCommitmentHours} Hours`}
             progressPercent={progressPercent}
             shipmentStatus={status}
@@ -1034,7 +1041,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                     <Scale size={18} className="dtl-icon text-slate-500" />
                     <div className="dtl-cell-content">
                       <small>Weight</small>
-                      <strong>{pet.weightLbs ? `${pet.weightLbs} lbs` : '—'}</strong>
+                      <strong>{pet.weightLbs ? formatWeight(pet.weightLbs, unitSystem) : '—'}</strong>
                     </div>
                   </div>
                   <div className="detail-cell">
@@ -1084,7 +1091,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                     <Scale size={18} className="dtl-icon text-slate-500" />
                     <div className="dtl-cell-content">
                       <small>Weight Per Skid</small>
-                      <strong>{liveShipment.palletDetails.weightPerSkidLbs} lbs</strong>
+                      <strong>{formatWeight(liveShipment.palletDetails.weightPerSkidLbs, unitSystem)}</strong>
                     </div>
                   </div>
                   <div className="detail-cell">
@@ -1216,7 +1223,10 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
 
             {/* Card 2: Shipment Details (2-Column Icon Grid) */}
             <div className="shipment-details-spec-card">
-              <h3 className="card-section-title">Shipment Details</h3>
+              <div className="sdl-heading-with-units">
+                <h3 className="card-section-title">Shipment Details</h3>
+                <UnitToggle />
+              </div>
               <div className="shipment-details-two-col-grid">
                 {/* Row 1 */}
                 <div className="detail-cell">
@@ -1277,7 +1287,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                   <Scale size={18} className="dtl-icon text-slate-500" />
                   <div className="dtl-cell-content">
                     <small>Weight</small>
-                    <strong>{totalWeight.toLocaleString()} lbs</strong>
+                    <strong>{totalWeightText}</strong>
                   </div>
                 </div>
 

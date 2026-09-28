@@ -820,6 +820,8 @@ const normalizeShipment = (s: any): Shipment => {
       createdAt: 'Today',
       service: shipmentData.service || 'Standard',
       shipmentType: shipmentData.shipmentType || 'Parcel',
+      // Main-leg mode chosen on the form (undefined = let the server infer it)
+      transportMode: shipmentData.transportMode,
       cargoCategory: shipmentData.cargoCategory || (shipmentData.shipmentType === 'Vehicle' ? 'Automotive & Vehicles' : shipmentData.shipmentType === 'Pets' ? 'Live Animals & Pets (USDA / IPATA Regulated)' : 'General Freight'),
       cargoDescription: shipmentData.cargoDescription || 'Commercial Freight Cargo',
       vehicleDetails: shipmentData.vehicleDetails,
@@ -828,10 +830,11 @@ const normalizeShipment = (s: any): Shipment => {
       containerDetails: shipmentData.containerDetails,
       freightDetails: shipmentData.freightDetails,
       documentDetails: shipmentData.documentDetails,
-      totalWeightLbs: shipmentData.totalWeightLbs || 45,
+      // Real values only: an empty declared value stays 0 rather than an invented amount.
+      totalWeightLbs: shipmentData.totalWeightLbs ?? 0,
       totalPieces: shipmentData.totalPieces || 1,
-      declaredValue: (shipmentData as any)?.declaredValue || 850,
-      dimensions: shipmentData.dimensions || { length: 72, width: 24, height: 18 },
+      declaredValue: (shipmentData as any)?.declaredValue ?? 0,
+      dimensions: shipmentData.dimensions || { length: 0, width: 0, height: 0 },
       references: shipmentData.references || {
         customerReference: 'PO-STANDARD',
         orderNumber: 'ORD-ACTIVE',

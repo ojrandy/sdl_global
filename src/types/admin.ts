@@ -48,17 +48,25 @@ export interface QuoteRequest {
   // Route
   originCity: string; // New York
   originState: string; // NY
-  originZip?: string; // 10001
+  originZip?: string; // postcode, optional
+  originCountry?: string;
+  originCountryCode?: string;
   destCity: string; // Los Angeles
   destState: string; // CA
-  destZip?: string; // 90071
+  destZip?: string; // postcode, optional
+  destCountry?: string;
+  destCountryCode?: string;
 
   // Cargo
   cargoDescription: string; // e.g. Generator spare parts
   cargoType: string; // Automotive part / Parcel
   quantity: number;
   totalWeightLbs: number;
-  dimensions: string; // 72 × 24 × 18 in
+  dimensions: string; // 72 × 24 × 18 in (display string, inches)
+  /** Canonical inches, for unit-aware display (tracker 2.7). */
+  dimensionsIn?: { length?: number; width?: number; height?: number };
+  /** Mode the customer asked for (tracker 2.8). */
+  transportMode?: 'Road' | 'Air' | 'Sea';
   pieces?: QuoteRequestPiece[];
 
   // Service & Requirements
@@ -194,6 +202,10 @@ export interface AdminSettings {
   // Barcode & document automation
   autoGenLabel?: boolean;
   autoGenReceipt?: boolean;
+  // Display currency (tracker 2.7): amounts are stored in USD and shown in this currency at the
+  // admin-entered rate (units per 1 USD). No rate for a non-USD currency = prices stay in USD.
+  displayCurrency?: 'USD' | 'NGN' | 'GBP' | 'EUR';
+  exchangeRates?: Partial<Record<'NGN' | 'GBP' | 'EUR', number>>;
 }
 
 export type ContactMessageStatus = 'NEW' | 'READ' | 'RESOLVED';

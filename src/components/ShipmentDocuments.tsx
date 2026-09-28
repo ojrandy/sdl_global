@@ -4,6 +4,7 @@ import { ShipmentDocument, Shipment } from '../types/shipment';
 import { Barcode } from './Barcode';
 import './ShipmentDocuments.css';
 import { COMPANY } from '../config/brand';
+import { formatWeightBoth } from '../shared/units';
 
 interface ShipmentDocumentsProps {
   documents: ShipmentDocument[];
@@ -130,7 +131,7 @@ export const ShipmentDocuments: React.FC<ShipmentDocumentsProps> = ({
                 </div>
                 <div className="doc-row">
                   <span className="doc-field">Pieces / Weight:</span>
-                  <span className="doc-val">{shipment.totalPieces} pcs • {shipment.totalWeightLbs} lbs</span>
+                  <span className="doc-val">{shipment.totalPieces} pcs • {formatWeightBoth(shipment.totalWeightLbs)}</span>
                 </div>
               </div>
 

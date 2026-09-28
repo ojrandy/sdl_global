@@ -575,3 +575,31 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* International address blocks (country first) and the units row (tracker 2.6/2.7) */
+.quote-address-fieldset {
+  border: 1px solid var(--sdl-slate-200);
+  border-radius: var(--sdl-radius-lg);
+  padding: 0.75rem 1rem 0.25rem;
+  margin: 0 0 1rem;
+  min-width: 0;
+}
+
+.quote-address-fieldset legend {
+  padding: 0 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sdl-slate-600);
+}
+
+.quote-units-row {
+  margin: 0.25rem 0 1rem;
+}
+
+.quote-units-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--sdl-ink-900);
+}

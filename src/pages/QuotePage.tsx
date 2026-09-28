@@ -24,7 +24,33 @@ import { api } from '../services/api';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY } from '../config/brand';
+import { CountrySelect } from '../components/forms/CountrySelect';
+import { PhoneInput } from '../components/forms/PhoneInput';
+import { MeasureInput, MoneyInput, UnitToggle, useUnitLabels } from '../components/forms/UnitControls';
+import { getCountry, postcodeLabel, regionLabel, shortRegion } from '../data/countries';
+import { formatWeight } from '../shared/units';
+import { TRANSPORT_MODE_LABELS, type TransportMode } from '../shared/transportMode';
+import { useCurrency } from '../utils/useCurrency';
 import './QuotePage.css';
+
+// Address as sent to the API: the short region shown after the city ("TX" / "NG"), plus the
+// full region, postcode and country as entered.
+function addressPayload(countryCode: string, city: string, region: string, postcode: string) {
+  return {
+    city: city.trim(),
+    state: shortRegion(countryCode, region),
+    region: region.trim() || undefined,
+    postalCode: postcode.trim() || undefined,
+    country: getCountry(countryCode)?.name || '',
+    countryCode
+  };
+}
+
+// "Houston, TX, United States" / "Lagos, Nigeria"
+function placeLabel(city: string, region: string, countryCode: string) {
+  const country = getCountry(countryCode);
+  return [city || '—', countryCode === 'US' ? region.trim().toUpperCase() : '', country?.name].filter(Boolean).join(', ');
+}
 
 interface QuotePageProps {
   onNavigate: (page: string, param?: string) => void;
@@ -42,14 +68,21 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
 
-  // Routing
+  // Routing: country first, then the fields that fit it (region and postcode optional)
+  const [originCountry, setOriginCountry] = useState('');
   const [originCity, setOriginCity] = useState('');
   const [originState, setOriginState] = useState('');
   const [originZip, setOriginZip] = useState('');
-  
+
+  const [destCountry, setDestCountry] = useState('');
   const [destCity, setDestCity] = useState('');
   const [destState, setDestState] = useState('');
   const [destZip, setDestZip] = useState('');
+
+  // '' = let SDL recommend the mode
+  const [transportMode, setTransportMode] = useState<TransportMode | ''>('');
+  const units = useUnitLabels();
+  const money = useCurrency();
 
   // Cargo Specs (Strict 4 Allowed Core Services, Zero Freight/Train/Ship)
   const [cargoDescription, setCargoDescription] = useState('');
@@ -62,12 +95,13 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
     }
   }, [initialService]);
 
-  const [weight, setWeight] = useState('');
+  // Stored canonically: pounds, inches and USD (the inputs convert for display).
+  const [weight, setWeight] = useState<number | ''>('');
   const [pieces, setPieces] = useState('1');
-  const [length, setLength] = useState('');
-  const [width, setWidth] = useState('');
-  const [height, setHeight] = useState('');
-  const [declaredValue, setDeclaredValue] = useState('');
+  const [length, setLength] = useState<number | ''>('');
+  const [width, setWidth] = useState<number | ''>('');
+  const [height, setHeight] = useState<number | ''>('');
+  const [declaredValue, setDeclaredValue] = useState<number | ''>('');
   const [specialInstructions, setSpecialInstructions] = useState('');
 
   // Status & Errors
@@ -78,7 +112,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
 
   // Dynamic Real-Time Tariff Estimator
   const estimatedRate = useMemo(() => {
-    const w = parseFloat(weight) || 0;
+    const w = weight === '' ? 0 : weight;
     const p = parseInt(pieces, 10) || 1;
     if (w <= 0) return null;
 
@@ -110,8 +144,8 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
     e.preventDefault();
     setFormError(null);
 
-    if (!customerName.trim() || !customerEmail.trim() || !originCity.trim() || !destCity.trim() || !weight.trim()) {
-      setFormError('Please complete all required fields (Name, Email, Origin City, Destination City, and Weight).');
+    if (!customerName.trim() || !customerEmail.trim() || !originCountry || !originCity.trim() || !destCountry || !destCity.trim() || weight === '') {
+      setFormError('Please complete all required fields (Name, Email, origin and destination country and city, and Weight).');
       return;
     }
 
@@ -123,27 +157,21 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
         company: company.trim() || undefined,
         customerEmail: customerEmail.trim(),
         customerPhone: customerPhone.trim(),
-        origin: {
-          city: originCity.trim(),
-          state: originState.trim() || 'NY',
-          postalCode: originZip.trim() || '10001'
-        },
-        destination: {
-          city: destCity.trim(),
-          state: destState.trim() || 'CA',
-          postalCode: destZip.trim() || '90001'
-        },
+        origin: addressPayload(originCountry, originCity, originState, originZip),
+        destination: addressPayload(destCountry, destCity, destState, destZip),
+        transportMode: transportMode || undefined,
         cargoDescription: cargoDescription.trim() || 'Commercial Express Consignment',
         shipmentType: (cargoType === 'Vehicle / Automobile' ? 'Vehicle' : 'Parcel') as any,
         service: service as any,
-        weightLbs: parseFloat(weight) || 10,
+        weightLbs: weight,
         pieces: parseInt(pieces, 10) || 1,
+        // Optional; only the sides actually entered are sent (inches)
         dimensions: {
-          length: parseFloat(length) || 12,
-          width: parseFloat(width) || 12,
-          height: parseFloat(height) || 12
+          ...(length !== '' ? { length } : {}),
+          ...(width !== '' ? { width } : {}),
+          ...(height !== '' ? { height } : {})
         },
-        declaredValue: parseFloat(declaredValue) || 0,
+        declaredValue: declaredValue === '' ? 0 : declaredValue,
         specialInstructions: specialInstructions.trim() || undefined
       };
 
@@ -165,13 +193,14 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
         company: company.trim() || undefined,
         customerEmail: customerEmail.trim(),
         customerPhone: customerPhone.trim(),
-        origin: { city: originCity, state: originState, postalCode: originZip },
-        destination: { city: destCity, state: destState, postalCode: destZip },
+        origin: addressPayload(originCountry, originCity, originState, originZip),
+        destination: addressPayload(destCountry, destCity, destState, destZip),
+        transportMode: transportMode || undefined,
         cargoDescription: cargoDescription || 'Commercial Express Consignment',
         service,
-        weightLbs: parseFloat(weight) || 10,
+        weightLbs: weight,
         pieces: parseInt(pieces, 10) || 1,
-        declaredValue: parseFloat(declaredValue) || 0,
+        declaredValue: declaredValue === '' ? 0 : declaredValue,
         specialInstructions
       } as any);
       setCreatedQuoteId(localQuote.id);
@@ -188,6 +217,9 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
     setCompany('');
     setCustomerEmail('');
     setCustomerPhone('');
+    setOriginCountry('');
+    setDestCountry('');
+    setTransportMode('');
     setOriginCity('');
     setOriginState('');
     setOriginZip('');
@@ -272,8 +304,8 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   <strong>{customerName} {company ? `(${company})` : ''}</strong>
                 </div>
                 <div className="rec-item">
-                  <small>Interstate Corridor:</small>
-                  <strong>{originCity || 'Origin'}, {originState || 'NY'} → {destCity || 'Dest'}, {destState || 'CA'}</strong>
+                  <small>Route:</small>
+                  <strong>{placeLabel(originCity, originState, originCountry)} → {placeLabel(destCity, destState, destCountry)}</strong>
                 </div>
                 <div className="rec-item">
                   <small>Cargo Consignment:</small>
@@ -281,11 +313,11 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 </div>
                 <div className="rec-item">
                   <small>Certified Weight & Pieces:</small>
-                  <strong>{weight || '10'} lbs ({pieces || '1'} pc{parseInt(pieces, 10) > 1 ? 's' : ''})</strong>
+                  <strong>{formatWeight(weight, units.system)} ({pieces || '1'} pc{parseInt(pieces, 10) > 1 ? 's' : ''})</strong>
                 </div>
                 <div className="rec-item">
                   <small>Requested Service Tier:</small>
-                  <strong>{service}</strong>
+                  <strong>{service}{transportMode ? ` · ${TRANSPORT_MODE_LABELS[transportMode]}` : ''}</strong>
                 </div>
                 <div className="rec-item span-full">
                   <small>Tariff Certification Status:</small>
@@ -387,12 +419,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   </div>
 
                   <div className="form-group">
-                    <label>Phone Number</label>
-                    <input
-                      type="tel"
+                    <label htmlFor="quote-phone">Phone Number <span className="sdl-field-optional">(optional)</span></label>
+                    <PhoneInput
+                      id="quote-phone"
                       value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder="e.g. (555) 014-8822"
+                      onChange={setCustomerPhone}
+                      defaultCountry={originCountry || 'US'}
                       className="sdl-input font-mono"
                     />
                   </div>
@@ -404,77 +436,60 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   <span>2. Origin & Destination Corridor</span>
                 </div>
 
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Origin City & State *</label>
-                    <div className="city-state-row">
-                      <input
-                        type="text"
-                        required
-                        value={originCity}
-                        onChange={(e) => setOriginCity(e.target.value)}
-                        placeholder="Origin City (e.g. New York)"
-                        className="sdl-input input-city"
-                      />
-                      <input
-                        type="text"
-                        required
-                        maxLength={2}
-                        value={originState}
-                        onChange={(e) => setOriginState(e.target.value.toUpperCase())}
-                        placeholder="NY"
-                        className="sdl-input input-state font-mono uppercase"
-                      />
+                {([
+                  { key: 'origin', title: 'Origin', country: originCountry, setCountry: setOriginCountry, city: originCity, setCity: setOriginCity, region: originState, setRegion: setOriginState, postcode: originZip, setPostcode: setOriginZip },
+                  { key: 'dest', title: 'Destination', country: destCountry, setCountry: setDestCountry, city: destCity, setCity: setDestCity, region: destState, setRegion: setDestState, postcode: destZip, setPostcode: setDestZip }
+                ]).map((side) => (
+                  <fieldset key={side.key} className="quote-address-fieldset">
+                    <legend>{side.title}</legend>
+                    <div className="form-row-2">
+                      <div className="form-group">
+                        <label htmlFor={`${side.key}-country`}>Country *</label>
+                        <CountrySelect
+                          id={`${side.key}-country`}
+                          value={side.country}
+                          onChange={side.setCountry}
+                          className="sdl-input"
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor={`${side.key}-city`}>City *</label>
+                        <input
+                          id={`${side.key}-city`}
+                          type="text"
+                          required
+                          value={side.city}
+                          onChange={(e) => side.setCity(e.target.value)}
+                          placeholder={side.key === 'origin' ? 'e.g. Lagos' : 'e.g. London'}
+                          className="sdl-input"
+                        />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Origin ZIP Code</label>
-                    <input
-                      type="text"
-                      value={originZip}
-                      onChange={(e) => setOriginZip(e.target.value)}
-                      placeholder="e.g. 10007"
-                      className="sdl-input font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Destination City & State *</label>
-                    <div className="city-state-row">
-                      <input
-                        type="text"
-                        required
-                        value={destCity}
-                        onChange={(e) => setDestCity(e.target.value)}
-                        placeholder="Destination City (e.g. Los Angeles)"
-                        className="sdl-input input-city"
-                      />
-                      <input
-                        type="text"
-                        required
-                        maxLength={2}
-                        value={destState}
-                        onChange={(e) => setDestState(e.target.value.toUpperCase())}
-                        placeholder="CA"
-                        className="sdl-input input-state font-mono uppercase"
-                      />
+                    <div className="form-row-2">
+                      <div className="form-group">
+                        <label htmlFor={`${side.key}-region`}>{regionLabel(side.country)} <span className="sdl-field-optional">(optional)</span></label>
+                        <input
+                          id={`${side.key}-region`}
+                          type="text"
+                          value={side.region}
+                          onChange={(e) => side.setRegion(e.target.value)}
+                          className="sdl-input"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor={`${side.key}-postcode`}>{postcodeLabel(side.country)} <span className="sdl-field-optional">(optional)</span></label>
+                        <input
+                          id={`${side.key}-postcode`}
+                          type="text"
+                          value={side.postcode}
+                          onChange={(e) => side.setPostcode(e.target.value)}
+                          className="sdl-input font-mono"
+                        />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Destination ZIP Code</label>
-                    <input
-                      type="text"
-                      value={destZip}
-                      onChange={(e) => setDestZip(e.target.value)}
-                      placeholder="e.g. 90017"
-                      className="sdl-input font-mono"
-                    />
-                  </div>
-                </div>
+                  </fieldset>
+                ))}
 
                 {/* 3. CARGO SPECIFICATIONS */}
                 <div className="form-section-divider">
@@ -526,16 +541,38 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label htmlFor="quote-mode">Transport Mode</label>
+                  <select
+                    id="quote-mode"
+                    value={transportMode}
+                    onChange={(e) => setTransportMode(e.target.value as TransportMode | '')}
+                    className="sdl-input"
+                  >
+                    <option value="">Let {COMPANY} recommend</option>
+                    <option value="Air">{TRANSPORT_MODE_LABELS.Air}</option>
+                    <option value="Sea">{TRANSPORT_MODE_LABELS.Sea}</option>
+                    <option value="Road">{TRANSPORT_MODE_LABELS.Road}</option>
+                  </select>
+                </div>
+
+                <div className="sdl-heading-with-units quote-units-row">
+                  <span className="quote-units-label">Units</span>
+                  <UnitToggle />
+                </div>
+
                 <div className="form-row-3">
                   <div className="form-group">
-                    <label>Scale Weight (lbs) *</label>
-                    <input
-                      type="number"
+                    <label htmlFor="quote-weight">Scale Weight ({units.weight}) *</label>
+                    <MeasureInput
+                      id="quote-weight"
+                      kind="weight"
                       step="0.1"
+                      min="0"
                       required
                       value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
-                      placeholder="e.g. 14.5"
+                      onChange={setWeight}
+                      placeholder={units.system === 'metric' ? 'e.g. 6.5' : 'e.g. 14.5'}
                       className="sdl-input font-mono"
                     />
                   </div>
@@ -554,11 +591,12 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   </div>
 
                   <div className="form-group">
-                    <label>Declared Value ($ USD)</label>
-                    <input
-                      type="number"
+                    <label htmlFor="quote-value">Declared Value ({money.currency})</label>
+                    <MoneyInput
+                      id="quote-value"
+                      min="0"
                       value={declaredValue}
-                      onChange={(e) => setDeclaredValue(e.target.value)}
+                      onChange={setDeclaredValue}
                       placeholder="e.g. 2500"
                       className="sdl-input font-mono"
                     />
@@ -566,29 +604,11 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 </div>
 
                 <div className="form-group">
-                  <label>Carton Dimensions (L × W × H in Inches - Optional)</label>
+                  <label>Carton Dimensions (L × W × H, {units.length}) <span className="sdl-field-optional">(optional)</span></label>
                   <div className="dimensions-row">
-                    <input
-                      type="number"
-                      value={length}
-                      onChange={(e) => setLength(e.target.value)}
-                      placeholder="Length (in)"
-                      className="sdl-input font-mono"
-                    />
-                    <input
-                      type="number"
-                      value={width}
-                      onChange={(e) => setWidth(e.target.value)}
-                      placeholder="Width (in)"
-                      className="sdl-input font-mono"
-                    />
-                    <input
-                      type="number"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
-                      placeholder="Height (in)"
-                      className="sdl-input font-mono"
-                    />
+                    <MeasureInput kind="length" min="0" aria-label={`Length (${units.length})`} value={length} onChange={setLength} placeholder={`Length (${units.length})`} className="sdl-input font-mono" />
+                    <MeasureInput kind="length" min="0" aria-label={`Width (${units.length})`} value={width} onChange={setWidth} placeholder={`Width (${units.length})`} className="sdl-input font-mono" />
+                    <MeasureInput kind="length" min="0" aria-label={`Height (${units.length})`} value={height} onChange={setHeight} placeholder={`Height (${units.length})`} className="sdl-input font-mono" />
                   </div>
                 </div>
 
@@ -624,10 +644,10 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                     <strong>Preliminary Tariff Corridor</strong>
                   </div>
                   <div className="est-amount font-mono">
-                    ${estimatedRate.low} - ${estimatedRate.high}
+                    {money.format(estimatedRate.low, 0)} – {money.format(estimatedRate.high, 0)}
                   </div>
                   <p className="est-note">
-                    Preliminary automated estimate for {weight} lbs via {service}. Final custom tariff is certified by our dispatch desk upon scale and corridor intake review.
+                    Preliminary automated estimate for {formatWeight(weight, units.system)} via {service}. Final custom tariff is certified by our dispatch desk upon scale and corridor intake review.
                   </p>
                 </div>
               )}
@@ -646,7 +666,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   </div>
                   <div className="p-point">
                     <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
-                    <span>Verified Interstate linehaul corridor scheduling</span>
+                    <span>Verified route and schedule planning</span>
                   </div>
                   <div className="p-point">
                     <CheckCircle2 size={16} className="text-accent flex-shrink-0" />

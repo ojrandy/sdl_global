@@ -21,6 +21,7 @@ import { useAdminData } from '../../context/AdminDataContext';
 import { AdminViewType } from '../AdminLayout';
 import { Shipment } from '../../types/shipment';
 import './OperationsCenter.css';
+import { WeightText } from '../../components/forms/UnitControls';
 
 interface OperationsCenterProps {
   onSelectView: (view: AdminViewType) => void;
@@ -462,7 +463,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
                           <div className="ops-consignment-text">
                             <strong className="ops-tracking-code font-mono">{shipment.trackingNumber}</strong>
                             <span className="ops-specs-text">
-                              {piecesCount} {piecesCount === 1 ? 'pc' : 'pcs'}{weight > 0 ? ` (${weight} lbs)` : ''}
+                              {piecesCount} {piecesCount === 1 ? 'pc' : 'pcs'}{weight > 0 ? <> (<WeightText lbs={weight} />)</> : ''}
                             </span>
                           </div>
                         </div>
