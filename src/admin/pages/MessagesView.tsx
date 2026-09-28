@@ -74,7 +74,7 @@ export const MessagesView: React.FC<MessagesViewProps> = ({ searchQuery, onMessa
     return messages.filter((m) => {
       if (filter !== 'ALL' && m.status !== filter) return false;
       if (!q) return true;
-      return [m.id, m.name, m.email, m.subject, m.trackingNumber, m.gatewayCode, m.message]
+      return [m.id, m.name, m.email, m.phone, m.subject, m.trackingNumber, m.gatewayCode, m.message]
         .some((field) => field?.toLowerCase().includes(q));
     });
   }, [messages, filter, searchQuery]);
@@ -120,7 +120,7 @@ export const MessagesView: React.FC<MessagesViewProps> = ({ searchQuery, onMessa
         <div className="messages-empty">
           <Inbox size={28} />
           <strong>{messages.length === 0 ? 'No messages yet' : 'No messages match'}</strong>
-          <p>{messages.length === 0 ? 'Messages sent from the Contact page will appear here.' : 'Try another filter or clear the search.'}</p>
+          <p>{messages.length === 0 ? 'Messages from the Contact page and Home callback requests will appear here.' : 'Try another filter or clear the search.'}</p>
         </div>
       )}
 
@@ -151,16 +151,23 @@ export const MessagesView: React.FC<MessagesViewProps> = ({ searchQuery, onMessa
               {isOpen && (
                 <div className="message-detail">
                   <div className="message-detail-grid">
-                    <div><Mail size={14} /><a href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: ${m.subject} [${m.id}]`)}`}>{m.email}</a></div>
-                    {m.phone && <div><Phone size={14} /><span>{m.phone}</span></div>}
+                    {m.email && <div><Mail size={14} /><a href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: ${m.subject} [${m.id}]`)}`}>{m.email}</a></div>}
+                    {m.phone && <div><Phone size={14} /><a href={`tel:${m.phone.replace(/[^\d+]/g, '')}`}>{m.phone}</a></div>}
                     {m.trackingNumber && <div><Package size={14} /><span className="font-mono">{m.trackingNumber}</span></div>}
                     {m.gatewayLabel && <div><MapPin size={14} /><span>{m.gatewayLabel}</span></div>}
                   </div>
                   <p className="message-body">{m.message}</p>
                   <div className="message-actions">
-                    <a className="message-action primary" href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: ${m.subject} [${m.id}]`)}`}>
-                      <Reply size={14} /><span>Reply by email</span>
-                    </a>
+                    {/* Home callback requests carry a phone number and no email. */}
+                    {m.email ? (
+                      <a className="message-action primary" href={`mailto:${m.email}?subject=${encodeURIComponent(`Re: ${m.subject} [${m.id}]`)}`}>
+                        <Reply size={14} /><span>Reply by email</span>
+                      </a>
+                    ) : m.phone && (
+                      <a className="message-action primary" href={`tel:${m.phone.replace(/[^\d+]/g, '')}`}>
+                        <Phone size={14} /><span>Call back</span>
+                      </a>
+                    )}
                     {m.status !== 'RESOLVED' ? (
                       <button type="button" className="message-action" disabled={busyId === m.id} onClick={() => setStatus(m.id, 'RESOLVED')}>
                         <CheckCircle2 size={14} /><span>Mark resolved</span>

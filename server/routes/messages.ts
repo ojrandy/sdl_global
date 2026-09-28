@@ -32,7 +32,8 @@ function formatMessage(row: any) {
   };
 }
 
-// POST /api/messages — the public Contact form. Rate-limited, no session.
+// POST /api/messages — the public Contact form and the Home callback request. Rate-limited, no session.
+// An empty email is stored as '' (the column is NOT NULL).
 messagesRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
@@ -45,10 +46,14 @@ messagesRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
     const trackingNumber = text(body.trackingNumber, 40).toUpperCase() || null;
     const gatewayCode = getGateway(text(body.gatewayCode, 3).toUpperCase())?.code || null;
 
-    if (!name || !email || !message) {
-      return res.status(400).json({ success: false, error: 'Name, email and message are required.' });
+    if (!name || !message) {
+      return res.status(400).json({ success: false, error: 'Name and message are required.' });
     }
-    if (!EMAIL_PATTERN.test(email)) {
+    // Contact form messages come with an email; Home callback requests only with a phone number.
+    if (!email && (phone ?? '').replace(/\D/g, '').length < 6) {
+      return res.status(400).json({ success: false, error: 'Please enter an email address or a phone number with its country code.' });
+    }
+    if (email && !EMAIL_PATTERN.test(email)) {
       return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
     }
 
