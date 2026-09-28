@@ -52,17 +52,14 @@
   background-color: rgba(255, 255, 255, 0.15);
 }
 
-.topbar-cert-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(16, 185, 129, 0.12);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.6875rem;
-  font-weight: 600;
+.topbar-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.topbar-link:hover {
+  color: var(--sdl-white);
 }
 
 .text-accent {
@@ -511,11 +508,13 @@
   filter: brightness(1.08);
 }
 
-.drawer-regulatory {
-  text-align: center;
-  font-size: 0.6875rem;
-  color: #64748b;
-  letter-spacing: 0.04em;
+.hotline-phone-btn:last-child {
+  margin-bottom: 0;
+}
+
+.hotline-phone-btn.is-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 /* ============================================================

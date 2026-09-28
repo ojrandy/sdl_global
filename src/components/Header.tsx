@@ -11,7 +11,6 @@ import {
   Phone,
   Mail,
   Clock,
-  CheckCircle2,
   ChevronRight,
   Home,
   Headphones,
@@ -31,11 +30,9 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigate = () => {},
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // Admin-editable company contact info — this used to be hardcoded here (and independently
-  // hardcoded, often with different fake numbers, across every other public page), so
-  // changing the phone/email/DOT number in Settings never actually reached any of them.
+  // Contact values come from brand.ts, overridable in admin Settings (useCompanyContact).
   // Empty values hide their element (no placeholder numbers).
-  const { phone: supportPhone, phoneHref, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
+  const { phone: supportPhone, phoneHref, email: supportEmail } = useCompanyContact();
 
   // Prevent background scroll when mobile drawer is open
   useEffect(() => {
@@ -64,28 +61,23 @@ export const Header: React.FC<HeaderProps> = ({
               <Clock size={13} className="text-emerald" />
               <span>24/7 Global Support</span>
             </div>
-            <div className="topbar-divider" />
-            <div className="topbar-item">
-              <Mail size={13} className="text-accent" />
-              <span>{dispatchEmail}</span>
-            </div>
+            {supportEmail && (
+              <>
+                <div className="topbar-divider" />
+                <a href={`mailto:${supportEmail}`} className="topbar-item topbar-link">
+                  <Mail size={13} className="text-accent" />
+                  <span>{supportEmail}</span>
+                </a>
+              </>
+            )}
             {supportPhone && (
               <>
                 <div className="topbar-divider" />
-                <div className="topbar-item">
+                <a href={phoneHref} className="topbar-item topbar-link">
                   <Phone size={13} className="text-accent" />
                   <strong>{supportPhone}</strong>
-                </div>
+                </a>
               </>
-            )}
-          </div>
-
-          <div className="sdl-topbar-right">
-            {dotNumber && (
-              <div className="topbar-cert-pill font-mono">
-                <CheckCircle2 size={12} className="text-emerald" />
-                <span>{dotNumber}</span>
-              </div>
             )}
           </div>
         </div>
@@ -322,29 +314,27 @@ export const Header: React.FC<HeaderProps> = ({
               </nav>
             </div>
 
-            {/* Drawer footer: Need help? + email (phone when set) */}
-            <div className="drawer-footer-hotline">
-              <div className="hotline-head">
-                <span className="live-status-dot" />
-                <span className="hotline-tag font-mono">NEED HELP?</span>
-              </div>
-              {supportPhone ? (
-                <a href={phoneHref} className="hotline-phone-btn">
-                  <Phone size={15} />
-                  <span>{supportPhone}</span>
-                </a>
-              ) : (
-                <a href={`mailto:${dispatchEmail}`} className="hotline-phone-btn">
-                  <Mail size={15} />
-                  <span>{dispatchEmail}</span>
-                </a>
-              )}
-              {dotNumber && (
-                <div className="drawer-regulatory font-mono">
-                  {dotNumber}
+            {/* Drawer footer (CONTENT §1.2): Need help? + email, phone too when set */}
+            {(supportEmail || supportPhone) && (
+              <div className="drawer-footer-hotline">
+                <div className="hotline-head">
+                  <span className="live-status-dot" />
+                  <span className="hotline-tag font-mono">NEED HELP?</span>
                 </div>
-              )}
-            </div>
+                {supportEmail && (
+                  <a href={`mailto:${supportEmail}`} className="hotline-phone-btn">
+                    <Mail size={15} />
+                    <span>{supportEmail}</span>
+                  </a>
+                )}
+                {supportPhone && (
+                  <a href={phoneHref} className="hotline-phone-btn is-secondary">
+                    <Phone size={15} />
+                    <span>{supportPhone}</span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ShieldCheck,
   Clock,
@@ -10,8 +10,7 @@ import {
   Twitter,
   Instagram,
   Youtube,
-  ChevronRight,
-  Mail
+  ChevronRight
 } from 'lucide-react';
 import { COMPANY_SHORT, LEGAL_NAME, LOGO_ALT, LOGO_WHITE, SOCIAL, SocialNetwork, TAGLINE } from '../config/brand';
 import { useCompanyContact } from '../utils/useCompanyContact';
@@ -26,6 +25,14 @@ const SOCIAL_LINKS: { key: SocialNetwork; label: string; Icon: typeof Facebook }
   { key: 'youtube', label: 'YouTube', Icon: Youtube },
 ];
 
+// LegalPage sections (CONTENT §1.3). Cookie Policy joins once its tab is written (3.11).
+const LEGAL_LINKS = [
+  { section: 'privacy', label: 'Privacy Policy' },
+  { section: 'terms', label: 'Terms of Service' },
+  { section: 'shipping-terms', label: 'Shipping Terms' },
+  { section: 'accessibility', label: 'Accessibility' },
+];
+
 interface FooterProps {
   onNavigate?: (page: string, param?: string) => void;
   showTrustStrip?: boolean;
@@ -35,18 +42,7 @@ export const Footer: React.FC<FooterProps> = ({
   onNavigate = () => {},
   showTrustStrip = true,
 }) => {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
   const { address } = useCompanyContact();
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-      setTimeout(() => setSubscribed(false), 4000);
-    }
-  };
 
   return (
     <footer className="sdl-pro-footer-wrapper">
@@ -239,51 +235,23 @@ export const Footer: React.FC<FooterProps> = ({
               </ul>
             </div>
 
-            {/* Column 5: Stay Updated */}
-            <div className="sdl-pro-newsletter-col">
+            {/* Column 5: Legal (Cookie Policy hidden until its page exists, tracker 3.11) */}
+            <nav className="sdl-pro-links-col" aria-label="Legal">
               <h4 className="sdl-pro-col-title">
-                Stay Updated
+                Legal
                 <span className="title-accent-dash" />
               </h4>
-              
-              <p className="sdl-pro-newsletter-desc">
-                Subscribe to our newsletter for the latest updates, shipping tips and special offers.
-              </p>
-
-              <form onSubmit={handleSubscribe} className="sdl-pro-subscribe-form">
-                <div className="pro-input-wrap">
-                  <Mail size={16} className="pro-mail-icon" />
-                  <input
-                    type="email"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pro-newsletter-input"
-                    required
-                  />
-                </div>
-                <button type="submit" className="pro-subscribe-btn">
-                  <span>Subscribe</span>
-                  <ChevronRight size={15} />
-                </button>
-              </form>
-
-              {subscribed && (
-                <p className="pro-subscribe-msg font-mono">✓ Thank you for subscribing to operations updates.</p>
-              )}
-
-              {/* Worldwide Network Callout */}
-              <div className="sdl-pro-global-pill">
-                <div className="global-pill-icon">
-                  <Globe size={26} className="text-accent" />
-                </div>
-                <div className="global-pill-text">
-                  <strong>We Deliver Worldwide</strong>
-                  <p>Air, ocean and road, connected under one network.</p>
-                </div>
-              </div>
-
-            </div>
+              <ul className="sdl-pro-links-list">
+                {LEGAL_LINKS.map(({ section, label }) => (
+                  <li key={section}>
+                    <button type="button" onClick={() => onNavigate('legal', section)}>
+                      <ChevronRight size={14} className="link-chevron" />
+                      <span>{label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
 
           {/* 3. BOTTOM BAR */}
@@ -292,16 +260,6 @@ export const Footer: React.FC<FooterProps> = ({
               © {new Date().getFullYear()} {LEGAL_NAME}. All rights reserved.
               {address && <> · {address}</>}
             </div>
-
-            <nav className="pro-bottom-right-links" aria-label="Legal">
-              <button type="button" onClick={() => onNavigate('legal', 'privacy')}>Privacy Policy</button>
-              <span className="pro-dot">•</span>
-              <button type="button" onClick={() => onNavigate('legal', 'terms')}>Terms of Service</button>
-              <span className="pro-dot">•</span>
-              <button type="button" onClick={() => onNavigate('legal', 'shipping-terms')}>Shipping Terms</button>
-              <span className="pro-dot">•</span>
-              <button type="button" onClick={() => onNavigate('legal', 'accessibility')}>Accessibility</button>
-            </nav>
           </div>
         </div>
       </div>
