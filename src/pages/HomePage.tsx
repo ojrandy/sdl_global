@@ -4,45 +4,37 @@ import {
   Truck,
   Calculator,
   MapPin,
-  Calendar,
   Clock,
   Globe,
-  Layers,
   Warehouse,
   ShieldCheck,
   Headphones,
-  Eye,
   CheckCircle2,
   ArrowRight,
   Phone,
   Mail,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
   Activity,
   Zap,
   Lock,
   FileText,
-  Building,
-  Check,
+  FileCheck,
   Search,
   Shield,
-  Award,
-  Send,
-  Star,
   Users,
   Car,
   ChevronDown,
   ChevronUp,
-  RefreshCw,
-  Sliders,
-  DollarSign
+  Plane,
+  Ship,
+  ScanBarcode
 } from 'lucide-react';
 import { Barcode } from '../components/Barcode';
 import { HomeNetworkMap } from '../components/HomeNetworkMap';
+import { ResponsiveImage } from '../components/ResponsiveImage';
+import { SdlImageName } from '../data/sdlImages';
 import { GATEWAYS, getGateway, getLanePartners, formatGatewayTime } from '../data/gateways';
 import { useNow } from '../utils/useNow';
-import { CLIENT_LOGOS } from '../components/ClientLogos';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
 import './HomePage.css';
@@ -52,26 +44,166 @@ interface HomePageProps {
   onNavigate: (page: string) => void;
 }
 
+type IndustryTab = 'auto' | 'medical' | 'ecommerce' | 'tech';
+
+// Copy: docs/CONTENT.md §2. Alt text: CONTENT.md §12.
+const SERVICES: { title: string; body: string; cta: string; image: SdlImageName; alt: string }[] = [
+  {
+    title: 'Priority Express Courier',
+    body: 'Time-critical documents and parcels, door to door, with the fastest available routing and customs pre-clearance where possible.',
+    cta: 'Explore Express',
+    image: 'service-priority-express',
+    alt: 'Ground crew loading palletised air cargo into an SDL aircraft at sunset'
+  },
+  {
+    title: 'Scheduled Freight & Linehaul',
+    body: 'Air, ocean (FCL and LCL) and road freight on fixed departures, for regular volumes that need predictable transit times.',
+    cta: 'Explore Freight',
+    image: 'service-freight-linehaul',
+    alt: 'Container ship being loaded by gantry cranes at a port terminal'
+  },
+  {
+    title: 'Vehicle Shipping & Transport',
+    body: 'Cars, motorcycles and fleet vehicles moved by container, RoRo or enclosed carrier, with documentation handled end to end.',
+    cta: 'Explore Vehicle Shipping',
+    image: 'service-vehicle-transport',
+    alt: 'Roll-on/roll-off vehicle carrier ship berthed at a harbour quay'
+  },
+  {
+    title: 'Secure Vault & High-Value',
+    body: 'Sealed, tamper-evident transport for valuables, sensitive documents, pharmaceuticals and high-value electronics, with restricted hand-offs.',
+    cta: 'Explore Secure Vault',
+    image: 'service-secure-vault',
+    alt: 'Close-up of the combination lock on a metal security case'
+  }
+];
+
+const INDUSTRIES: { id: IndustryTab; icon: React.ReactNode; title: string; body: string; bullets: string[]; image: SdlImageName; alt: string }[] = [
+  {
+    id: 'auto',
+    icon: <Car size={16} />,
+    title: 'Automotive & Vehicles',
+    body: 'Spare parts, components and complete vehicles, moved to keep production lines and dealerships running.',
+    bullets: ['Line-side parts express', 'Vehicle export & import documentation', 'Enclosed and container shipping'],
+    image: 'industry-automotive',
+    alt: 'Mechanic working on a car engine with a spanner'
+  },
+  {
+    id: 'medical',
+    icon: <ShieldCheck size={16} />,
+    title: 'Healthcare & Life Sciences',
+    body: 'Samples, medical devices and pharmaceuticals handled with care, controlled hand-offs and full traceability.',
+    bullets: ['Temperature-sensitive handling (on request)', 'Sealed chain of custody', 'Priority customs lodgement'],
+    image: 'industry-healthcare',
+    alt: 'Worker in gloves and a clean-room gown carrying sealed boxes'
+  },
+  {
+    id: 'ecommerce',
+    icon: <Package size={16} />,
+    title: 'E-Commerce & Retail',
+    body: 'Cross-border parcels, stock replenishment and returns for growing online brands.',
+    bullets: ['Multi-piece shipments under one ID', 'Scheduled consolidations', 'Simple returns with linked tracking'],
+    image: 'industry-ecommerce',
+    alt: 'Online seller packing parcels next to a laptop'
+  },
+  {
+    id: 'tech',
+    icon: <Zap size={16} />,
+    title: 'Technology & Electronics',
+    body: 'High-value hardware and components moved securely, on time and fully insured on request.',
+    bullets: ['Secure vault option', 'Anti-static, protected packing guidance', 'Signature-only release'],
+    image: 'industry-technology',
+    alt: 'Server rack with network cables and status lights'
+  }
+];
+
+const STEPS: { title: string; body: string; icon: React.ReactNode }[] = [
+  {
+    title: 'Book & Label',
+    body: 'Book online or with a coordinator. You get your 8-character SDL tracking ID and a barcode label for every piece straight away.',
+    icon: <FileText size={22} className="text-accent" />
+  },
+  {
+    title: 'Collect & Verify',
+    body: 'We collect from your door, weigh and scan every piece at the origin gateway, and prepare the export and customs documents.',
+    icon: <Warehouse size={22} className="text-accent" />
+  },
+  {
+    title: 'Move Across Borders',
+    body: 'Your cargo travels on the fastest suitable lane: air, ocean or road. Customs clearance and each transfer are logged live.',
+    icon: <Globe size={22} className="text-accent" />
+  },
+  {
+    title: 'Deliver & Sign',
+    body: 'Final-mile delivery to the door, with a signed digital proof of delivery sent to you the moment it lands.',
+    icon: <ShieldCheck size={22} className="text-accent" />
+  }
+];
+
+const TRUST_TILES: { title: string; body: string; icon: React.ReactNode }[] = [
+  { title: 'Integrity Guarantee', body: 'What you hand us is exactly what arrives: counted, sealed and signed for.', icon: <ShieldCheck size={22} className="text-accent" /> },
+  { title: 'Committed Schedules', body: 'Agreed windows, proactive updates and no silent delays.', icon: <Clock size={22} className="text-accent" /> },
+  { title: 'Vetted Handlers', body: 'Every driver, agent and handler in our chain is vetted and accountable.', icon: <Users size={22} className="text-accent" /> },
+  { title: 'Privacy by Design', body: 'Public tracking masks names and addresses. Your data stays yours.', icon: <Lock size={22} className="text-accent" /> },
+  { title: 'Compliance First', body: 'Export, import and dangerous-goods rules are respected on every lane.', icon: <Shield size={22} className="text-accent" /> },
+  { title: 'Digital Documents', body: 'Waybills, invoices and proof of delivery, available online at any time.', icon: <FileText size={22} className="text-accent" /> },
+  { title: 'Piece-Level Barcodes', body: 'Every carton carries its own scannable label, linked to one tracking ID.', icon: <ScanBarcode size={22} className="text-accent" /> },
+  { title: '24/7 Support', body: 'A real coordinator, whatever the hour and wherever you are.', icon: <Headphones size={22} className="text-accent" /> }
+];
+
+// CONTENT.md §2.10 Option A: stands in for testimonials until real, permitted ones exist.
+const COMMITMENTS: { quote: string; body: string }[] = [
+  { quote: 'You’ll always know where it is.', body: 'Live milestones on every shipment, with no exceptions.' },
+  { quote: 'You’ll always reach a person.', body: 'A coordinator who knows your shipment, any time zone.' },
+  { quote: 'You’ll hear from us first.', body: 'If something changes, we tell you before you have to ask.' }
+];
+
+// CONTENT.md §2.11: replaces the client-logo strip. Real partner logos only with written permission.
+const MODES: { label: string; icon: React.ReactNode }[] = [
+  { label: 'Air Freight', icon: <Plane size={20} className="text-accent" /> },
+  { label: 'Ocean Freight', icon: <Ship size={20} className="text-accent" /> },
+  { label: 'Road Freight', icon: <Truck size={20} className="text-accent" /> },
+  { label: 'Express Courier', icon: <Package size={20} className="text-accent" /> },
+  { label: 'Customs Brokerage', icon: <FileCheck size={20} className="text-accent" /> },
+  { label: 'Secure Transport', icon: <Lock size={20} className="text-accent" /> }
+];
+
+const FAQS = [
+  {
+    q: 'Do I need an account to track a shipment?',
+    a: 'No. Enter your 8-character tracking ID (for example DLS7K2M9) on the Track page and you’ll see its status and milestones straight away. Personal details are masked for privacy.'
+  },
+  {
+    q: 'How does live tracking work?',
+    a: 'Every piece is scanned at each hand-off: collection, gateway, departure, arrival, customs and delivery. Between scans, we show your shipment’s estimated position on its route.'
+  },
+  {
+    q: 'Can I track a multi-piece shipment under one ID?',
+    a: 'Yes. All pieces share one tracking ID, and each piece has its own label (for example DLS7K2M9-01, -02), so you can see every carton individually.'
+  },
+  {
+    q: 'Do you handle customs clearance?',
+    a: 'Yes. We prepare the export and import documentation with you and manage clearance on your behalf. Duties and taxes are billed as agreed at booking.'
+  },
+  {
+    q: 'Are my documents available online?',
+    a: 'Yes. Your waybill, invoice and signed proof of delivery can be viewed and downloaded from your tracking page.'
+  }
+];
+
 export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
-  // Empty phone/regulatory values hide their element (no placeholders).
-  const { phone: supportPhone, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
-  // Interactive Mini Rate Estimator State
-  const [estOrigin, setEstOrigin] = useState('New York, NY');
-  const [estDest, setEstDest] = useState('Los Angeles, CA');
-  const [estService, setEstService] = useState<'EXPRESS' | 'GROUND' | 'VEHICLE'>('EXPRESS');
-  const [estWeight, setEstWeight] = useState(45);
+  // Empty phone values hide their element (no placeholders).
+  const { phone: supportPhone, email: dispatchEmail } = useCompanyContact();
 
   // Industry Solutions Interactive Tab State
-  const [industryTab, setIndustryTab] = useState<'auto' | 'medical' | 'ecommerce' | 'tech'>('auto');
+  const [industryTab, setIndustryTab] = useState<IndustryTab>('auto');
+  const activeIndustry = INDUSTRIES.find((ind) => ind.id === industryTab) ?? INDUSTRIES[0];
 
   // Callback Form State
   const [cbName, setCbName] = useState('');
-  const [cbService, setCbService] = useState('Priority Express Courier');
   const [cbPhone, setCbPhone] = useState('');
+  const [cbTime, setCbTime] = useState('');
   const [cbSuccess, setCbSuccess] = useState(false);
-
-  // Testimonials Slider State
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
 
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -83,78 +215,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   const activeGatewayTime = formatGatewayTime(activeGateway.timeZone, now);
   const activeGatewayLanes = getLanePartners(activeGateway.code).map((code) => getGateway(code)?.city ?? code);
 
-  // Mini Rate Calculation
-  const calculateRate = () => {
-    let base = 35;
-    if (estService === 'EXPRESS') base = 65;
-    if (estService === 'VEHICLE') return 1280 + (estWeight > 50 ? 150 : 0);
-
-    const weightCost = estWeight * (estService === 'EXPRESS' ? 1.85 : 0.95);
-    const fuel = (base + weightCost) * 0.085;
-    return Math.round((base + weightCost + fuel) * 100) / 100;
-  };
-
-  const testimonials = [
-    {
-      quote: "Their team gives us the visibility and reliability we need to keep our commercial clients completely satisfied. Checkpoint updates are accurate, schedules are consistent, and their dedicated dispatch desk is unmatched.",
-      author: "Jessica Morgan",
-      role: "Director of Supply Chain, Apex Retail Logistics",
-      company: "Apex Commercial Corp",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-      rating: 5
-    },
-    {
-      quote: "The linear Code 128 piece barcodes and live vehicle telemetry revolutionized our medical parts delivery across regional hubs. Real-time chain of custody from origin pickup to hospital dock sign-off.",
-      author: "David Vance",
-      role: "VP of Operations, Midwest Medical Distribution",
-      company: "Midwest Health Logistics",
-      avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80",
-      rating: 5
-    },
-    {
-      quote: "We ship high-value auto components and full vehicle transports nationwide. The digital Bill of Lading generation and 60 FPS live tracking give our customers total confidence from coast to coast.",
-      author: "Marcus Sterling",
-      role: "Fleet Operations Manager, Sterling Automotive USA",
-      company: "Sterling Auto Group",
-      avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
-      rating: 5
-    }
-  ];
-
-  const faqs = [
-    {
-      q: 'Do I need an account or password to track a shipment?',
-      a: `No. ${COMPANY} operates a public logistics ledger. Simply enter your unique tracking identifier into our public tracking engine to view verified facility checkpoints, transit progress, and dynamic ETA updates.`
-    },
-    {
-      q: 'How does live highway telemetry work without continuous driver GPS?',
-      a: 'For driver safety and commercial privacy, our simulation and routing engine calculates verified physical progress between certified FMCSA corridor waypoints, logging exact facility arrival and departure timestamps.'
-    },
-    {
-      q: 'Can I track multi-piece packages or auto transports under one master waybill?',
-      a: 'Yes. Our platform supports parent-child consignment hierarchies with linear Code 128 piece barcodes, VIN inspection records, and consolidated Bill of Lading documentation.'
-    },
-    {
-      q: 'What is the cutoff time for same-day scheduled linehaul dispatch?',
-      a: 'Same-day scheduled linehaul tenders are accepted until 4:00 PM local time across our regional gateway terminals (New York JFK, Chicago ORD, Dallas DFW, Denver DEN, Los Angeles LAX).'
-    },
-    {
-      q: 'Are documents such as the Bill of Lading (BOL) and Proof of Delivery (POD) available digitally?',
-      a: 'Yes. Every tendered consignment automatically provisions an official digital Bill of Lading and Master Shipping Label. Upon delivery, the recipient’s physical signature is recorded on the official Proof of Delivery (POD).'
-    }
-  ];
-
-  const partnerLogos = [
-    { name: 'FedEx Custom Critical', type: 'EXPRESS COURIER', icon: <Truck size={20} className="text-accent" /> },
-    { name: 'DHL Express Network', type: 'TIME-CRITICAL COURIER', icon: <Globe size={20} className="text-accent" /> },
-    { name: 'UPS Express Critical', type: 'INTERSTATE LINEHAUL', icon: <ShieldCheck size={20} className="text-accent" /> },
-    { name: 'Penske Commercial Logistics', type: 'DEDICATED FLEET', icon: <Warehouse size={20} className="text-accent" /> },
-    { name: 'ArcBest Expedited', type: 'EXPEDITED TRANSIT', icon: <Zap size={20} className="text-accent" /> },
-    { name: 'Old Dominion Express', type: 'DIRECT LINEHAUL', icon: <Truck size={20} className="text-accent" /> },
-    { name: 'Estes Express Lines', type: 'REGIONAL COURIER', icon: <Package size={20} className="text-accent" /> },
-    { name: 'Forward Logistics Complete', type: 'AIRPORT GATEWAY COURIER', icon: <Globe size={20} className="text-accent" /> }
-  ];
-
   const handleCallbackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (cbPhone.trim()) {
@@ -163,39 +223,41 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
         setCbSuccess(false);
         setCbName('');
         setCbPhone('');
+        setCbTime('');
       }, 4000);
     }
-  };
-
-  const nextTestimonial = () => {
-    setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
   return (
     <div className="sdl-homepage-container">
       {/* =========================================================================
-          1. CINEMATIC HERO SECTION WITH BOLD TYPOGRAPHY & FAST ACTION CONSOLE
+          1. HERO (CONTENT.md §2.1)
           ========================================================================= */}
       <section className="corp-hero-section">
+        <ResponsiveImage
+          name="hero-home"
+          mobileName="hero-home-mobile"
+          alt="SDL Global Logistics truck at a container port at sunset, with a cargo ship, cranes and an SDL aircraft overhead"
+          eager
+          sizes="100vw"
+          className="corp-hero-media"
+          imgClassName="corp-hero-img"
+        />
         <div className="corp-hero-overlay" />
         <div className="sdl-container-wide corp-hero-inner">
           <div className="corp-hero-content animate-fade-in">
             <div className="corp-hero-badge">
               <span className="badge-pulse-dot" />
-              <span>{dotNumber ? `${dotNumber} · ` : ''}NATIONWIDE COURIER NETWORK</span>
+              <span>WORLDWIDE LOGISTICS NETWORK</span>
             </div>
 
             <h1 className="corp-hero-title">
-              Delivering confidence <br />
-              <span className="sdl-highlight">mile after mile.</span>
+              Fast, Safe, <br />
+              <span className="sdl-highlight">Reliable.</span>
             </h1>
 
             <p className="corp-hero-subtitle">
-              Fast, certified express courier and scheduled commercial linehaul transit across major nationwide commercial trade corridors.
+              Express parcels, freight, vehicles and high-value cargo, moved across borders by a team that answers, with one tracking ID from pickup to signed delivery.
             </p>
 
             <div className="corp-hero-cta-row">
@@ -215,19 +277,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                 onClick={() => onNavigate('track')}
               >
                 <Search size={18} />
-                <span>Track Shipment</span>
+                <span>Track a Shipment</span>
               </button>
             </div>
           </div>
 
-          {/* Clean & Elegant Hero Service Guarantee Showcase */}
+          {/* Service promise panel */}
           <div className="corp-hero-service-showcase animate-scale-in">
             <div className="hero-showcase-header">
               <div className="flex items-center gap-2">
                 <ShieldCheck size={18} className="text-accent" />
-                <span className="showcase-header-title font-mono">OFFICIAL SERVICE GUARANTEES</span>
+                <span className="showcase-header-title font-mono">OUR SERVICE PROMISE</span>
               </div>
-              <span className="hero-guarantee-badge font-mono">CERTIFIED</span>
             </div>
 
             <div className="hero-feature-rows">
@@ -236,8 +297,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                   <Clock size={20} className="text-accent" />
                 </div>
                 <div className="hero-feat-text">
-                  <strong>Guaranteed Transit Windows</strong>
-                  <p>Strict pickup and arrival timeframes with real-time milestone confirmations.</p>
+                  <strong>Agreed Delivery Windows</strong>
+                  <p>You get a committed pickup and delivery window, and we tell you the moment anything changes.</p>
                 </div>
               </div>
 
@@ -246,8 +307,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                   <ShieldCheck size={20} className="text-emerald" />
                 </div>
                 <div className="hero-feat-text">
-                  <strong>Direct Chain of Custody</strong>
-                  <p>Hand-to-hand parcel scanning and instant signed Proof of Delivery (POD).</p>
+                  <strong>Unbroken Chain of Custody</strong>
+                  <p>Every hand-off is scanned, every high-value item is sealed, and every delivery is signed.</p>
                 </div>
               </div>
 
@@ -256,8 +317,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                   <Headphones size={20} className="text-sky" />
                 </div>
                 <div className="hero-feat-text">
-                  <strong>Dedicated Human Support</strong>
-                  <p>Direct phone access to senior dispatch coordinators for every single consignment.</p>
+                  <strong>Real People, Every Time Zone</strong>
+                  <p>A named coordinator follows your shipment and replies around the clock.</p>
                 </div>
               </div>
             </div>
@@ -266,12 +327,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               {supportPhone ? (
                 <>
                   <Phone size={15} className="text-accent" />
-                  <span>Priority Hotline: <strong>{supportPhone}</strong></span>
+                  <span>Priority line: <strong><a href={`tel:${supportPhone.replace(/[^\d+]/g, '')}`}>{supportPhone}</a></strong></span>
                 </>
               ) : (
                 <>
                   <Mail size={15} className="text-accent" />
-                  <span>Priority Desk: <strong>{dispatchEmail}</strong></span>
+                  <span><strong><a href={`mailto:${dispatchEmail}`}>{dispatchEmail}</a></strong></span>
                 </>
               )}
             </div>
@@ -280,15 +341,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          2. "WHY SHIPPERS CHOOSE US" (3 ELEVATED FLOATING VALUE CARDS)
+          2. WHY SHIPPERS CHOOSE SDL (CONTENT.md §2.2)
           ========================================================================= */}
       <section className="corp-why-choose-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">RELIABLE COURIER EXCELLENCE</span>
-            <h2>Why commercial shippers choose {COMPANY}</h2>
+            <span className="section-eyebrow">WHY SDL</span>
+            <h2>Why shippers around the world choose {COMPANY_SHORT}</h2>
             <p className="section-desc-sub">
-              Precision transit schedules, verifiable chain of custody, and dedicated driver dispatch across all major interstate corridors.
+              Global reach only matters if every shipment is handled like it’s the only one. That’s the standard we work to.
             </p>
             <div className="section-header-line" />
           </div>
@@ -299,9 +360,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               <div className="why-icon-bubble">
                 <Zap size={24} />
               </div>
-              <h3>Priority Express Courier</h3>
+              <h3>Priority Express, Worldwide</h3>
               <p>
-                Guaranteed point-to-point same-day and next-day courier delivery connecting commercial hubs and regional distribution gateways without delay.
+                Door-to-door express for documents and parcels that can’t wait. Booked in minutes, collected fast, cleared and delivered on an agreed window.
               </p>
               <button
                 type="button"
@@ -318,9 +379,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               <div className="why-icon-bubble">
                 <Truck size={24} />
               </div>
-              <h3>Door-to-Door Scheduled Linehaul</h3>
+              <h3>Scheduled Freight on Every Mode</h3>
               <p>
-                Dedicated courier linehaul fleets with strict chain of custody, tamper-evident security seals, and direct dock-to-dock transit schedules.
+                Air, ocean and road departures on fixed schedules. Consolidated or dedicated, with one booking, one tracking ID and one invoice.
               </p>
               <button
                 type="button"
@@ -337,9 +398,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               <div className="why-icon-bubble">
                 <Activity size={24} />
               </div>
-              <h3>Real-Time Checkpoint Provenance</h3>
+              <h3>Visibility at Every Checkpoint</h3>
               <p>
-                Every barcode scan logs verified physical timestamps, hub sortation provenance, digital Bill of Lading records, and live highway telemetry.
+                Every scan, hand-off and customs milestone appears on your tracking page as it happens. No chasing, no guesswork.
               </p>
               <button
                 type="button"
@@ -355,141 +416,65 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          3. "HOW IT WORKS" — 4-STEP VERIFIED TRANSIT PROTOCOL
+          3. HOW IT WORKS (CONTENT.md §2.3)
           ========================================================================= */}
       <section className="corp-how-it-works-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">SEAMLESS COURIER PROTOCOL</span>
-            <h2>How {COMPANY} moves your shipments</h2>
+            <span className="section-eyebrow">HOW IT WORKS</span>
+            <h2>How {COMPANY_SHORT} moves your shipment</h2>
             <p className="section-desc-sub">
-              From origin pickup to final recipient signature, every consignment follows our verified 4-step chain of custody.
+              Four stages, one tracking ID, and full visibility from the first scan to the final signature.
             </p>
             <div className="section-header-line" />
           </div>
 
-          {/* Kinetic Horizontal Conduit Architecture (No Box Fatigue) */}
           <div className="kinetic-pipeline-container">
             <div className="pipeline-laser-beam" />
             <div className="pipeline-nodes-row">
-              {/* Step 1 */}
-              <div className="pipeline-step-node">
-                <div className="pipeline-connector-top">
-                  <div className="node-ring font-mono">
-                    <span className="node-num">01</span>
-                    <div className="node-ring-pulse" />
+              {STEPS.map((step, i) => {
+                const num = String(i + 1).padStart(2, '0');
+                return (
+                  <div key={step.title} className="pipeline-step-node">
+                    <div className="pipeline-connector-top">
+                      <div className="node-ring font-mono">
+                        <span className="node-num">{num}</span>
+                        <div className="node-ring-pulse" />
+                      </div>
+                      <div className="node-icon-bubble">{step.icon}</div>
+                    </div>
+                    <div className="node-body">
+                      <span className="node-eyebrow font-mono">STEP {num}</span>
+                      <h3>{step.title}</h3>
+                      <p>{step.body}</p>
+                    </div>
                   </div>
-                  <div className="node-icon-bubble">
-                    <FileText size={22} className="text-accent" />
-                  </div>
-                </div>
-                <div className="node-body">
-                  <span className="node-eyebrow font-mono">STEP 01 · TENDER</span>
-                  <h3>Consignment Tender & Digital BOL</h3>
-                  <p>
-                    Instant electronic Bill of Lading generation, regulatory compliance validation, and high-density linear Code 128 piece barcode issuance.
-                  </p>
-                  <div className="node-spec-pills">
-                    <span className="spec-pill font-mono">EDI 214 Ready</span>
-                    <span className="spec-pill font-mono">Instant BOL</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="pipeline-step-node">
-                <div className="pipeline-connector-top">
-                  <div className="node-ring font-mono">
-                    <span className="node-num">02</span>
-                    <div className="node-ring-pulse" />
-                  </div>
-                  <div className="node-icon-bubble">
-                    <Warehouse size={22} className="text-accent" />
-                  </div>
-                </div>
-                <div className="node-body">
-                  <span className="node-eyebrow font-mono">STEP 02 · HUB INTAKE</span>
-                  <h3>Regional Sortation & Verification</h3>
-                  <p>
-                    Tendered parcels arrive at regional gateway cross-docks for automated optical dimensioning, high-speed scales, and physical timestamping.
-                  </p>
-                  <div className="node-spec-pills">
-                    <span className="spec-pill font-mono">Laser Dimensioning</span>
-                    <span className="spec-pill font-mono">Ledger Logged</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="pipeline-step-node">
-                <div className="pipeline-connector-top">
-                  <div className="node-ring font-mono">
-                    <span className="node-num">03</span>
-                    <div className="node-ring-pulse" />
-                  </div>
-                  <div className="node-icon-bubble">
-                    <Truck size={22} className="text-accent" />
-                  </div>
-                </div>
-                <div className="node-body">
-                  <span className="node-eyebrow font-mono">STEP 03 · LINEHAUL</span>
-                  <h3>Interstate Highway Telemetry</h3>
-                  <p>
-                    Dedicated express linehaul departures with 60 FPS schedule-based position telemetry, automated waypoint alerts, and corridor milestone tracking.
-                  </p>
-                  <div className="node-spec-pills">
-                    <span className="spec-pill font-mono">60 FPS Telemetry</span>
-                    <span className="spec-pill font-mono">Geofenced ETA</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 4 */}
-              <div className="pipeline-step-node">
-                <div className="pipeline-connector-top">
-                  <div className="node-ring font-mono">
-                    <span className="node-num">04</span>
-                    <div className="node-ring-pulse" />
-                  </div>
-                  <div className="node-icon-bubble">
-                    <ShieldCheck size={22} className="text-accent" />
-                  </div>
-                </div>
-                <div className="node-body">
-                  <span className="node-eyebrow font-mono">STEP 04 · DELIVERED</span>
-                  <h3>Dock-to-Door Signed POD</h3>
-                  <p>
-                    Direct physical handoff with electronic recipient signature capture, timestamped geocoordinates, and immediate downloadable POD waybill.
-                  </p>
-                  <div className="node-spec-pills">
-                    <span className="spec-pill font-mono">Electronic Signature</span>
-                    <span className="spec-pill font-mono">Legal Proof</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
 
+          {/* CTA strip: CONTENT.md §3.6 */}
           <div className="how-it-works-action-strip">
             <div className="flex items-center gap-3">
               <Sparkles size={20} className="text-accent" />
-              <span>Ready to experience transparent nationwide express delivery?</span>
+              <span>Ready to ship with {COMPANY_SHORT}? Get a rate in minutes, or talk to a coordinator about your lane.</span>
             </div>
             <div className="flex gap-3">
               <button
                 type="button"
                 className="btn-corp-primary"
-                onClick={() => onNavigate('ship')}
+                onClick={() => onNavigate('quote')}
               >
-                <span>Ship With Us</span>
+                <span>Get a Quote</span>
                 <ArrowRight size={16} />
               </button>
               <button
                 type="button"
                 className="btn-corp-ghost-dark"
-                onClick={() => onNavigate('quote')}
+                onClick={() => onNavigate('contact')}
               >
-                <span>Get a Rate Quote</span>
+                <span>Contact Us</span>
               </button>
             </div>
           </div>
@@ -497,64 +482,53 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          4. EDITORIAL "ABOUT US" SECTION (SPLIT SHOWCASE WITH EXPERIENCE BADGE)
+          4. ABOUT STRIP (CONTENT.md §2.4)
           ========================================================================= */}
       <section className="corp-about-section">
         <div className="sdl-container-wide corp-about-grid">
           {/* Left Stacked Image Stage */}
           <div className="about-image-stage">
             <div className="about-main-img-wrapper">
-              <img
-                src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=900&auto=format&fit=crop&q=85"
-                alt={`${COMPANY} logistics operations`}
-                className="about-main-img"
+              <ResponsiveImage
+                name="about-operations"
+                alt="SDL warehouse staff member checking stacked, labelled cartons on a tablet"
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                imgClassName="about-main-img"
               />
-              <div className="about-experience-badge">
-                <span className="exp-years font-mono">15+</span>
-                <div className="exp-text">
-                  <strong>YEARS OF</strong>
-                  <span>EXPRESS LOGISTICS</span>
-                </div>
-              </div>
             </div>
 
             {/* Floating Secondary Thumbnail */}
             <div className="about-thumb-overlap">
-              <img
-                src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=500&auto=format&fit=crop&q=85"
-                alt="Operations Logistics Team"
-                className="about-thumb-img"
+              <ResponsiveImage
+                name="about-team"
+                alt="Smiling SDL team member in a branded cap at a container yard"
+                sizes="72px"
+                imgClassName="about-thumb-img"
               />
               <div className="about-thumb-caption">
-                <strong>24/7 Dispatch Desk</strong>
-                <small>Dedicated Regional Operators</small>
+                <strong>Real People, Every Time Zone</strong>
+                <small>A named coordinator follows your shipment</small>
               </div>
             </div>
           </div>
 
           {/* Right Text Content */}
           <div className="about-text-content">
-            <span className="section-eyebrow">ABOUT {COMPANY.toUpperCase()}</span>
-            <h2>We believe modern shipping should be visible, fast, and effortlessly dependable.</h2>
+            <span className="section-eyebrow">ABOUT {COMPANY_SHORT}</span>
+            <h2>We believe global shipping should feel local: visible, fast and dependable.</h2>
             <p className="about-lead">
-              {COMPANY} provides nationwide interstate courier services and express parcel distribution across major U.S. commercial corridors.
-            </p>
-            <p className="about-body">
-              Built on certified carrier compliance and digital transparency, our operations eliminate the ambiguity of traditional shipping. Shippers and consignees receive physical facility checkpoint verification, high-density linear Code 128 barcodes, and continuous vehicle tracking from origin tender to final delivery.
+              {COMPANY} was built for shippers who are tired of losing sight of their cargo the moment it leaves the building. We bring express, freight and secure transport under one roof, so one team owns your shipment from pickup to proof of delivery, wherever in the world it’s going.
             </p>
 
+            {/* "Years moving cargo" stays hidden until the owner confirms the founding year. */}
             <div className="about-stats-strip">
               <div className="about-stat-item">
-                <strong className="font-mono text-accent">99.4%</strong>
-                <span>On-Time Delivery Rate</span>
-              </div>
-              <div className="about-stat-item">
-                <strong className="font-mono text-accent">50+</strong>
-                <span>Gateway Sorting Hubs</span>
-              </div>
-              <div className="about-stat-item">
                 <strong className="font-mono text-accent">24/7</strong>
-                <span>Live Dispatch Support</span>
+                <span>Global operations desk</span>
+              </div>
+              <div className="about-stat-item">
+                <strong className="font-mono text-accent">1</strong>
+                <span>Tracking ID from start to finish</span>
               </div>
             </div>
 
@@ -563,7 +537,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               className="btn-corp-primary"
               onClick={() => onNavigate('about')}
             >
-              <span>Discover Our Network</span>
+              <span>More about {COMPANY_SHORT}</span>
               <ArrowRight size={16} />
             </button>
           </div>
@@ -571,265 +545,95 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          5. CORE COURIER SERVICES SHOWCASE (4 ELEVATED CARDS)
+          5. SERVICES (CONTENT.md §2.5)
           ========================================================================= */}
       <section className="corp-services-section">
         <div className="sdl-container-wide">
           <div className="section-center-header light">
-            <span className="section-eyebrow text-accent">COURIER SOLUTIONS</span>
-            <h2>Specialized Priority Transportation</h2>
-            <p className="section-desc-sub text-slate-300">
-              High-velocity transport options engineered for time-sensitive commercial consignments and private shipments.
-            </p>
+            <span className="section-eyebrow text-accent">WHAT WE MOVE</span>
+            <h2>Specialised transport for cargo that matters</h2>
             <div className="section-header-line accent" />
           </div>
 
           <div className="services-showcase-grid">
-            {/* Service 01: Priority Express Courier */}
-            <div className="service-card" style={{ backgroundImage: `url('/images/home/ecommerce-retail.jpg')` }}>
-              <div className="service-card-overlay" />
-              <div className="service-card-content">
-                <div className="flex justify-between items-center">
-                  <span className="service-num font-mono">01</span>
-                  <span className="service-status-pill">SAME-DAY DISPATCH</span>
+            {SERVICES.map((service, i) => (
+              <div key={service.title} className="service-card">
+                <ResponsiveImage
+                  name={service.image}
+                  alt={service.alt}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="service-card-media"
+                  imgClassName="service-card-img"
+                />
+                <div className="service-card-overlay" />
+                <div className="service-card-content">
+                  <span className="service-num font-mono">{String(i + 1).padStart(2, '0')}</span>
+                  <h3>{service.title}</h3>
+                  <p>{service.body}</p>
+                  <button
+                    type="button"
+                    className="btn-service-arrow"
+                    onClick={() => onNavigate('services')}
+                  >
+                    <span>{service.cta}</span>
+                    <ArrowRight size={16} />
+                  </button>
                 </div>
-                <h3>Priority Express Courier</h3>
-                <p>Urgent point-to-point document and parcel dispatch with expedited linehaul connection.</p>
-                <div className="service-micro-pills">
-                  <span>• Flight Connection</span>
-                  <span>• 24/7 Hand-off</span>
-                  <span>• Direct Chain</span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-service-arrow"
-                  onClick={() => onNavigate('services')}
-                  aria-label="View Priority Express Courier"
-                >
-                  <ArrowRight size={18} />
-                </button>
               </div>
-            </div>
-
-            {/* Service 02: Scheduled Regional Linehaul */}
-            <div className="service-card" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=900&auto=format&fit=crop&q=80')` }}>
-              <div className="service-card-overlay" />
-              <div className="service-card-content">
-                <div className="flex justify-between items-center">
-                  <span className="service-num font-mono">02</span>
-                  <span className="service-status-pill">SCHEDULED LINEHAUL</span>
-                </div>
-                <h3>Scheduled Regional Linehaul</h3>
-                <p>Direct interstate highway transport between sorting gateways with verified timestamps.</p>
-                <div className="service-micro-pills">
-                  <span>• Dedicated Fleet</span>
-                  <span>• Dock-to-Dock</span>
-                  <span>• Tamper Seals</span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-service-arrow"
-                  onClick={() => onNavigate('services')}
-                  aria-label="View Scheduled Regional Linehaul"
-                >
-                  <ArrowRight size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Service 03: Auto & Vehicle Transport */}
-            <div className="service-card" style={{ backgroundImage: `url('/images/home/automotive-parts.jpg')` }}>
-              <div className="service-card-overlay" />
-              <div className="service-card-content">
-                <div className="flex justify-between items-center">
-                  <span className="service-num font-mono">03</span>
-                  <span className="service-status-pill">VEHICLE LOGISTICS</span>
-                </div>
-                <h3>Auto & Vehicle Transport</h3>
-                <p>Enclosed and open vehicle hauling with VIN barcode tracking and digital condition reports.</p>
-                <div className="service-micro-pills">
-                  <span>• 17-Digit VIN Pass</span>
-                  <span>• Open/Enclosed</span>
-                  <span>• Condition Log</span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-service-arrow"
-                  onClick={() => onNavigate('services')}
-                  aria-label="View Auto & Vehicle Transport"
-                >
-                  <ArrowRight size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Service 04: Secure Cargo & Vault */}
-            <div className="service-card" style={{ backgroundImage: `url('/images/home/healthcare-pharma.jpg')` }}>
-              <div className="service-card-overlay" />
-              <div className="service-card-content">
-                <div className="flex justify-between items-center">
-                  <span className="service-num font-mono">04</span>
-                  <span className="service-status-pill">COLD CHAIN VAULT</span>
-                </div>
-                <h3>Medical & High-Value Cargo</h3>
-                <p>Tamper-evident chain of custody, direct driver handoff, and direct recipient signature sign-off.</p>
-                <div className="service-micro-pills">
-                  <span>• Temperature Vault</span>
-                  <span>• Direct Driver</span>
-                  <span>• Signed POD</span>
-                </div>
-                <button
-                  type="button"
-                  className="btn-service-arrow"
-                  onClick={() => onNavigate('services')}
-                  aria-label="View Medical & High-Value Cargo"
-                >
-                  <ArrowRight size={18} />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          6. INDUSTRY-SPECIFIC LOGISTICS SOLUTIONS (INTERACTIVE TABS)
+          6. INDUSTRIES (CONTENT.md §2.6)
           ========================================================================= */}
       <section className="corp-industry-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">SECTOR EXPERTISE</span>
-            <h2>Tailored logistics for key industries</h2>
-            <p className="section-desc-sub">
-              Customized courier workflows designed to meet strict regulatory and delivery standards.
-            </p>
+            <span className="section-eyebrow">INDUSTRIES</span>
+            <h2>Logistics shaped around your industry</h2>
             <div className="section-header-line" />
           </div>
 
           <div className="industry-tabs-bar">
-            <button
-              type="button"
-              className={`ind-tab-btn ${industryTab === 'auto' ? 'active' : ''}`}
-              onClick={() => setIndustryTab('auto')}
-            >
-              <Car size={16} />
-              <span>Automotive & Parts</span>
-            </button>
-            <button
-              type="button"
-              className={`ind-tab-btn ${industryTab === 'medical' ? 'active' : ''}`}
-              onClick={() => setIndustryTab('medical')}
-            >
-              <ShieldCheck size={16} />
-              <span>Healthcare & Pharma</span>
-            </button>
-            <button
-              type="button"
-              className={`ind-tab-btn ${industryTab === 'ecommerce' ? 'active' : ''}`}
-              onClick={() => setIndustryTab('ecommerce')}
-            >
-              <Package size={16} />
-              <span>E-Commerce & Retail</span>
-            </button>
-            <button
-              type="button"
-              className={`ind-tab-btn ${industryTab === 'tech' ? 'active' : ''}`}
-              onClick={() => setIndustryTab('tech')}
-            >
-              <Zap size={16} />
-              <span>Technology & Industrial</span>
-            </button>
+            {INDUSTRIES.map((ind) => (
+              <button
+                key={ind.id}
+                type="button"
+                className={`ind-tab-btn ${industryTab === ind.id ? 'active' : ''}`}
+                onClick={() => setIndustryTab(ind.id)}
+              >
+                {ind.icon}
+                <span>{ind.title}</span>
+              </button>
+            ))}
           </div>
 
           {/* Tab Content Display */}
           <div className="industry-content-card animate-fade-in">
-            {industryTab === 'auto' && (
-              <div className="industry-tab-grid">
-                <div className="ind-text-col">
-                  <h3>Precision Automotive & Vehicle Hauling</h3>
-                  <p>
-                    From bumper-to-bumper commercial parts to full vehicle carriers, we provide VIN barcode tracking, condition assessment logs, and direct dealership distribution.
-                  </p>
-                  <ul className="ind-feature-list">
-                    <li><CheckCircle2 size={16} className="text-emerald" /> 17-digit VIN barcode inspection at pickup & dock tender</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Enclosed & open multi-car carrier dispatch schedules</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Expedited same-day dealership emergency part runs</li>
-                  </ul>
-                  <button className="btn-corp-primary mt-4" onClick={() => onNavigate('services')}>
-                    Explore Automotive Solutions
-                  </button>
-                </div>
-                <div className="ind-img-col">
-                  <img src="/images/home/automotive-parts.jpg" alt="Automotive Parts Logistics" className="ind-showcase-img" />
-                </div>
+            <div key={activeIndustry.id} className="industry-tab-grid">
+              <div className="ind-text-col">
+                <h3>{activeIndustry.title}</h3>
+                <p>{activeIndustry.body}</p>
+                <ul className="ind-feature-list">
+                  {activeIndustry.bullets.map((bullet) => (
+                    <li key={bullet}><CheckCircle2 size={16} className="text-emerald" /> {bullet}</li>
+                  ))}
+                </ul>
+                <button className="btn-corp-primary mt-4" onClick={() => onNavigate('quote')}>
+                  Get a Rate Quote
+                </button>
               </div>
-            )}
-
-            {industryTab === 'medical' && (
-              <div className="industry-tab-grid">
-                <div className="ind-text-col">
-                  <h3>Certified Medical & Life Science Courier</h3>
-                  <p>
-                    Time-critical healthcare logistics requiring uncompromised chain of custody, tamper-evident security sealing, and priority airport connection.
-                  </p>
-                  <ul className="ind-feature-list">
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Dedicated courier hand-to-hand specimen transport</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Hospital dock priority check-in & signed receiver sign-off</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Temperature-sensitive package monitoring</li>
-                  </ul>
-                  <button className="btn-corp-primary mt-4" onClick={() => onNavigate('services')}>
-                    Explore Healthcare Solutions
-                  </button>
-                </div>
-                <div className="ind-img-col">
-                  <img src="/images/home/healthcare-pharma.jpg" alt="Healthcare & Life Science Logistics" className="ind-showcase-img" />
-                </div>
+              <div className="ind-img-col">
+                <ResponsiveImage
+                  name={activeIndustry.image}
+                  alt={activeIndustry.alt}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  imgClassName="ind-showcase-img"
+                />
               </div>
-            )}
-
-            {industryTab === 'ecommerce' && (
-              <div className="industry-tab-grid">
-                <div className="ind-text-col">
-                  <h3>High-Velocity E-Commerce Fulfillment</h3>
-                  <p>
-                    Accelerate your brand’s customer satisfaction with scheduled linehaul routes between fulfillment centers and final-mile regional sort hubs.
-                  </p>
-                  <ul className="ind-feature-list">
-                    <li><CheckCircle2 size={16} className="text-emerald" /> High-density Code 128 piece barcodes on every carton</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Automated batch multi-consignment manifest integration</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Transparent 99.4% on-time interstate linehaul network</li>
-                  </ul>
-                  <button className="btn-corp-primary mt-4" onClick={() => onNavigate('quote')}>
-                    Get E-Commerce Volume Rates
-                  </button>
-                </div>
-                <div className="ind-img-col">
-                  <img src="/images/home/ecommerce-retail.jpg" alt="E-Commerce Fulfillment & Dispatch" className="ind-showcase-img" />
-                </div>
-              </div>
-            )}
-
-            {industryTab === 'tech' && (
-              <div className="industry-tab-grid">
-                <div className="ind-text-col">
-                  <h3>Mission-Critical Technology & Hardware</h3>
-                  <p>
-                    Secure transport of enterprise server racks, microelectronics, aerospace components, and sensitive machinery with full insurance coverage.
-                  </p>
-                  <ul className="ind-feature-list">
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Air-ride suspension trucks with hydraulic liftgate tender</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Dual-driver continuous security escort available</li>
-                    <li><CheckCircle2 size={16} className="text-emerald" /> Direct data center dock delivery clearance</li>
-                  </ul>
-                  <button className="btn-corp-primary mt-4" onClick={() => onNavigate('ship')}>
-                    Book Technology Tender
-                  </button>
-                </div>
-                <div className="ind-img-col">
-                  <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=900&auto=format&fit=crop&q=80" alt="Enterprise Data & Precision Tech Transport" className="ind-showcase-img" />
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </section>
@@ -912,110 +716,53 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          8. "YOUR CARGO IS SAFE WITH US" (8-POINT TRUST PILLARS GRID)
+          8. TRUST MATRIX (CONTENT.md §2.8)
           ========================================================================= */}
       <section className="corp-trust-matrix-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">GUARANTEED SECURITY</span>
+            <span className="section-eyebrow">SAFE HANDS</span>
             <h2>Your cargo is safe with us</h2>
-            <p className="section-desc-sub">
-              Every shipment is backed by institutional security protocols, FMCSA carrier registration, and PII protection.
-            </p>
             <div className="section-header-line" />
           </div>
 
           <div className="trust-matrix-grid">
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><ShieldCheck size={22} className="text-accent" /></div>
-              <div>
-                <h4>Integrity Guarantee</h4>
-                <p>Strict chain-of-custody verification at every transit checkpoint.</p>
+            {TRUST_TILES.map((tile) => (
+              <div key={tile.title} className="trust-pillar-card">
+                <div className="trust-pillar-icon">{tile.icon}</div>
+                <div>
+                  <h4>{tile.title}</h4>
+                  <p>{tile.body}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Clock size={22} className="text-accent" /></div>
-              <div>
-                <h4>Precise Time Schedules</h4>
-                <p>Dynamic ETA routing calculated on live trade corridor conditions.</p>
-              </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Users size={22} className="text-accent" /></div>
-              <div>
-                <h4>Vetted Professional Drivers</h4>
-                <p>FMCSA-certified commercial drivers with background validation.</p>
-              </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Lock size={22} className="text-accent" /></div>
-              <div>
-                <h4>PII Privacy Protection</h4>
-                <p>Automated masking of personal contact info on public tracking.</p>
-              </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Award size={22} className="text-accent" /></div>
-              <div>
-                <h4>Certified Quality Standards</h4>
-                <p>USDOT registered commercial carrier authority #3894210.</p>
-              </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><FileText size={22} className="text-accent" /></div>
-              <div>
-                <h4>Digital Bills of Lading</h4>
-                <p>Instant regulatory BOL, Waybills, and signed POD receipts.</p>
-              </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Sparkles size={22} className="text-accent" /></div>
-              <div>
-                <h4>Linear Code 128 Barcodes</h4>
-                <p>High-density optical symbology for tamper-proof piece tracking.</p>
-              </div>
-            </div>
-
-            <div className="trust-pillar-card">
-              <div className="trust-pillar-icon"><Headphones size={22} className="text-accent" /></div>
-              <div>
-                <h4>24/7 Dedicated Support</h4>
-                <p>Live human dispatch assistance with instant shipment lookup.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          9. LINEAR CODE 128 BARCODE SPOTLIGHT (THERMAL SHIPPING LABEL)
+          9. BARCODE SPOTLIGHT (CONTENT.md §2.9)
           ========================================================================= */}
       <section className="corp-barcode-spotlight-section">
         <div className="sdl-container-wide barcode-spotlight-grid">
           <div className="barcode-text-col">
-            <span className="section-eyebrow text-accent">PROVENANCE TECHNOLOGY</span>
-            <h2>High-Density Linear Code 128 Barcode Symbology</h2>
+            <span className="section-eyebrow text-accent">SMART LABELS</span>
+            <h2>One label. Every checkpoint. Zero guesswork.</h2>
             <p>
-              Unlike generic QR codes that fail in industrial dock environments, {COMPANY} utilizes standardized high-density linear Code 128 barcodes across all parcel cartons, auto VIN passes, and Bills of Lading.
+              Every {COMPANY_SHORT} piece carries a high-density Code 128 barcode linked to your tracking ID. Each scan, at collection, at the gateway, through customs and at the door, updates your tracking page instantly.
             </p>
             <div className="barcode-specs-row">
               <div className="b-spec">
-                <strong>0.001s</strong>
-                <small>Laser Scan Velocity</small>
+                <strong>8-character</strong>
+                <small>Tracking ID</small>
               </div>
               <div className="b-spec">
-                <strong>100%</strong>
-                <small>Physical Provenance</small>
+                <strong>Every piece</strong>
+                <small>Individually scanned</small>
               </div>
               <div className="b-spec">
-                <strong>Zero</strong>
-                <small>QR Code Failures</small>
+                <strong>Live</strong>
+                <small>Milestone updates</small>
               </div>
             </div>
           </div>
@@ -1025,28 +772,26 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               <div className="thermal-perforation-top" />
               <div className="thermal-header-strip">
                 <div>
-                  <strong className="thermal-brand font-mono">{COMPANY_SHORT} CARRIER LABEL</strong>
-                  <span className="thermal-fmcsa font-mono">{dotNumber ? `${dotNumber} · ` : ''}STANDARD MASTER WAYBILL</span>
+                  <strong className="thermal-brand font-mono">{COMPANY.toUpperCase()}</strong>
                 </div>
-                <span className="thermal-badge font-mono">PRIORITY AIR/GROUND</span>
               </div>
 
               <div className="thermal-body-grid font-mono">
                 <div className="th-cell">
-                  <small>ORIGIN HUB</small>
-                  <strong>JFK-01 (NEW YORK)</strong>
+                  <small>ORIGIN</small>
+                  <strong>LOS (LAGOS)</strong>
                 </div>
                 <div className="th-cell">
-                  <small>DESTINATION GATEWAY</small>
-                  <strong>LAX-06 (LOS ANGELES)</strong>
+                  <small>DESTINATION</small>
+                  <strong>LHR (LONDON)</strong>
                 </div>
                 <div className="th-cell">
-                  <small>WEIGHT & CLASS</small>
-                  <strong>45.0 LBS · CLASS 70</strong>
+                  <small>WEIGHT</small>
+                  <strong>20.4 KG</strong>
                 </div>
                 <div className="th-cell">
-                  <small>DEPARTURE DISPATCH</small>
-                  <strong>LINEHAUL #842</strong>
+                  <small>SERVICE</small>
+                  <strong>PRIORITY EXPRESS</strong>
                 </div>
               </div>
 
@@ -1057,7 +802,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
 
               <div className="thermal-footer font-mono">
                 <span>TRACKING ID: DLS7K2M9</span>
-                <span>PIECE 01/01 · VERIFIED LEDGER</span>
+                <span>PIECE 01/01</span>
               </div>
             </div>
           </div>
@@ -1065,140 +810,98 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          10. WHAT OUR CLIENTS SAY (TESTIMONIAL CAROUSEL)
+          10. OUR COMMITMENTS (CONTENT.md §2.10, Option A)
           ========================================================================= */}
       <section className="corp-testimonial-section">
-        <div className="sdl-container">
-          <div className="testimonial-wrapper">
-            <div className="testimonial-card-frame">
-              <div className="quote-mark-icon">“</div>
-              <div className="testimonial-top-row">
-                <div className="flex gap-1 text-accent">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} fill="#D3070B" color="#D3070B" />
-                  ))}
-                </div>
-                <span className="verified-client-badge font-mono">
-                  <CheckCircle2 size={12} className="text-emerald" />
-                  VERIFIED ENTERPRISE SHIPPER
-                </span>
+        <div className="sdl-container-wide">
+          <div className="section-center-header">
+            <span className="section-eyebrow">OUR COMMITMENTS</span>
+            <h2>What you can hold us to</h2>
+            <div className="section-header-line" />
+          </div>
+
+          <div className="commitments-grid">
+            {COMMITMENTS.map((item) => (
+              <div key={item.quote} className="testimonial-card-frame commitment-card">
+                <div className="quote-mark-icon" aria-hidden="true">“</div>
+                <p className="testimonial-quote-text">“{item.quote}”</p>
+                <p className="commitment-body">{item.body}</p>
               </div>
-
-              <p className="testimonial-quote-text">
-                {testimonials[activeTestimonial].quote}
-              </p>
-
-              <div className="testimonial-author-row">
-                <div className="author-profile">
-                  <img
-                    src={testimonials[activeTestimonial].avatar}
-                    alt={testimonials[activeTestimonial].author}
-                    className="author-avatar-img"
-                  />
-                  <div>
-                    <h4 className="author-name">{testimonials[activeTestimonial].author}</h4>
-                    <p className="author-role">{testimonials[activeTestimonial].role}</p>
-                    <small className="author-company">{testimonials[activeTestimonial].company}</small>
-                  </div>
-                </div>
-
-                {/* Slider Navigation Arrows */}
-                <div className="testimonial-controls">
-                  <button
-                    type="button"
-                    className="btn-slider-arrow"
-                    onClick={prevTestimonial}
-                    aria-label="Previous Testimonial"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-slider-arrow"
-                    onClick={nextTestimonial}
-                    aria-label="Next Testimonial"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          11. TRUSTED BY NATIONWIDE COMMERCIAL SHIPPERS (PURE LOGO MARQUEE)
+          11. MODES WE CONNECT (CONTENT.md §2.11)
           ========================================================================= */}
       <section className="corp-partners-strip">
         <div className="sdl-container-wide">
-          <div className="partners-label">TRUSTED BY NATIONWIDE ENTERPRISES & COMMERCIAL SHIPPERS</div>
-          <div className="partners-marquee-container">
-            <div className="partners-marquee-fade left" />
-            <div className="partners-marquee-track">
-              {CLIENT_LOGOS.concat(CLIENT_LOGOS).map((client, idx) => (
-                <div key={idx} className="partner-marquee-card">
-                  <div className="partner-logo-svg-wrap">{client.svg}</div>
-                </div>
-              ))}
-            </div>
-            <div className="partners-marquee-fade right" />
-          </div>
+          <div className="partners-label">MODES WE CONNECT</div>
+          <ul className="modes-row">
+            {MODES.map((mode) => (
+              <li key={mode.label} className="mode-card">
+                {mode.icon}
+                <span>{mode.label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/* =========================================================================
-          12. INSTANT DISPATCH CALLBACK BANNER
+          12. CALLBACK BANNER (CONTENT.md §2.12)
           ========================================================================= */}
       <section className="corp-callback-banner">
         <div className="callback-banner-overlay" />
         <div className="sdl-container callback-inner">
           <div className="callback-text-block">
-            <h3>Need urgent linehaul dispatch or custom rate consultation?</h3>
-            <p>Enter your details and our senior logistics coordinator will call you within 15 minutes.</p>
+            <h3>Need an urgent collection or a custom rate?</h3>
+            {/* "usually within 30 minutes during business hours" is held back until the owner confirms it. */}
+            <p>Leave your number and a coordinator will call you back.</p>
           </div>
 
           {cbSuccess ? (
             <div className="callback-success-alert animate-fade-in">
               <CheckCircle2 size={24} className="text-emerald" />
               <div>
-                <strong>Callback Request Received!</strong>
-                <p>Our priority dispatch desk is connecting with you now.</p>
+                <strong>Request received!</strong>
+                <p>A coordinator will call you shortly.</p>
               </div>
             </div>
           ) : (
             <form onSubmit={handleCallbackSubmit} className="callback-form-row">
               <input
                 type="text"
-                placeholder="Your Full Name"
+                placeholder="Name"
+                aria-label="Name"
                 value={cbName}
                 onChange={(e) => setCbName(e.target.value)}
                 className="cb-input"
                 required
               />
 
-              <select
-                value={cbService}
-                onChange={(e) => setCbService(e.target.value)}
-                className="cb-select"
-              >
-                <option value="Priority Express Courier">Priority Express Courier</option>
-                <option value="Regional Scheduled Linehaul">Regional Scheduled Linehaul</option>
-                <option value="Auto & Vehicle Transport">Auto & Vehicle Transport</option>
-                <option value="Medical / Fragile Cargo">Medical / Fragile Cargo</option>
-              </select>
-
               <input
                 type="tel"
-                placeholder="Phone Number (e.g. 555-0199)"
+                placeholder="Phone (with country code)"
+                aria-label="Phone (with country code)"
                 value={cbPhone}
                 onChange={(e) => setCbPhone(e.target.value)}
                 className="cb-input"
                 required
               />
 
+              <input
+                type="text"
+                placeholder="Preferred time"
+                aria-label="Preferred time"
+                value={cbTime}
+                onChange={(e) => setCbTime(e.target.value)}
+                className="cb-input"
+              />
+
               <button type="submit" className="btn-callback-submit">
-                <span>Request Call</span>
+                <span>Request a Callback</span>
                 <ArrowRight size={16} />
               </button>
             </form>
@@ -1207,7 +910,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          13. FREQUENTLY ASKED QUESTIONS (ACCORDION)
+          13. FAQ (CONTENT.md §2.13)
           ========================================================================= */}
       <section className="corp-faq-section">
         <div className="sdl-container">
@@ -1218,7 +921,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           </div>
 
           <div className="faq-accordion-list">
-            {faqs.map((faq, index) => {
+            {FAQS.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
                 <div key={index} className={`faq-item-card ${isOpen ? 'open' : ''}`}>
@@ -1226,6 +929,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                     type="button"
                     className="faq-question-toggle"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
+                    aria-expanded={isOpen}
                   >
                     <span>{faq.q}</span>
                     {isOpen ? <ChevronUp size={18} className="text-accent" /> : <ChevronDown size={18} />}

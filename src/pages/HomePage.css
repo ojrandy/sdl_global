@@ -16,12 +16,25 @@
 .corp-hero-section {
   position: relative;
   min-height: 660px;
-  background-image: url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=1920&auto=format&fit=crop&q=85');
-  background-size: cover;
-  background-position: center;
+  background-color: var(--sdl-ink-950);
+  overflow: hidden;
   display: flex;
   align-items: center;
   padding: 5rem 0 7rem 0;
+}
+
+/* Hero photo (<ResponsiveImage>, art-directed for phones) sits behind the overlay. */
+.corp-hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.corp-hero-media .corp-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .corp-hero-overlay {
@@ -283,6 +296,16 @@
   font-family: var(--sdl-font-mono);
   font-weight: 800;
   letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.hero-showcase-bottom a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hero-showcase-bottom a:hover {
+  text-decoration: underline;
 }
 
 /* ============================================================
@@ -585,7 +608,7 @@
   gap: 1rem;
 }
 
-.how-it-works-action-strip span {
+.how-it-works-action-strip > div:first-child span {
   font-size: 0.9375rem;
   font-weight: 700;
   color: var(--sdl-ink-900);
@@ -637,7 +660,7 @@
   box-shadow: var(--sdl-shadow-xl);
 }
 
-.about-main-img {
+.about-main-img-wrapper .about-main-img {
   width: 100%;
   height: 440px;
   object-fit: cover;
@@ -689,7 +712,11 @@
   gap: 1rem;
 }
 
-.about-thumb-img {
+.about-thumb-overlap .sdl-responsive-picture {
+  flex-shrink: 0;
+}
+
+.about-thumb-overlap .about-thumb-img {
   width: 72px;
   height: 72px;
   border-radius: var(--sdl-radius-md);
@@ -736,7 +763,7 @@
 
 .about-stats-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1.5rem;
   padding: 1.5rem 0;
   margin: 0.5rem 0;
@@ -794,6 +821,18 @@
   transform: translateY(-8px) scale(1.02);
   border-color: var(--sdl-accent-500);
   box-shadow: 0 20px 35px -5px rgba(var(--sdl-accent-rgb), 0.3);
+}
+
+.service-card-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.service-card-media .service-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .service-card-overlay {
@@ -866,13 +905,17 @@
 }
 
 .btn-service-arrow {
-  width: 42px;
-  height: 42px;
+  align-self: flex-start;
+  min-height: 42px;
+  padding: 0 1rem;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
   background: rgba(255, 255, 255, 0.12);
   color: var(--sdl-white);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  display: flex;
+  border-radius: 9999px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -975,7 +1018,7 @@
   gap: 0.625rem;
 }
 
-.ind-showcase-img {
+.ind-img-col .ind-showcase-img {
   width: 100%;
   height: 320px;
   object-fit: cover;
@@ -1441,22 +1484,23 @@
 }
 
 /* ============================================================
-   10. TESTIMONIAL CAROUSEL
+   10. OUR COMMITMENTS (replaces testimonials, CONTENT.md §2.10)
    ============================================================ */
 .corp-testimonial-section {
   padding: 5rem 0;
   background-color: var(--sdl-white);
 }
 
-.testimonial-wrapper {
-  max-width: 840px;
-  margin: 0 auto;
+.commitments-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
 .testimonial-card-frame {
   background: var(--sdl-white);
   border-radius: var(--sdl-radius-xl);
-  padding: 3rem;
+  padding: 2.5rem 2rem 2rem;
   box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--sdl-slate-200);
   position: relative;
@@ -1468,109 +1512,31 @@
   font-family: Georgia, serif;
   color: var(--sdl-accent-400);
   position: absolute;
-  top: 1.5rem;
-  left: 2rem;
+  top: 1rem;
+  left: 1.5rem;
   opacity: 0.3;
-}
-
-.testimonial-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-  position: relative;
-  z-index: 2;
-}
-
-.verified-client-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: #059669;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
 }
 
 .testimonial-quote-text {
   font-size: 1.1875rem;
-  line-height: 1.7;
+  line-height: 1.5;
   color: var(--sdl-ink-900);
-  font-weight: 500;
+  font-weight: 700;
   position: relative;
   z-index: 2;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
 }
 
-.testimonial-author-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--sdl-slate-100);
-}
-
-.author-profile {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.author-avatar-img {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--sdl-accent-500);
-}
-
-.author-name {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--sdl-ink-900);
-}
-
-.author-role {
-  font-size: 0.8125rem;
+.commitment-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
   color: var(--sdl-slate-600);
-}
-
-.author-company {
-  font-size: 0.75rem;
-  color: var(--sdl-accent-500);
-  font-weight: 600;
-}
-
-.testimonial-controls {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-slider-arrow {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--sdl-slate-100);
-  color: var(--sdl-ink-900);
-  border: 1px solid var(--sdl-slate-300);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--sdl-transition);
-}
-
-.btn-slider-arrow:hover {
-  background: var(--sdl-accent-500);
-  border-color: var(--sdl-accent-500);
-  color: var(--sdl-white);
+  position: relative;
+  z-index: 2;
 }
 
 /* ============================================================
-   11. PARTNERS STRIP (INFINITE MOVING MARQUEE TICKER)
+   11. MODES WE CONNECT (replaces client logos, CONTENT.md §2.11)
    ============================================================ */
 .corp-partners-strip {
   padding: 4.5rem 0;
@@ -1578,7 +1544,6 @@
   border-top: 1px solid var(--sdl-slate-200);
   border-bottom: 1px solid var(--sdl-slate-200);
   text-align: center;
-  overflow: hidden;
 }
 
 .partners-label {
@@ -1589,82 +1554,29 @@
   margin-bottom: 2.25rem;
 }
 
-.partners-marquee-container {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
+.modes-row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  align-items: center;
-}
-
-.partners-marquee-fade {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 180px;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.partners-marquee-fade.left {
-  left: 0;
-  background: linear-gradient(to right, #f8fafc, transparent);
-}
-
-.partners-marquee-fade.right {
-  right: 0;
-  background: linear-gradient(to left, #f8fafc, transparent);
-}
-
-.partners-marquee-track {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  width: max-content;
-  animation: infiniteMarquee 40s linear infinite;
-}
-
-.partners-marquee-track:hover {
-  animation-play-state: paused;
-}
-
-@keyframes infiniteMarquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-.partner-marquee-card {
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 1rem;
+}
+
+.mode-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
   background: var(--sdl-white);
   border: 1.5px solid var(--sdl-slate-200);
-  padding: 1.25rem 2.75rem;
+  padding: 0.875rem 1.5rem;
   border-radius: var(--sdl-radius-xl);
   box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--sdl-ink-900);
   white-space: nowrap;
-  user-select: none;
-  min-width: 220px;
-  height: 86px;
-  transition: var(--sdl-transition);
-}
-
-.partner-marquee-card:hover {
-  border-color: var(--sdl-accent-500);
-  transform: translateY(-4px);
-  box-shadow: 0 14px 28px rgba(var(--sdl-accent-rgb), 0.16);
-}
-
-.partner-logo-svg-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 48px;
-  transition: transform 0.3s ease;
-}
-
-.partner-marquee-card:hover .partner-logo-svg-wrap {
-  transform: scale(1.08);
 }
 
 /* ============================================================
@@ -1733,6 +1645,11 @@
   font-size: 0.875rem;
   color: var(--sdl-ink-900);
   outline: none;
+}
+
+/* Room for the full "Phone (with country code)" placeholder. */
+.callback-form-row .cb-input[type="tel"] {
+  flex: 1.4 1 230px;
 }
 
 .cb-input:focus, .cb-select:focus {
@@ -1831,6 +1748,11 @@
    COMPLETE RESPONSIVE DESIGN SYSTEM (MOBILE & TABLET EXCELLENCE)
    ============================================================ */
 @media (max-width: 1024px) {
+  .commitments-grid {
+    grid-template-columns: 1fr;
+    max-width: 640px;
+    margin: 0 auto;
+  }
   .corp-hero-inner {
     grid-template-columns: 1fr;
     gap: 2.5rem;
@@ -1940,7 +1862,7 @@
     width: 100%;
     justify-content: center;
   }
-  .about-main-img {
+  .about-main-img-wrapper .about-main-img {
     height: 280px;
   }
   .about-thumb-overlap {
@@ -2014,24 +1936,14 @@
     padding: 1.25rem;
   }
   .testimonial-card-frame {
-    padding: 1.75rem 1.25rem;
-  }
-  .testimonial-top-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+    padding: 2.25rem 1.25rem 1.5rem;
   }
   .testimonial-quote-text {
-    font-size: 1rem;
+    font-size: 1.0625rem;
   }
-  .testimonial-author-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
-  }
-  .testimonial-controls {
-    width: 100%;
-    justify-content: flex-end;
+  .mode-card {
+    padding: 0.75rem 1.125rem;
+    font-size: 0.875rem;
   }
   .callback-text-block h3 {
     font-size: 1.75rem;
@@ -2066,9 +1978,5 @@
   }
   .thermal-body-grid {
     grid-template-columns: 1fr;
-  }
-  .partner-emblem-badge {
-    width: 100%;
-    justify-content: center;
   }
 }
