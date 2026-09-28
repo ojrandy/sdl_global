@@ -983,7 +983,22 @@
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 3.5rem;
-  align-items: center;
+  align-items: stretch;
+}
+
+.ind-text-col {
+  align-self: center;
+}
+
+/* The photo covers the whole image column, whatever the text height. */
+.ind-img-col {
+  display: flex;
+  min-height: 320px;
+}
+
+.ind-img-col .sdl-responsive-picture {
+  flex: 1;
+  display: flex;
 }
 
 .ind-text-col h3 {
@@ -1020,7 +1035,8 @@
 
 .ind-img-col .ind-showcase-img {
   width: 100%;
-  height: 320px;
+  height: 100%;
+  min-height: 320px;
   object-fit: cover;
   border-radius: var(--sdl-radius-lg);
   box-shadow: var(--sdl-shadow-lg);
@@ -1405,6 +1421,13 @@
   padding-bottom: 0.75rem;
 }
 
+.thermal-mark {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .thermal-brand {
   font-size: 0.8125rem;
   font-weight: 800;
@@ -1584,11 +1607,22 @@
    ============================================================ */
 .corp-callback-banner {
   position: relative;
-  background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&auto=format&fit=crop&q=80');
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
+  background-color: var(--sdl-ink-950);
   padding: 5.5rem 0;
   color: var(--sdl-white);
+}
+
+.callback-banner-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.callback-banner-media .callback-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .callback-banner-overlay {
@@ -1676,6 +1710,18 @@
 .btn-callback-submit:hover {
   background: linear-gradient(135deg, var(--sdl-accent-600) 0%, var(--sdl-accent-500) 100%);
   transform: translateY(-2px);
+}
+
+.btn-callback-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
+}
+
+.callback-error {
+  color: #fecaca;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .callback-success-alert {

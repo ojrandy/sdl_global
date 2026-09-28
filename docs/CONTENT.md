@@ -107,12 +107,14 @@ Spelling: International/British English (see BRAND_GUIDE §3).
 2. **Collect & Verify.** We collect from your door, weigh and scan every piece at the origin gateway, and prepare the export and customs documents.
 3. **Move Across Borders.** Your cargo travels on the fastest suitable lane: air, ocean or road. Customs clearance and each transfer are logged live.
 4. **Deliver & Sign.** Final-mile delivery to the door, with a signed digital proof of delivery sent to you the moment it lands.
+- **CTA strip under the steps** (reuses §3.6, owner approved 2026-09-28): `Ready to ship with SDL? Get a rate in minutes, or talk to a coordinator about your lane.` · Buttons `Get a Quote` · `Contact Us`
 
 ### 2.4 About strip
 - **Eyebrow:** `ABOUT SDL`
 - **H2:** `We believe global shipping should feel local: visible, fast and dependable.`
 - **Body:** `SDL Global Logistics was built for shippers who are tired of losing sight of their cargo the moment it leaves the building. We bring express, freight and secure transport under one roof, so one team owns your shipment from pickup to proof of delivery, wherever in the world it's going.`
-- **Stat tiles:** `{{YEAR_FOUNDED}}` → "Years moving cargo" (**remove if unknown**) · **24/7** "Global operations desk" · **1** "Tracking ID from start to finish"
+- **Stat tiles (always three):** **24/7** "Global operations desk" · **1** "Tracking ID from start to finish" · **5** "Continents served" (from §2.7). When `{{YEAR_FOUNDED}}` is confirmed, "Years moving cargo" replaces "Continents served".
+- **Photo caption** (reuses §2.1, owner approved 2026-09-28): **Real People, Every Time Zone** · `A named coordinator follows your shipment`
 - **Link:** `More about SDL →`
 
 ### 2.5 Services (4 image cards)
@@ -130,6 +132,7 @@ Spelling: International/British English (see BRAND_GUIDE §3).
 2. **Healthcare & Life Sciences.** Samples, medical devices and pharmaceuticals handled with care, controlled hand-offs and full traceability. *Bullets:* Temperature-sensitive handling (on request) · Sealed chain of custody · Priority customs lodgement.
 3. **E-Commerce & Retail.** Cross-border parcels, stock replenishment and returns for growing online brands. *Bullets:* Multi-piece shipments under one ID · Scheduled consolidations · Simple returns with linked tracking.
 4. **Technology & Electronics.** High-value hardware and components moved securely, on time and fully insured on request. *Bullets:* Secure vault option · Anti-static, protected packing guidance · Signature-only release.
+- **Button on every tab** (owner approved 2026-09-28): `Get a Rate Quote`
 
 ### 2.7 Global network map (replaces "Active U.S. Trade Gateways")
 - **Eyebrow:** `GLOBAL NETWORK`
@@ -156,6 +159,7 @@ Spelling: International/British English (see BRAND_GUIDE §3).
 - **H2:** `One label. Every checkpoint. Zero guesswork.`
 - **Body:** `Every SDL piece carries a high-density Code 128 barcode linked to your tracking ID. Each scan, at collection, at the gateway, through customs and at the door, updates your tracking page instantly.`
 - **Replace the invented metrics** with capability tiles: **8-character** "Tracking ID" · **Every piece** "Individually scanned" · **Live** "Milestone updates"
+- **Demo label header:** `SDL GLOBAL LOGISTICS` with the SDL mark (`/brand/sdl-mark.png`) on the right
 - **Demo label fields:** `ORIGIN: LOS (LAGOS)` · `DESTINATION: LHR (LONDON)` · `WEIGHT: 20.4 KG` · `SERVICE: PRIORITY EXPRESS` · barcode value `DLS7K2M9` · caption `TRACKING ID: DLS7K2M9`
 
 ### 2.10 Testimonials → "Our commitments" (until real testimonials exist)
@@ -173,12 +177,14 @@ Remove the invented client logos. Replace with an icon row: **Air Freight · Oce
 
 ### 2.12 Callback banner
 - **H3:** `Need an urgent collection or a custom rate?`
-- **Body:** `Leave your number and a coordinator will call you back, usually within 30 minutes during business hours.` *(Keep "30 minutes" only if the owner confirms it.)*
+- **Body:** `Leave your number and a coordinator will call you back, usually within 30 minutes during business hours.` *("30 minutes" confirmed by the owner 2026-09-28.)*
+- **Background:** `callback-banner` (3:1 crop of `images/landingimage.png`) under the dark overlay
 - **Fields:** Name · Phone (with country code) · Preferred time
 - **Button:** `Request a Callback`
 - **Success:** **Request received!** `A coordinator will call you shortly. Your reference is SDL-TKT-######.`
 
 ### 2.13 FAQ (home, 5 items)
+- **Eyebrow / H2** (owner approved 2026-09-28): `COMMON QUESTIONS` · `Frequently Asked Questions`
 1. **Do I need an account to track a shipment?** No. Enter your 8-character tracking ID (for example DLS7K2M9) on the Track page and you'll see its status and milestones straight away. Personal details are masked for privacy.
 2. **How does live tracking work?** Every piece is scanned at each hand-off: collection, gateway, departure, arrival, customs and delivery. Between scans, we show your shipment's estimated position on its route.
 3. **Can I track a multi-piece shipment under one ID?** Yes. All pieces share one tracking ID, and each piece has its own label (for example DLS7K2M9-01, -02), so you can see every carton individually.
@@ -433,16 +439,17 @@ Several SDL photos show the logo lettered as "SOL" (AI-generated artwork), so th
 | Image (slot) | Source | Alt |
 |---|---|---|
 | hero-home / hero-home-mobile | images/landingimage(-mobile).png | SDL Global Logistics truck at a container port at sunset, with a cargo ship, cranes and an SDL aircraft overhead |
+| callback-banner | images/landingimage.png (3:1 crop) | (decorative background behind the callback form, empty alt) |
 | track-hero | images/landingimage.png (2:1 crop) | SDL truck, cargo ship and aircraft at a container port at sunset |
 | locations-hero | images/free-cc0/locations-hero.webp | Aerial view of rows of shipping containers at a port terminal |
 | service-priority-express | images/brand-img1.PNG | Ground crew loading palletised air cargo into an SDL aircraft at sunset |
 | service-freight-linehaul | images/brand-img2.PNG | Container ship being loaded by gantry cranes at a port terminal |
 | service-vehicle-transport | images/free-cc0/service-vehicle-transport.webp | Roll-on/roll-off vehicle carrier ship berthed at a harbour quay |
 | service-secure-vault | images/free-cc0/service-secure-vault.webp | Close-up of the combination lock on a metal security case |
-| industry-healthcare | Public/images/home/healthcare-pharma.jpg | Worker in gloves and a clean-room gown carrying sealed boxes |
+| industry-healthcare | images/site/healthcare-pharma.jpg | Worker in gloves and a clean-room gown carrying sealed boxes |
 | industry-technology | images/free-cc0/industry-technology.webp | Server rack with network cables and status lights |
-| industry-automotive | Public/images/home/automotive-parts.jpg | Mechanic working on a car engine with a spanner |
-| industry-ecommerce | Public/images/home/ecommerce-retail.jpg | Online seller packing parcels next to a laptop |
+| industry-automotive | images/site/automotive-parts.jpg | Mechanic working on a car engine with a spanner |
+| industry-ecommerce | images/site/ecommerce-retail.jpg | Online seller packing parcels next to a laptop |
 | track-result-vehicle | images/brand-img3.PNG | Two SDL trucks travelling along a highway at sunset |
 | about-operations | images/brand-img4.PNG | SDL warehouse staff member checking stacked, labelled cartons on a tablet |
 | about-team | images/brand-img7.PNG (cropped) | Smiling SDL team member in a branded cap at a container yard |

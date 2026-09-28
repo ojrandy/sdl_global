@@ -37,6 +37,7 @@ import { GATEWAYS, getGateway, getLanePartners, formatGatewayTime } from '../dat
 import { useNow } from '../utils/useNow';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
+import { api } from '../services/api';
 import './HomePage.css';
 
 interface HomePageProps {
@@ -203,7 +204,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   const [cbName, setCbName] = useState('');
   const [cbPhone, setCbPhone] = useState('');
   const [cbTime, setCbTime] = useState('');
-  const [cbSuccess, setCbSuccess] = useState(false);
+  const [cbReference, setCbReference] = useState<string | null>(null);
+  const [cbSubmitting, setCbSubmitting] = useState(false);
+  const [cbError, setCbError] = useState<string | null>(null);
 
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -215,16 +218,31 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   const activeGatewayTime = formatGatewayTime(activeGateway.timeZone, now);
   const activeGatewayLanes = getLanePartners(activeGateway.code).map((code) => getGateway(code)?.city ?? code);
 
-  const handleCallbackSubmit = (e: React.FormEvent) => {
+  // Stored as a message in the admin inbox; the server issues the SDL-TKT reference.
+  const handleCallbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (cbPhone.trim()) {
-      setCbSuccess(true);
-      setTimeout(() => {
-        setCbSuccess(false);
-        setCbName('');
-        setCbPhone('');
-        setCbTime('');
-      }, 4000);
+    if (!cbName.trim() || !cbPhone.trim() || cbSubmitting) return;
+    setCbSubmitting(true);
+    setCbError(null);
+    try {
+      const saved = await api.submitContactMessage({
+        name: cbName.trim(),
+        email: '',
+        phone: cbPhone.trim(),
+        subject: 'Callback request',
+        priority: 'urgent',
+        message: cbTime.trim()
+          ? `Callback requested from the Home page. Preferred time: ${cbTime.trim()}`
+          : 'Callback requested from the Home page. No preferred time given.'
+      });
+      setCbReference(saved.id);
+      setCbName('');
+      setCbPhone('');
+      setCbTime('');
+    } catch (err) {
+      setCbError(err instanceof Error && err.message ? err.message : 'We couldn’t send your request. Please try again.');
+    } finally {
+      setCbSubmitting(false);
     }
   };
 
@@ -520,7 +538,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               {COMPANY} was built for shippers who are tired of losing sight of their cargo the moment it leaves the building. We bring express, freight and secure transport under one roof, so one team owns your shipment from pickup to proof of delivery, wherever in the world it’s going.
             </p>
 
-            {/* "Years moving cargo" stays hidden until the owner confirms the founding year. */}
+            {/* "Years moving cargo" stays hidden until the owner confirms the founding year;
+                "Continents served" (CONTENT §2.7) fills the third tile. */}
             <div className="about-stats-strip">
               <div className="about-stat-item">
                 <strong className="font-mono text-accent">24/7</strong>
@@ -529,6 +548,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
               <div className="about-stat-item">
                 <strong className="font-mono text-accent">1</strong>
                 <span>Tracking ID from start to finish</span>
+              </div>
+              <div className="about-stat-item">
+                <strong className="font-mono text-accent">5</strong>
+                <span>Continents served</span>
               </div>
             </div>
 
@@ -774,6 +797,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                 <div>
                   <strong className="thermal-brand font-mono">{COMPANY.toUpperCase()}</strong>
                 </div>
+                <img src="/brand/sdl-mark.png" alt="" className="thermal-mark" width={40} height={40} loading="lazy" />
               </div>
 
               <div className="thermal-body-grid font-mono">
@@ -853,20 +877,26 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
           12. CALLBACK BANNER (CONTENT.md §2.12)
           ========================================================================= */}
       <section className="corp-callback-banner">
+        <ResponsiveImage
+          name="callback-banner"
+          alt=""
+          sizes="100vw"
+          className="callback-banner-media"
+          imgClassName="callback-banner-img"
+        />
         <div className="callback-banner-overlay" />
         <div className="sdl-container callback-inner">
           <div className="callback-text-block">
             <h3>Need an urgent collection or a custom rate?</h3>
-            {/* "usually within 30 minutes during business hours" is held back until the owner confirms it. */}
-            <p>Leave your number and a coordinator will call you back.</p>
+            <p>Leave your number and a coordinator will call you back, usually within 30 minutes during business hours.</p>
           </div>
 
-          {cbSuccess ? (
-            <div className="callback-success-alert animate-fade-in">
+          {cbReference ? (
+            <div className="callback-success-alert animate-fade-in" role="status">
               <CheckCircle2 size={24} className="text-emerald" />
               <div>
                 <strong>Request received!</strong>
-                <p>A coordinator will call you shortly.</p>
+                <p>A coordinator will call you shortly. Your reference is <span className="font-mono">{cbReference}</span>.</p>
               </div>
             </div>
           ) : (
@@ -900,11 +930,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
                 className="cb-input"
               />
 
-              <button type="submit" className="btn-callback-submit">
-                <span>Request a Callback</span>
+              <button type="submit" className="btn-callback-submit" disabled={cbSubmitting}>
+                <span>{cbSubmitting ? 'Sending…' : 'Request a Callback'}</span>
                 <ArrowRight size={16} />
               </button>
             </form>
+          )}
+          {cbError && !cbReference && (
+            <p className="callback-error" role="alert">{cbError}</p>
           )}
         </div>
       </section>
