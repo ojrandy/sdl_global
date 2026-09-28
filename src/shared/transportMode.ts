@@ -13,9 +13,16 @@ export function parseTransportMode(value: unknown): TransportMode | undefined {
   return undefined;
 }
 
-// Customer-facing names for the modes (tracker 2.8).
+// Customer-facing names for the modes as services (tracker 2.8): quote and booking forms.
 export const TRANSPORT_MODE_LABELS: Record<TransportMode, string> = {
   Road: 'Road',
   Air: 'Air Freight',
   Sea: 'Ocean Freight',
+};
+
+// How a shipment's legs are labelled on tracking and in the admin (CONTENT §6.3).
+export const TRANSPORT_LEG_LABELS: Record<TransportMode, string> = {
+  Road: 'By road',
+  Air: 'By air',
+  Sea: 'By sea',
 };

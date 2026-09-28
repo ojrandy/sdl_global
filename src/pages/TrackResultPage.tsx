@@ -49,12 +49,15 @@ import {
 import { Shipment, TrackingEvent, RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { Barcode } from '../components/Barcode';
 import { JourneyMap } from '../components/JourneyMap';
-import { COMPANY_SHORT, OPERATIONS_CENTRE } from '../config/brand';
+import { ResponsiveImage } from '../components/ResponsiveImage';
+import { MultiPieceList } from '../components/MultiPieceList';
+import { OPERATIONS_CENTRE } from '../config/brand';
+import { shipmentStatusLabel, shipmentStatusTone } from '../shared/shipmentStatus';
 import { SupportModal } from '../components/SupportModal';
 import { calculateRouteGeometry, inferTransportMode } from '../services/routingEngine';
 import { timeZoneForPlace } from '../shared/timeZones';
-import { formatDistance, formatWeight } from '../shared/units';
-import { TRANSPORT_MODE_LABELS } from '../shared/transportMode';
+import { formatDimensions, formatDistance, formatWeight } from '../shared/units';
+import { TRANSPORT_LEG_LABELS } from '../shared/transportMode';
 import { useUnitSystem } from '../utils/useUnitSystem';
 import { UnitToggle } from '../components/forms/UnitControls';
 import { simulationEngine } from '../services/simulationEngine';
@@ -145,44 +148,21 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   // Safe field extraction from synchronized liveShipment
   const trackingNum = liveShipment?.trackingNumber || shipment?.trackingNumber || '';
   const status = liveShipment?.status || 'IN_TRANSIT';
-  const isDelivered = status === 'DELIVERED';
-  const isException = status === 'EXCEPTION' || status === 'DELAYED';
-  const isHold = status === 'ON_HOLD' || status === 'HELD';
-  const isDelayed = status === 'DELAYED';
-  const isOutForDelivery = status === 'OUT_FOR_DELIVERY';
+  const statusTone = shipmentStatusTone(status);
+  const isDelivered = statusTone === 'delivered';
+  const isHold = statusTone === 'hold';
+  const isDelayed = statusTone === 'delayed';
   // The admin's Operations Control modal records a hold/delay reason into statusText as
-  // "On Hold (<reason>)" / "Transit Delayed (<reason>)" — there's no separate reason column in
+  // "On hold (<reason>)" / "Delayed (<reason>)" — there's no separate reason column in
   // the backend, so this is the one place that value actually survives the round trip to the
   // database. Pull it back out here so the public page can tell the customer WHY, instead of
   // a generic "your shipment is on hold" that never says anything more.
   const holdOrDelayReasonMatch = /\((.+)\)\s*$/.exec(liveShipment?.statusText || '');
   const holdOrDelayReason = holdOrDelayReasonMatch ? holdOrDelayReasonMatch[1] : undefined;
   const hasRevisedSchedule = isHold || isDelayed || Boolean(shipment.delayNotice?.hasDelay);
-  // Single canonical status label, reused everywhere the page shows the shipment's current
-  // status. This used to be five separate copies of the same ternary chain, each of which
-  // only special-cased HOLD/DELAYED/DELIVERED and collapsed every other real status —
-  // RECEIVED, PROCESSING, AT_FACILITY, DEPARTED_FACILITY, DESTINATION_PROCESSING, even
-  // OUT_FOR_DELIVERY — down to "In Transit", so a shipment that hadn't even been picked up
-  // yet was labeled "In Transit" throughout the page.
-  const statusDisplayLabel = isHold
-    ? 'On Hold'
-    : isDelayed
-    ? 'Transit Delayed'
-    : status === 'DELIVERED'
-    ? 'Delivered'
-    : isOutForDelivery
-    ? 'Out for Delivery'
-    : status === 'RECEIVED'
-    ? 'Received at Origin'
-    : status === 'PROCESSING' || status === 'AT_FACILITY'
-    ? 'At Facility'
-    : status === 'DEPARTED_FACILITY'
-    ? 'Departed Facility'
-    : status === 'DESTINATION_PROCESSING'
-    ? 'At Destination Facility'
-    : status === 'EXCEPTION'
-    ? 'Exception'
-    : 'In Transit';
+  // Single canonical status name (CONTENT §6.3, shared with the admin), reused everywhere the
+  // page shows the shipment's current status.
+  const statusDisplayLabel = shipmentStatusLabel(status);
   // Vehicle views only for real vehicle shipments (by type or stored vehicle details).
   const isVehicle = liveShipment?.shipmentType === 'Vehicle' || !!liveShipment?.vehicleDetails;
   const isPet = liveShipment?.shipmentType === 'Pets' || !!liveShipment?.petDetails;
@@ -200,34 +180,9 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   const destCity = liveShipment?.destination?.city || shipment?.destination?.city || 'Los Angeles';
   const destState = liveShipment?.destination?.state || shipment?.destination?.state || 'CA';
   const destZip = (liveShipment?.recipient as any)?.postalCode || (liveShipment?.destination as any)?.zip || (shipment?.recipient as any)?.postalCode || (shipment?.destination as any)?.zip;
-  const originFacility = (liveShipment?.origin as any)?.facilityName || (shipment?.origin as any)?.facilityName || `${originCity} Gateway Terminal`;
-  const destFacility = (liveShipment?.destination as any)?.facilityName || (shipment?.destination as any)?.facilityName || `${destCity} Distribution Center`;
-
-  const statusHeroHeading = isHold
-    ? 'Shipment on Hold'
-    : (isDelayed || shipment.delayNotice?.hasDelay)
-    ? 'Transit Delay Advisory'
-    : status === 'DELIVERED'
-    ? 'Shipment Delivered'
-    : isOutForDelivery
-    ? 'Out for Delivery Today'
-    : status === 'RECEIVED'
-    ? 'Shipment Received at Origin'
-    : status === 'PROCESSING' || status === 'AT_FACILITY' || status === 'DEPARTED_FACILITY' || status === 'DESTINATION_PROCESSING'
-    ? 'Shipment At Facility'
-    : 'Shipment In Transit';
-
-  const statusHeroSub = isHold
-    ? `Your shipment is on hold${holdOrDelayReason ? `: ${holdOrDelayReason}` : ''}. We'll update this page once it resumes movement.`
-    : isDelayed
-    ? `Your shipment's transit has been delayed${holdOrDelayReason ? `: ${holdOrDelayReason}` : ''}. The estimated delivery below reflects the revised schedule.`
-    : status === 'DELIVERED'
-    ? `Your package was delivered to ${destCity}, ${destState}.`
-    : isOutForDelivery
-    ? `Your package is out for delivery today in ${destCity}, ${destState}.`
-    : status === 'RECEIVED'
-    ? `Your package has been received and is awaiting pickup for transit to ${destCity}, ${destState}.`
-    : `Your package is on its way to ${destCity}, ${destState}.`;
+  // Facility names only when stored (no invented terminal names).
+  const originFacility = (liveShipment?.origin as any)?.facilityName || (shipment?.origin as any)?.facilityName || '';
+  const destFacility = (liveShipment?.destination as any)?.facilityName || (shipment?.destination as any)?.facilityName || '';
 
   const currentCity = typeof liveShipment?.currentLocation === 'string'
     ? liveShipment.currentLocation.split(',')[0].trim()
@@ -263,11 +218,12 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
 
   const estDeliveryDate = typeof liveShipment?.estimatedDelivery === 'string'
     ? liveShipment.estimatedDelivery
-    : (typeof liveShipment?.estimatedDelivery === 'object' && (liveShipment.estimatedDelivery as any)?.date) || 'Wednesday, August 22';
+    : (typeof liveShipment?.estimatedDelivery === 'object' && (liveShipment.estimatedDelivery as any)?.date) || '';
 
   const estDeliveryTime = typeof liveShipment?.estimatedDeliveryDetail === 'string'
     ? liveShipment.estimatedDeliveryDetail
-    : (typeof liveShipment?.estimatedDelivery === 'object' && (liveShipment.estimatedDelivery as any)?.timeWindow) || 'by the end of day';
+    : (typeof liveShipment?.estimatedDelivery === 'object' && (liveShipment.estimatedDelivery as any)?.timeWindow) || '';
+  const estDeliveryText = [estDeliveryDate, estDeliveryTime].filter(Boolean).join(' · ') || '—';
 
   const service = liveShipment?.service || shipment?.service || 'Express';
 
@@ -281,7 +237,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   const [unitSystem] = useUnitSystem();
   const totalWeightText = totalWeight > 0 ? formatWeight(totalWeight, unitSystem) : '—';
   const totalPieces = Number(shipment?.totalPieces || 1);
-  const dimensions = liveShipment?.dimensions || shipment?.dimensions || { length: 60, width: 20, height: 15 };
+  const dimensionsText = formatDimensions(liveShipment?.dimensions || shipment?.dimensions, unitSystem);
 
   // Parties data — only Full Name and Street Address are required at booking (see
   // CreateShipmentView); Company/Email/Phone are explicitly optional there, so a blank one
@@ -505,10 +461,10 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
       if (!hasDelivered) {
         const lastUp = typeof liveShipment?.lastUpdated === 'string' && liveShipment.lastUpdated.includes('·')
           ? liveShipment.lastUpdated
-          : 'Today · Delivery Verified';
+          : lastUpdated;
         const parts = lastUp.split('·');
-        const dStr = parts[0]?.trim() || 'Today';
-        const tStr = parts[1]?.trim() || 'Delivery Verified';
+        const dStr = parts[0]?.trim() || '';
+        const tStr = parts[1]?.trim() || '';
 
         const delEvent: TrackingEvent = {
           id: 'auto-delivered-scan',
@@ -516,14 +472,13 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           timezone: timeZoneForPlace({ city: destCity, state: destState }),
           displayDate: dStr,
           displayTime: tStr,
-          title: `Delivered to Consignee — ${destCity}, ${destState}`,
-          facility: `${destCity} Consignee Delivery Address`,
+          title: shipmentStatusLabel('DELIVERED'),
+          facility: '',
           city: destCity,
           state: destState,
-          description: `Consignment successfully delivered into the custody of ${liveShipment?.recipient?.name || shipment?.recipient?.name || 'authorized recipient'}. Proof of delivery confirmed.`,
+          description: '',
           isCurrent: true,
-          isCompleted: true,
-          operatorId: 'Final Mile Courier'
+          isCompleted: true
         };
 
         sourceList = [delEvent, ...sourceList];
@@ -592,17 +547,37 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
     }, 2000);
   };
 
+  // CONTENT §6.3 lines. The ETA is given in the destination's local time zone.
+  const destZone = timeZoneForPlace({ city: destCity, state: destState });
+  const destZoneName = destZone === 'UTC' ? 'UTC' : `${(destZone.split('/').pop() || destZone).replace(/_/g, ' ')} time`;
+  const etaLine = estDeliveryDate
+    ? `Estimated delivery: ${[estDeliveryDate, estDeliveryTime].filter(Boolean).join(', ')} (${destZoneName})`
+    : '';
+  // Delivered: date and time of the delivery scan; the signer comes from the admin's delivery
+  // record ("Delivered (Signed by …)"), already masked by the public API.
+  const deliveredEvent = eventsList.find(e => e.status === 'DELIVERED' || (e.title || '').toLowerCase().includes('delivered'));
+  const [lastUpdatedDate, lastUpdatedTime] = lastUpdated.split(' · ');
+  const deliveredDate = deliveredEvent?.displayDate || lastUpdatedDate;
+  const deliveredTime = deliveredEvent?.displayTime || lastUpdatedTime;
+  const signerMatch = /signed (?:for )?by ([^().]+)/i.exec(`${liveShipment?.statusText || ''} ${deliveredEvent?.description || ''}`);
+  const signer = signerMatch ? signerMatch[1].trim() : '';
+  const deliveredLine = `Delivered ${deliveredDate}${deliveredTime ? ` at ${deliveredTime}` : ''}.${signer ? ` Signed by ${signer}.` : ''}`;
+  const statusLine = isDelivered ? deliveredLine : etaLine;
+
   return (
     <div className="sdl-redesign-tracking-page animate-fade-in">
       {/* =========================================================================
-          0. CINEMATIC HERO BANNER (DUSK HIGHWAY WITH BRANDED SEMI-TRUCK)
+          0. HERO BANNER
           ========================================================================= */}
       <section className="sdl-cinematic-hero-section">
         <div className="sdl-hero-backdrop-img">
-          <img
-            src="/images/tracking/truck_highway_hero.jpg"
-            alt={`${COMPANY_SHORT} freight vehicle`}
-            className="hero-bg-photo"
+          <ResponsiveImage
+            name="track-hero"
+            alt="SDL truck, cargo ship and aircraft at a container port at sunset"
+            eager
+            sizes="100vw"
+            className="hero-bg-media"
+            imgClassName="hero-bg-photo"
           />
           <div className="sdl-hero-overlay" />
         </div>
@@ -616,7 +591,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               onClick={() => onNavigate('track')}
             >
               <ArrowLeft size={16} />
-              <span>Back to Shipments</span>
+              <span>Track another shipment</span>
             </button>
           </div>
 
@@ -650,7 +625,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               </div>
               <div className="hero-metric-text">
                 <span className="hero-metric-lbl">Service Level</span>
-                <strong className="hero-metric-val">{service} (24h)</strong>
+                <strong className="hero-metric-val">{service}</strong>
               </div>
             </div>
 
@@ -662,7 +637,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               </div>
               <div className="hero-metric-text">
                 <span className="hero-metric-lbl">Est. Delivery</span>
-                <strong className="hero-metric-val">{estDeliveryDate} · {estDeliveryTime}</strong>
+                <strong className="hero-metric-val">{estDeliveryText}</strong>
               </div>
             </div>
 
@@ -704,13 +679,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           <div className={`tracking-top-alert-banner animate-fade-in ${isHold ? 'hold' : 'delay'}`}>
             {isHold ? <Clock size={18} /> : <AlertTriangle size={18} />}
             <div>
-              <strong>{isHold ? 'Shipment On Hold' : 'Transit Delay Advisory'}{holdOrDelayReason ? `: ${holdOrDelayReason}` : ''}</strong>
-              <p>
-                {isHold
-                  ? 'Movement is temporarily paused. '
-                  : 'This shipment is running behind its original schedule. '}
-                Revised estimated delivery: <strong>{estDeliveryDate} · {estDeliveryTime}</strong>.
-              </p>
+              <strong>{statusDisplayLabel}{holdOrDelayReason ? `: ${holdOrDelayReason}` : ''}</strong>
+              {etaLine && <p>{etaLine}</p>}
             </div>
           </div>
         )}
@@ -720,8 +690,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           <div className="rto-active-advisory-banner animate-fade-in">
             <RotateCcw size={18} className="text-amber" />
             <div>
-              <strong>Return to Origin In Progress ({shipment.returnLeg.reason})</strong>
-              <p>Consignment journey reversed back to sender at {originCity}, {originState}. Return tracking: <span className="font-mono">{shipment.returnLeg.returnTrackingNumber}</span></p>
+              <strong>{shipmentStatusLabel('RETURNED')} ({shipment.returnLeg.reason})</strong>
+              <p>Returning to {originCity}{originState ? `, ${originState}` : ''}. Return tracking ID: <span className="font-mono">{shipment.returnLeg.returnTrackingNumber}</span></p>
             </div>
           </div>
         )}
@@ -731,8 +701,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           <div className="rto-active-advisory-banner animate-fade-in">
             <RotateCcw size={18} className="text-amber" />
             <div>
-              <strong>Return Shipment</strong>
-              <p>This is the return of consignment <span className="font-mono">{shipment.returnOf}</span> to its sender.</p>
+              <strong>{shipmentStatusLabel('RETURNED')}</strong>
+              <p>This is the return of shipment <span className="font-mono">{shipment.returnOf}</span> to its sender.</p>
             </div>
           </div>
         )}
@@ -772,39 +742,19 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             {/* Column 2: Current Status & Details */}
             <div className="hero-col-status">
               <span className="hero-col-label">Current Status</span>
-              <div className="status-badge-wrap">
-                <span className={`status-pill-in-transit ${isHold ? 'hold' : (isDelayed || shipment.delayNotice?.hasDelay) ? 'delayed' : ''}`}>
-                  <span className="pill-dot-pulse" />
-                  {statusDisplayLabel.toUpperCase()}
-                </span>
-              </div>
               <h2 className="status-hero-heading">
-                {statusHeroHeading}
+                {statusDisplayLabel}
               </h2>
-              <p className="status-hero-sub">
-                {statusHeroSub}
-              </p>
+              {statusLine && (
+                <p className="status-hero-sub">
+                  {statusLine}
+                </p>
+              )}
 
               <div className="last-recorded-checkpoint-box">
                 <span className="chk-label">LAST RECORDED CHECKPOINT</span>
-                <span className="chk-val">{currentCity}, {currentState} ({lastUpdated})</span>
+                <span className="chk-val">{currentLocationText}{currentLocationText ? ' · ' : ''}{lastUpdated}</span>
               </div>
-
-              {/* This used to unconditionally claim "On schedule" even while the shipment was
-                  actively on hold or delayed (with an ETA that had, in fact, just been pushed
-                  back) — misleading a customer checking exactly the shipment they'd most want
-                  an honest answer about. */}
-              {hasRevisedSchedule ? (
-                <div className="on-schedule-chip revised">
-                  <Clock size={14} />
-                  <span>Revised delivery estimate — see {isHold ? 'hold' : 'delay'} details above.</span>
-                </div>
-              ) : (
-                <div className="on-schedule-chip">
-                  <CheckCircle2 size={14} className="text-emerald" />
-                  <span>On schedule — Estimated delivery remains unchanged.</span>
-                </div>
-              )}
             </div>
 
             {/* Column 3: Estimated Delivery & Meta Specs */}
@@ -814,8 +764,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 <div className="eta-date-row">
                   <Calendar size={22} className="text-blue" />
                   <div>
-                    <strong>{estDeliveryDate}</strong>
-                    <small>{estDeliveryTime}</small>
+                    <strong>{estDeliveryDate || '—'}</strong>
+                    {estDeliveryTime && <small>{estDeliveryTime}</small>}
                   </div>
                 </div>
                 {hasRevisedSchedule ? (
@@ -835,7 +785,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               <div className="hero-specs-mini-table">
                 <div className="spec-item-row">
                   <span className="s-lbl">Service Level:</span>
-                  <span className="s-val">{service} (24h)</span>
+                  <span className="s-val">{service}</span>
                 </div>
                 <div className="spec-item-row">
                   <span className="s-lbl">Shipment Type:</span>
@@ -862,16 +812,16 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 <Navigation size={16} />
               </div>
               <div className="corridor-point-text">
-                <span className="corridor-label">ORIGIN TERMINAL</span>
+                <span className="corridor-label">ORIGIN</span>
                 <strong className="corridor-city">{originCity}, {originState}</strong>
-                <small className="corridor-facility">{originFacility}</small>
+                {originFacility && <small className="corridor-facility">{originFacility}</small>}
               </div>
             </div>
 
             <div className="corridor-track-wrapper">
               <div className="corridor-meta-badges">
                 <span className="corridor-dist-badge">
-                  <span>Total route {formatDistance(routeGeom.distanceMiles, unitSystem)} · {TRANSPORT_MODE_LABELS[transportMode]}</span>
+                  <span>Total route {formatDistance(routeGeom.distanceMiles, unitSystem)} · {TRANSPORT_LEG_LABELS[transportMode]}</span>
                 </span>
                 <span className="corridor-status-badge">
                   {status === 'DELIVERED' ? (
@@ -901,9 +851,9 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 <MapPin size={16} />
               </div>
               <div className="corridor-point-text">
-                <span className="corridor-label">FINAL DESTINATION</span>
+                <span className="corridor-label">DESTINATION</span>
                 <strong className="corridor-city">{destCity}, {destState}</strong>
-                <small className="corridor-facility">{destFacility}</small>
+                {destFacility && <small className="corridor-facility">{destFacility}</small>}
               </div>
             </div>
           </div>
@@ -912,13 +862,14 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         {/* =========================================================================
             2. FULL-WIDTH INTERACTIVE ROUTE MAP
             ========================================================================= */}
-        <section className="sdl-route-map-section">
+        <section className="sdl-route-map-section" aria-labelledby="track-route-title">
+          <h3 id="track-route-title" className="card-section-title sdl-route-title">Route</h3>
           <JourneyMap
             checkpoints={routeCheckpoints}
             currentLocationText={currentLocationText}
             currentLat={currentLat}
             currentLng={currentLng}
-            lastEventDescription={`${isVehicle ? 'Vehicle' : 'Shipment'} — ${timeProgress.activeMilestoneStage} toward ${destCity}.`}
+            lastEventDescription={isDelivered ? statusDisplayLabel : `${statusDisplayLabel} · ${TRANSPORT_LEG_LABELS[transportMode].toLowerCase()} to ${destCity}`}
             totalDistance={formatDistance(routeGeom.distanceMiles, unitSystem)}
             transitTime={`${plan.serviceCommitmentHours} Hours`}
             progressPercent={progressPercent}
@@ -937,7 +888,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
           <div id="shipment-timeline-section" className="content-col-timeline">
             <div className="timeline-card">
               <div className="timeline-card-header">
-                <h3 className="card-section-title" style={{ margin: 0 }}>Shipment Timeline</h3>
+                <h3 className="card-section-title" style={{ margin: 0 }}>Journey timeline</h3>
                 <span className="timeline-count-tag font-mono">
                   {referenceTimelineEvents.filter(e => e.statusType === 'confirmed' || e.statusType === 'current').length} of {referenceTimelineEvents.length} milestones
                 </span>
@@ -989,7 +940,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 className="view-full-timeline-action-btn"
                 onClick={() => setShowEarlierEvents(!showEarlierEvents)}
               >
-                <span>{showEarlierEvents ? 'Collapse Additional Scans' : 'View Full Timeline'}</span>
+                <span>{showEarlierEvents ? 'Hide all scans' : 'Show all scans'}</span>
                 <ChevronDown size={15} style={{ transform: showEarlierEvents ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
 
@@ -997,12 +948,12 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               {showEarlierEvents && (
                 <div className="timeline-extended-logs animate-fade-in">
                   <div className="extended-logs-header">
-                    <span className="font-mono text-xs text-slate-500 font-bold uppercase tracking-wider">Historical Checkpoint Scan Logs</span>
+                    <span className="font-mono text-xs text-slate-500 font-bold uppercase tracking-wider">All scans</span>
                   </div>
                   {eventsList.map((evt, idx) => (
                     <div key={evt.id || idx} className="extended-scan-item">
                       <div className="scan-time font-mono">{evt.displayDate} · {evt.displayTime}</div>
-                      <div className="scan-title">{evt.title} — {evt.city}, {evt.state}</div>
+                      <div className="scan-title">{evt.title} — {[evt.city, evt.state].filter(Boolean).join(', ')}</div>
                       <div className="scan-facility text-xs text-slate-500">{evt.facility}</div>
                     </div>
                   ))}
@@ -1224,7 +1175,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             {/* Card 2: Shipment Details (2-Column Icon Grid) */}
             <div className="shipment-details-spec-card">
               <div className="sdl-heading-with-units">
-                <h3 className="card-section-title">Shipment Details</h3>
+                <h3 className="card-section-title">Shipment summary</h3>
                 <UnitToggle />
               </div>
               <div className="shipment-details-two-col-grid">
@@ -1295,7 +1246,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                   <Package size={18} className="dtl-icon text-blue" />
                   <div className="dtl-cell-content">
                     <small>Service Level</small>
-                    <strong>{service} (24h)</strong>
+                    <strong>{service}</strong>
                   </div>
                 </div>
 
@@ -1304,7 +1255,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                   <Box size={18} className="dtl-icon text-slate-500" />
                   <div className="dtl-cell-content">
                     <small>Dimensions</small>
-                    <strong>{dimensions.length} × {dimensions.width} × {dimensions.height} in</strong>
+                    <strong>{dimensionsText || '—'}</strong>
                   </div>
                 </div>
 
@@ -1320,6 +1271,15 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Pieces (CONTENT §6.3) — each piece label travels with the shipment. */}
+            {(liveShipment?.pieces?.length ?? 0) > 0 && (
+              <MultiPieceList
+                pieces={liveShipment.pieces}
+                statusLabel={statusDisplayLabel}
+                locationText={currentLocationText}
+              />
+            )}
 
             {/* Card 3: Shipment Parties (Side-by-side Sender and Recipient) */}
             <div className="shipment-parties-card">
@@ -1412,42 +1372,24 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               )}
             </div>
 
-            {/* Card 5: Carrier Operating Authority & Chain of Custody */}
-            <div className="carrier-authority-card">
-              <div className="authority-card-left">
-                <div className="authority-icon-box">
-                  <ShieldCheck size={20} className="text-emerald" />
-                </div>
-                <div>
-                  <h4 className="authority-title">Carrier Operating Authority & Chain of Custody</h4>
-                  <p className="authority-subtitle">Federal Motor Carrier Safety Administration (FMCSA) Certified Linehaul Carrier</p>
-                </div>
-              </div>
-              <div className="authority-card-right">
-                <span className="authority-verified-badge">
-                  <Check size={13} />
-                  <span>Secure & Verified</span>
-                </span>
-              </div>
-            </div>
           </div>
         </section>
 
         {/* =========================================================================
-            4. 24/7 OPERATIONS CONCIERGE & DRIVER DISPATCH BANNER
+            4. NEED HELP? (CONTENT §6.3 / §6.4)
             ========================================================================= */}
         <section className="sdl-help-banner-card">
           <div className="help-banner-left">
-            <div className="help-icon-bubble">
-              <Headphones size={22} />
-            </div>
+            <ResponsiveImage
+              name="track-result-vehicle"
+              alt="Two SDL trucks travelling along a highway at sunset"
+              sizes="72px"
+              className="help-banner-photo"
+              imgClassName="help-banner-photo-img"
+            />
             <div>
-              <h3>24/7 Operations Concierge & Driver Dispatch</h3>
-              <p>Direct priority line for consignees, brokers, and destination receiving docks.</p>
-              <div className="dispatch-live-indicator">
-                <span className="dispatch-dot-pulse"></span>
-                <span>Dispatchers online · Average wait: &lt; 45 seconds</span>
-              </div>
+              <h3>Need help?</h3>
+              <p>Our operations desk is available 24/7.</p>
             </div>
           </div>
 
@@ -1455,39 +1397,15 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             {supportPhone && (
               <a href={phoneHref} className="help-btn phone-btn accent-dispatch-btn">
                 <Phone size={15} />
-                <span>Call Dispatch {supportPhone}</span>
+                <span>{supportPhone}</span>
               </a>
             )}
             <button className="help-btn contact-btn" onClick={() => setSupportOpen(true)} type="button">
-              <Mail size={15} />
-              <span>Message Dispatch Desk</span>
-            </button>
-            <button className="help-btn report-btn" onClick={() => setSupportOpen(true)} type="button">
-              <AlertTriangle size={15} />
-              <span>Report Delivery Exception</span>
+              <Headphones size={15} />
+              <span>Contact Support</span>
             </button>
           </div>
         </section>
-
-        {/* =========================================================================
-            5. TRUST & VERIFICATION STRIP
-            ========================================================================= */}
-        <div className="sdl-bottom-trust-strip">
-          <div className="trust-item">
-            <ShieldCheck size={15} className="text-blue" />
-            <span>Secure Tracking</span>
-          </div>
-          <span className="trust-sep">·</span>
-          <div className="trust-item">
-            <CheckCircle2 size={15} className="text-blue" />
-            <span>Real Updates</span>
-          </div>
-          <span className="trust-sep">·</span>
-          <div className="trust-item">
-            <Truck size={15} className="text-blue" />
-            <span>Real Deliveries</span>
-          </div>
-        </div>
       </div>
 
       {/* =========================================================================
@@ -1552,7 +1470,6 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         isOpen={supportOpen}
         onClose={() => setSupportOpen(false)}
         initialTrackingNumber={trackingNum}
-        defaultIssueType="In Transit Status Inquiry"
       />
     </div>
   );

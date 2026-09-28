@@ -9,6 +9,7 @@ import { applyForwardOnlyShipmentUpdate } from '../utils/shipmentSync';
 import { parseTrackingInput, pieceLabel } from '../shared/trackingId';
 import { ADMIN_ROLE_LABEL, COMPANY_SHORT } from '../config/brand';
 import { formatInZone, timeZoneForLocationLabel } from '../shared/timeZones';
+import { shipmentStatusLabel } from '../shared/shipmentStatus';
 
 // The server assigns every tracking ID (BRAND_GUIDE §7). Shipments are built here as drafts
 // without one, and this stamps the ID the server returned onto the draft: the ID, the barcode,
@@ -581,7 +582,7 @@ const normalizeShipment = (s: any): Shipment => {
     const draft: any = {
       id: `shp-${Date.now()}`,
       status: 'RECEIVED',
-      statusText: 'Consignment Registered',
+      statusText: shipmentStatusLabel('RECEIVED'),
       statusMessage: 'Shipment registered in verified linehaul network.',
       health: 'ON_TRACK',
       healthExplanation: 'Consignment created from approved tariff rate quotation.',
@@ -638,7 +639,7 @@ const normalizeShipment = (s: any): Shipment => {
           pieceNumber: 1,
           totalPieces: 1,
           status: 'RECEIVED',
-          statusText: 'Consignment Registered',
+          statusText: shipmentStatusLabel('RECEIVED'),
           currentLocation: `${originCity}, ${originState}`,
           weightLbs: tq.totalWeightLbs || tq.weightLbs || 45,
           dimensions: typeof tq.dimensions === 'object' ? tq.dimensions : { length: 12, width: 12, height: 12 }
@@ -882,7 +883,7 @@ const normalizeShipment = (s: any): Shipment => {
               pieceNumber: 1,
               totalPieces: shipmentData.totalPieces || 1,
               status: 'RECEIVED',
-              statusText: 'Consignment Registered',
+              statusText: shipmentStatusLabel('RECEIVED'),
               currentLocation: `${originCity}, ${originState}`,
               weightLbs: shipmentData.totalWeightLbs || 45,
               dimensions: shipmentData.dimensions || { length: 72, width: 24, height: 18 }

@@ -4,6 +4,7 @@ import { resolveProgressPaceHours } from '../src/services/planningEngine.js';
 import { findNearestMetro } from '../src/services/geocodingService.js';
 import { normalizeLng } from '../src/utils/greatCircle.js';
 import { eventTime } from './eventTime.js';
+import { shipmentStatusLabel } from '../src/shared/shipmentStatus.js';
 
 /** The shipment's stored transport mode, or the inferred one for rows created before it existed. */
 export function shipmentTransportMode(row: {
@@ -51,13 +52,14 @@ export function shipmentTransportMode(row: {
  * explicitly an SCHEDULE-BASED ESTIMATE, not a GPS ping: the UI must label it as such
  * ("Estimated Position (Schedule-Based)"), never "Live GPS" or "Live Tracking".
  *
- * Also advances `status` itself from RECEIVED/PROCESSING/AT_FACILITY/DEPARTED_FACILITY/
- * DESTINATION_PROCESSING to IN_TRANSIT once real movement has actually started — this used to
+ * Also advances `status` itself from RECEIVED/PROCESSING/AT_FACILITY/DEPARTED_FACILITY
+ * to IN_TRANSIT once real movement has actually started — this used to
  * only ever touch progress_percent, leaving status permanently frozen (a shipment could sit
  * at 94% progress while still reading "Received at Origin Facility" forever). Still
  * deliberately conservative past that: never auto-advances to OUT_FOR_DELIVERY or DELIVERED,
  * and stops short of 100% — that final confirmation still requires an explicit admin action,
- * same as a real courier's last-mile scan.
+ * same as a real courier's last-mile scan. A shipment that has arrived at its destination
+ * gateway or is in customs clearance waits there until an admin moves it on.
  */
 
 const MOVING_STATUSES = new Set([
@@ -66,7 +68,6 @@ const MOVING_STATUSES = new Set([
   'IN_TRANSIT',
   'AT_FACILITY',
   'DEPARTED_FACILITY',
-  'DESTINATION_PROCESSING',
 ]);
 
 const PRE_TRANSIT_STATUSES = new Set([
@@ -74,7 +75,6 @@ const PRE_TRANSIT_STATUSES = new Set([
   'PROCESSING',
   'AT_FACILITY',
   'DEPARTED_FACILITY',
-  'DESTINATION_PROCESSING',
 ]);
 
 interface ProgressRow {
@@ -164,7 +164,7 @@ export function syncTimeBasedProgress(row: ProgressRow): number {
   // still an explicit admin action, matching the 94% progress ceiling just above.
   const nextStatus = PRE_TRANSIT_STATUSES.has(row.status) && nextProgress > 0 ? 'IN_TRANSIT' : row.status;
   const nextStatusText = nextStatus !== row.status
-    ? `In Transit (${Math.round(nextProgress)}% Complete)`
+    ? shipmentStatusLabel('IN_TRANSIT')
     : (row.status_text ?? null);
 
   db.prepare(`

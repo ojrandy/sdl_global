@@ -53,7 +53,7 @@ import { formatDimensions, formatLength, formatWeight } from '../../shared/units
 
 // Weight text saved into event descriptions: kg first with lb alongside, readable in either system.
 const bothUnits = (lbs: unknown) => `${formatWeight(lbs, 'metric')} (${formatWeight(lbs, 'imperial')})`;
-import { TRANSPORT_MODE_LABELS } from '../../shared/transportMode';
+import { TRANSPORT_LEG_LABELS } from '../../shared/transportMode';
 import { useCurrency } from '../../utils/useCurrency';
 import { calculateRouteGeometry, inferTransportMode, type TransportMode } from '../../services/routingEngine';
 import { generateShipmentPlan } from '../../services/planningEngine';
@@ -3358,9 +3358,9 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                 <div className="service-radio-grid">
                   {([
                     { id: 'Auto', label: 'Auto', desc: 'Chosen from distance and cargo' },
-                    { id: 'Road', label: TRANSPORT_MODE_LABELS.Road, desc: 'Truck on real roads' },
-                    { id: 'Air', label: TRANSPORT_MODE_LABELS.Air, desc: 'Flight between gateways' },
-                    { id: 'Sea', label: TRANSPORT_MODE_LABELS.Sea, desc: 'Ocean freight between ports' }
+                    { id: 'Road', label: TRANSPORT_LEG_LABELS.Road, desc: 'Truck on real roads' },
+                    { id: 'Air', label: TRANSPORT_LEG_LABELS.Air, desc: 'Flight between gateways' },
+                    { id: 'Sea', label: TRANSPORT_LEG_LABELS.Sea, desc: 'Ocean freight between ports' }
                   ] as const).map(m => (
                     <label
                       key={m.id}

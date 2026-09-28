@@ -40,6 +40,7 @@ import { ADMIN_ROLE_LABEL, COMPANY_SHORT, displayOperator } from '../../config/b
 import { GATEWAYS } from '../../data/gateways';
 import { WeightText } from '../../components/forms/UnitControls';
 import { formatInZone, isValidTimeZone, timeZoneForPlace, utcOffsetLabel, zonedTimeToUtc } from '../../shared/timeZones';
+import { SHIPMENT_STATUS_OPTIONS, knownStatusLabel, shipmentStatusLabel } from '../../shared/shipmentStatus';
 
 // Preset event locations: the global gateway network, each with its IANA time zone.
 const NETWORK_LOCATIONS = GATEWAYS.map((g) => ({
@@ -68,18 +69,21 @@ const toIsoDate = (text: string): string | null => {
   return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
 };
 
-// Customer-facing message templates for normal customer understanding
+// Customer-facing message pre-filled for each status (editable before saving). Keys are the
+// status codes in SHIPMENT_STATUS_OPTIONS (names from CONTENT §6.3).
 const MESSAGE_TEMPLATES: Record<string, string> = {
-  ARRIVED: 'Your shipment has arrived at our facility and is continuing toward its destination.',
-  DEPARTED: 'Your shipment has departed our location and is en route to the next network gateway.',
-  PROCESSING: 'Your shipment is being processed and prepared for scheduled linehaul transit.',
-  RECEIVED: `Shipment received into the ${COMPANY_SHORT} network.`,
-  SHIPMENT_CREATED: 'Shipment waybill registered and physical piece barcode generated.',
-  OUT_FOR_DELIVERY: 'Your shipment is out for delivery with our courier and will be delivered today.',
-  DELIVERED: 'Your shipment has been successfully delivered and signed for.',
-  DELAYED: 'Your shipment has experienced a temporary transit delay. The estimated delivery schedule has been updated.',
-  ON_HOLD: 'Your shipment is temporarily on hold pending delivery window confirmation.',
-  EXCEPTION: 'A shipping exception has occurred. Our operations team is actively resolving the movement.'
+  BOOKED: 'Shipment booked and waybill registered.',
+  RECEIVED: `Shipment collected and received into the ${COMPANY_SHORT} network.`,
+  PROCESSING: 'Your shipment is at our origin gateway and is being prepared for departure.',
+  DEPARTED_FACILITY: 'Your shipment has departed and is on its way to the next gateway.',
+  IN_TRANSIT: 'Your shipment is in transit to its destination gateway.',
+  DESTINATION_PROCESSING: 'Your shipment has arrived at the destination gateway.',
+  CUSTOMS_CLEARANCE: 'Your shipment is going through customs clearance.',
+  OUT_FOR_DELIVERY: 'Your shipment is out for delivery with our courier.',
+  DELIVERED: 'Your shipment has been delivered and signed for.',
+  ON_HOLD: 'Your shipment is temporarily on hold.',
+  DELAYED: 'Your shipment has been delayed. The estimated delivery has been updated.',
+  RETURNED: 'Your shipment is being returned to the sender.'
 };
 
 // Helper: Format Date & Time helpers for input fields
@@ -109,8 +113,14 @@ const formatLocationStr = (loc: any): string => {
   return 'In Transit Hub';
 };
 
-// Color Theme Helper for Event Statuses
+// Color Theme Helper for Event Statuses. Status codes show their CONTENT §6.3 name.
 const getEventTheme = (statusStr?: string, title?: string) => {
+  const theme = getEventColors(statusStr, title);
+  const name = knownStatusLabel(statusStr);
+  return name ? { ...theme, label: name.toUpperCase() } : theme;
+};
+
+const getEventColors = (statusStr?: string, title?: string) => {
   const s = (statusStr || title || '').toUpperCase();
   if (s.includes('DELIVERED')) {
     return { color: '#16a34a', bg: '#f0fdf4', border: '#86efac', text: '#166534', label: 'DELIVERED', theme: 'theme-delivered' };
@@ -121,13 +131,13 @@ const getEventTheme = (statusStr?: string, title?: string) => {
   if (s.includes('DELAY') || s.includes('EXCEPTION') || s.includes('WEATHER')) {
     return { color: '#dc2626', bg: '#fef2f2', border: '#fca5a5', text: '#991b1b', label: 'DELAY / EXCEPTION', theme: 'theme-delay' };
   }
-  if (s.includes('HOLD')) {
+  if (s.includes('HOLD') || s.includes('RETURN')) {
     return { color: '#dc2626', bg: '#fef2f2', border: '#fca5a5', text: '#991b1b', label: 'ON HOLD', theme: 'theme-hold' };
   }
-  if (s.includes('PROCESSING') || s.includes('SORT')) {
+  if (s.includes('PROCESSING') || s.includes('SORT') || s.includes('CUSTOMS')) {
     return { color: '#7c3aed', bg: '#faf5ff', border: '#d8b4fe', text: '#6b21a8', label: 'PROCESSING', theme: 'theme-processing' };
   }
-  if (s.includes('DEPARTED')) {
+  if (s.includes('DEPARTED') || s.includes('IN_TRANSIT')) {
     return { color: '#0284c7', bg: '#f0f9ff', border: '#7dd3fc', text: '#0369a1', label: 'DEPARTED', theme: 'theme-departed' };
   }
   if (s.includes('ARRIVED')) {
@@ -161,11 +171,11 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
   const [correctingEvent, setCorrectingEvent] = useState<TrackingEvent | null>(null);
 
   // Form State: Add Tracking Event (Fully Editable Date & Time!)
-  const [formEventStatus, setFormEventStatus] = useState<string>('ARRIVED');
+  const [formEventStatus, setFormEventStatus] = useState<string>('IN_TRANSIT');
   const [formLocationIndex, setFormLocationIndex] = useState<number>(0);
   const [formCustomLocation, setFormCustomLocation] = useState<string>('');
   const [formFacility, setFormFacility] = useState<string>(NETWORK_LOCATIONS[0].facility);
-  const [formCustomerMessage, setFormCustomerMessage] = useState<string>(MESSAGE_TEMPLATES.ARRIVED);
+  const [formCustomerMessage, setFormCustomerMessage] = useState<string>(MESSAGE_TEMPLATES.IN_TRANSIT);
   const [formInternalNote, setFormInternalNote] = useState<string>('Shipment arrived after scheduled departure. Processing for next available movement.');
   const [formDelayReason, setFormDelayReason] = useState<string>('Weather-related transportation delay');
   const [formEventDate, setFormEventDate] = useState<string>(getTodayDateStr());
@@ -259,41 +269,17 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
       ? await resolveLocationPrecise(formCustomLocation)
       : resolveLocation(`${locCity}, ${locState}`);
 
-    const eventTitleMap: Record<string, string> = {
-      ARRIVED: 'Arrived at Facility',
-      DEPARTED: 'Departed Facility',
-      PROCESSING: 'Processing at Facility',
-      RECEIVED: 'Shipment Received',
-      SHIPMENT_CREATED: 'Shipment Created',
-      OUT_FOR_DELIVERY: 'Out for Final Delivery',
-      DELIVERED: 'Shipment Delivered',
-      DELAYED: 'Shipment Delayed',
-      ON_HOLD: 'Shipment On Hold',
-      EXCEPTION: 'Delivery Exception'
-    };
-
     // The event's instant from the entered local date + time in the chosen zone. The server
     // stores the instant and zone and shows local time + UTC offset.
     const eventZone = isValidTimeZone(formTimezone) ? formTimezone : 'UTC';
     const occurredAtTs = zonedTimeToUtc(formEventDate, formEventTime, eventZone) ?? Date.now();
     const local = formatInZone(occurredAtTs, eventZone);
 
-    // Determine equivalent shipment status. Previously missing ON_HOLD/DEPARTED/
-    // SHIPMENT_CREATED branches meant logging one of those events silently set the
-    // shipment's actual status to IN_TRANSIT, contradicting the event just recorded.
-    let mappedShipmentStatus: ShipmentStatus = 'IN_TRANSIT';
-    if (formEventStatus === 'DELIVERED') mappedShipmentStatus = 'DELIVERED';
-    else if (formEventStatus === 'OUT_FOR_DELIVERY') mappedShipmentStatus = 'OUT_FOR_DELIVERY';
-    else if (formEventStatus === 'DELAYED') mappedShipmentStatus = 'DELAYED';
-    else if (formEventStatus === 'EXCEPTION') mappedShipmentStatus = 'EXCEPTION';
-    else if (formEventStatus === 'RECEIVED') mappedShipmentStatus = 'RECEIVED';
-    else if (formEventStatus === 'PROCESSING') mappedShipmentStatus = 'PROCESSING';
-    else if (formEventStatus === 'ARRIVED') mappedShipmentStatus = 'AT_FACILITY';
-    else if (formEventStatus === 'ON_HOLD') mappedShipmentStatus = 'ON_HOLD';
-    else if (formEventStatus === 'DEPARTED') mappedShipmentStatus = 'DEPARTED_FACILITY';
-    else if (formEventStatus === 'SHIPMENT_CREATED') mappedShipmentStatus = 'CREATED';
-
-    const eventTitle = eventTitleMap[formEventStatus] || formEventStatus;
+    // The event's status is the shipment's new status (the options are the status codes).
+    const mappedShipmentStatus = (SHIPMENT_STATUS_OPTIONS.some(o => o.value === formEventStatus)
+      ? formEventStatus
+      : 'IN_TRANSIT') as ShipmentStatus;
+    const eventTitle = shipmentStatusLabel(mappedShipmentStatus);
 
     const newEvent: TrackingEvent = {
       id: `ev-${Date.now()}`,
@@ -576,7 +562,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               <div className="state-badge-row">
                 <span className="state-tag-label">CURRENT STATUS</span>
                 <span className={`status-pill ${currentShipment.status.toLowerCase().replace(/_/g, '-')}`}>
-                  {currentShipment.status.replace(/_/g, ' ')}
+                  {shipmentStatusLabel(currentShipment.status)}
                 </span>
               </div>
 
@@ -596,8 +582,8 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               <button
                 className="add-event-primary-btn"
                 onClick={() => {
-                  setFormEventStatus('ARRIVED');
-                  setFormCustomerMessage(MESSAGE_TEMPLATES.ARRIVED);
+                  setFormEventStatus('IN_TRANSIT');
+                  setFormCustomerMessage(MESSAGE_TEMPLATES.IN_TRANSIT);
                   setFormEventDate(getTodayDateStr());
                   setFormEventTime(getCurrentTimeStr());
                   setShowAddModal(true);
@@ -638,10 +624,10 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               <p>Append-only audit trail. Every event color-coded by milestone category.</p>
             </div>
             <div className="timeline-legend-row">
-              <span className="legend-chip color-arrived">● In Transit / Arrived</span>
+              <span className="legend-chip color-arrived">● In transit / Arrived</span>
               <span className="legend-chip color-delivered">● Delivered</span>
-              <span className="legend-chip color-out">● Out for Delivery</span>
-              <span className="legend-chip color-delayed">● Delayed / Hold</span>
+              <span className="legend-chip color-out">● Out for delivery</span>
+              <span className="legend-chip color-delayed">● Delayed / On hold</span>
             </div>
           </div>
 
@@ -791,16 +777,9 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                   onChange={e => handleStatusChange(e.target.value)}
                   className="modal-select-input"
                 >
-                  <option value="ARRIVED">Arrived (at Sorting / Linehaul Hub Location)</option>
-                  <option value="DEPARTED">Departed (En Route to Next Gateway)</option>
-                  <option value="PROCESSING">Processing (Sorting & Staging)</option>
-                  <option value="RECEIVED">Received (Physical Tender Verified)</option>
-                  <option value="SHIPMENT_CREATED">Shipment Created (Manifest Generated)</option>
-                  <option value="OUT_FOR_DELIVERY">Out for Delivery (Courier Assigned)</option>
-                  <option value="DELIVERED">Delivered (Direct Recipient Handover)</option>
-                  <option value="DELAYED">Delayed (Weather, Corridor Hold, etc.)</option>
-                  <option value="ON_HOLD">On Hold (Customer Instruction / Clearance)</option>
-                  <option value="EXCEPTION">Exception (Needs Operational Review)</option>
+                  {SHIPMENT_STATUS_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -886,7 +865,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
               </div>
 
               {/* Delay Specifics if Status is Delayed */}
-              {(formEventStatus === 'DELAYED' || formEventStatus === 'EXCEPTION') && (
+              {formEventStatus === 'DELAYED' && (
                 <div className="form-group-unit delay-highlight-box">
                   <label>Delay / Exception Reason *</label>
                   <select
@@ -1098,7 +1077,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                 </div>
                 <div className="inspect-item">
                   <span className="i-label">EVENT STATUS</span>
-                  <span className="font-mono">{inspectEvent.eventStatus || 'ARRIVED'}</span>
+                  <span className="font-mono">{shipmentStatusLabel(inspectEvent.eventStatus || inspectEvent.status)}</span>
                 </div>
                 <div className="inspect-item">
                   <span className="i-label">RECORDED LOCATION</span>

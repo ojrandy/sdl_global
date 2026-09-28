@@ -1,12 +1,23 @@
-import React from 'react';
-import { Truck, Radar } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Truck } from 'lucide-react';
 import './TrackingLoadingScreen.css';
 
 interface TrackingLoadingScreenProps {
   query: string;
 }
 
+// CONTENT §6.2: rotating lines while the lookup runs.
+const LOADING_LINES = ['Locating your shipment…', 'Checking the latest scans…', 'Plotting the route…'];
+const LINE_MS = 1400;
+
 export const TrackingLoadingScreen: React.FC<TrackingLoadingScreenProps> = ({ query }) => {
+  const [lineIndex, setLineIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setLineIndex((i) => (i + 1) % LOADING_LINES.length), LINE_MS);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <section className="sdl-tracking-loading-shell">
       <div className="tracking-loading-card">
@@ -18,22 +29,17 @@ export const TrackingLoadingScreen: React.FC<TrackingLoadingScreenProps> = ({ qu
           </div>
         </div>
 
-        <h2 className="tracking-loading-title">Locating Your Shipment</h2>
-        <p className="tracking-loading-sub">
-          Querying live carrier network for
-          {query ? <span className="tl-query-code font-mono"> {query}</span> : ' your consignment'}
-          …
-        </p>
+        <h2 className="tracking-loading-title" role="status" aria-live="polite">
+          {LOADING_LINES[lineIndex]}
+        </h2>
+        {query && (
+          <p className="tracking-loading-sub">
+            <span className="tl-query-code font-mono">{query}</span>
+          </p>
+        )}
 
         <div className="tracking-loading-bar-track">
           <div className="tracking-loading-bar-fill" />
-        </div>
-
-        <div className="tracking-loading-steps">
-          <span className="tl-step active">
-            <Radar size={12} />
-            Verifying tracking ID
-          </span>
         </div>
       </div>
     </section>

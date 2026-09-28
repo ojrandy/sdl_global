@@ -9,6 +9,7 @@ import { parseTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
 import { COMPANY_SHORT } from '../../src/config/brand.js';
 import { eventTimeDisplay } from '../../src/shared/timeZones.js';
 import { parseTransportMode } from '../../src/shared/transportMode.js';
+import { shipmentStatusLabel } from '../../src/shared/shipmentStatus.js';
 
 export const shipmentsRouter = Router();
 
@@ -218,7 +219,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       trackingNumber,
       barcodeCode,
       s.status || 'RECEIVED',
-      s.statusText || 'Consignment Registered',
+      s.statusText || shipmentStatusLabel(s.status || 'RECEIVED'),
       s.progressPercent || 15,
       lastUpdated,
       createdAt,
@@ -282,7 +283,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         pieceNumber: 1,
         totalPieces: 1,
         status: s.status || 'RECEIVED',
-        statusText: 'Consignment Staged',
+        statusText: shipmentStatusLabel(s.status || 'RECEIVED'),
         currentLocation: [s.origin?.city || 'New York', s.origin?.state].filter(Boolean).join(', '),
         weightLbs: s.totalWeightLbs || 10,
         dimensions: s.dimensions || { length: 12, width: 12, height: 12 }
@@ -299,7 +300,7 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         pieceNum,
         p.totalPieces || pieces.length,
         p.status || s.status || 'RECEIVED',
-        p.statusText || 'Scanned & Registered',
+        p.statusText || shipmentStatusLabel(p.status || 'RECEIVED'),
         p.currentLocation || [s.origin?.city || 'New York', s.origin?.state].filter(Boolean).join(', '),
         p.weightLbs || (s.totalWeightLbs ? s.totalWeightLbs / pieces.length : 10),
         JSON.stringify(p.dimensions || s.dimensions || {})
@@ -354,18 +355,15 @@ shipmentsRouter.patch('/:trackingNumber/status', requireAdminAuth, (req: Request
     // know a better value. The Operations Control modal computes a richer statusText
     // (with hold/delay reason, hub name, etc.) and its own progress via planningEngine.ts —
     // when it sends those, honor them instead of clobbering them with these generic defaults.
-    let progress = 15;
-    let statusText = 'Consignment Registered';
-    if (newStatus === 'PROCESSED') { progress = 35; statusText = 'Processed at Sorting Gateway'; }
-    else if (newStatus === 'IN_TRANSIT') { progress = 60; statusText = 'In Transit — Linehaul Route'; }
-    else if (newStatus === 'AT_FACILITY') { progress = 65; statusText = 'At Facility'; }
-    else if (newStatus === 'OUT_FOR_DELIVERY') { progress = 85; statusText = 'Out for Final Delivery'; }
-    else if (newStatus === 'DELIVERED') { progress = 100; statusText = 'Delivered & Signed'; }
-    else if (newStatus === 'ON_HOLD') { statusText = 'On Hold'; progress = (row as any).progress_percent; }
-    else if (newStatus === 'DELAYED') { statusText = 'Transit Delayed'; progress = (row as any).progress_percent; }
-    else if (newStatus === 'EXCEPTION') { progress = 50; statusText = 'Transit Exception / Delay'; }
-    else if (newStatus === 'DEPARTED_FACILITY') { progress = 45; statusText = 'Departed Facility'; }
-    else if (newStatus === 'CREATED') { progress = 5; statusText = 'Shipment Created'; }
+    // Status names come from CONTENT §6.3 (src/shared/shipmentStatus.ts).
+    const DEFAULT_PROGRESS: Record<string, number> = {
+      CREATED: 5, BOOKED: 5, RECEIVED: 15, PROCESSING: 25, PROCESSED: 35, DEPARTED_FACILITY: 45,
+      EXCEPTION: 50, IN_TRANSIT: 60, AT_FACILITY: 65, DESTINATION_PROCESSING: 75,
+      CUSTOMS_CLEARANCE: 80, OUT_FOR_DELIVERY: 85, DELIVERED: 100,
+    };
+    const keepsProgress = newStatus === 'ON_HOLD' || newStatus === 'DELAYED' || newStatus === 'RETURNED';
+    let progress = keepsProgress ? (row as any).progress_percent : (DEFAULT_PROGRESS[newStatus] ?? 15);
+    let statusText = shipmentStatusLabel(newStatus);
 
     if (typeof progressPercent === 'number' && !isNaN(progressPercent)) {
       progress = Math.max(0, Math.min(100, progressPercent));
@@ -583,15 +581,15 @@ shipmentsRouter.post('/:trackingNumber/return', requireAdminAuth, (req: Request,
     };
 
     db.prepare(`
-      UPDATE shipments SET status = 'EXCEPTION', status_text = ?, last_updated = 'Just now',
+      UPDATE shipments SET status = 'RETURNED', status_text = ?, last_updated = 'Just now',
         return_leg_json = ?, progress_updated_at_ts = ?
       WHERE tracking_number = ?
-    `).run(`Returning to Origin (${reason})`, JSON.stringify(returnLeg), now, tracking);
+    `).run(`${shipmentStatusLabel('RETURNED')} (${reason})`, JSON.stringify(returnLeg), now, tracking);
 
     db.prepare('UPDATE tracking_events SET current_flag = 0 WHERE shipment_tracking = ?').run(tracking);
     const eventCount = (db.prepare('SELECT COUNT(*) as count FROM tracking_events WHERE shipment_tracking = ?').get(tracking) as any).count;
     insertEvent.run(
-      `e-${now}`, tracking, 'EXCEPTION', `Return to Origin Initiated: ${reason}`, currentLabel,
+      `e-${now}`, tracking, 'RETURNED', `${shipmentStatusLabel('RETURNED')}: ${reason}`, currentLabel,
       row.current_facility || `${COMPANY_SHORT} Facility`, timestamp,
       `Original journey concluded (${reason}). Returning to the sender at ${row.origin_city}, ${row.origin_state} under tracking ID ${returnId}.`,
       null, 1, 1, 1, eventCount + 1, operator, returnTime.occurredAtTs, returnTime.timeZone

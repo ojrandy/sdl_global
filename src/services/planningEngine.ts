@@ -14,6 +14,7 @@ import {
 } from '../types/shipment.js';
 import { findIntermediateHub } from './routingEngine.js';
 import { ADMIN_ROLE_LABEL } from '../config/brand.js';
+import { shipmentStatusLabel } from '../shared/shipmentStatus.js';
 import { resolveLocation } from './geocodingService.js';
 
 /**
@@ -202,9 +203,8 @@ export function generateShipmentPlan(
     { lat: destGeo.lat, lng: destGeo.lng, name: destination.city }
   );
 
-  const midStageName = intermediateHub
-    ? `Corridor Transit Scan — ${intermediateHub.city}, ${intermediateHub.state}`
-    : 'Intermediate Linehaul Corridor Scan';
+  // Stage names are the CONTENT §6.3 status names.
+  const midStageName = shipmentStatusLabel('IN_TRANSIT');
   const midLocation = intermediateHub ? `${intermediateHub.city}, ${intermediateHub.state}` : 'In transit';
   const midFacility = intermediateHub ? intermediateHub.facility : 'Regional Linehaul Sort Center';
   const midDescription = intermediateHub
@@ -238,7 +238,7 @@ export function generateShipmentPlan(
   const rawMilestones = [
     {
       id: 'plan-orig-intake',
-      stageName: 'Shipment Received at Origin Facility',
+      stageName: shipmentStatusLabel('RECEIVED'),
       location: `${origin.city}, ${origin.state}`,
       facility: originFacility,
       plannedDateTime: `${d0} · ${tm0}`,
@@ -248,7 +248,7 @@ export function generateShipmentPlan(
     },
     {
       id: 'plan-linehaul-depart',
-      stageName: 'Departed Origin Facility on Scheduled Linehaul',
+      stageName: shipmentStatusLabel('DEPARTED_FACILITY'),
       location: `${origin.city}, ${origin.state}`,
       facility: originFacility,
       plannedDateTime: `${d1} · ${tm1}`,
@@ -268,7 +268,7 @@ export function generateShipmentPlan(
     },
     {
       id: 'plan-dest-arrive',
-      stageName: 'Arrived at Destination Facility',
+      stageName: shipmentStatusLabel('DESTINATION_PROCESSING'),
       location: `${destination.city}, ${destination.state}`,
       facility: destFacility,
       plannedDateTime: `${d3} · ${tm3}`,
@@ -278,7 +278,7 @@ export function generateShipmentPlan(
     },
     {
       id: 'plan-out-delivery',
-      stageName: 'Out for Final Delivery',
+      stageName: shipmentStatusLabel('OUT_FOR_DELIVERY'),
       location: `${destination.city}, ${destination.state}`,
       facility: destFacility,
       plannedDateTime: `${d4} · ${tm4}`,
@@ -288,7 +288,7 @@ export function generateShipmentPlan(
     },
     {
       id: 'plan-delivered',
-      stageName: 'Estimated Delivery to Consignee',
+      stageName: shipmentStatusLabel('DELIVERED'),
       location: `${destination.city}, ${destination.state}`,
       facility: 'Consignee Delivery Location',
       plannedDateTime: `${d5} · by ${tm5}`,
@@ -305,16 +305,18 @@ export function generateShipmentPlan(
   const plannedMilestones: PlannedMilestone[] = rawMilestones.map((m) => {
     const isOverallDelivered = currentStatus === 'DELIVERED' || (currentProgress !== undefined && currentProgress >= 100);
     const isOverallOutForDelivery = currentStatus === 'OUT_FOR_DELIVERY' || (currentProgress !== undefined && currentProgress >= 88);
-    const isOverallAtFacility = currentStatus === 'AT_FACILITY' || (currentProgress !== undefined && currentProgress >= 65);
-    const isOverallDeparted = currentStatus === 'IN_TRANSIT' && (currentProgress !== undefined ? currentProgress >= 20 : true);
+    // Arrived at the destination gateway (or in customs there): every earlier stage is done.
+    const isOverallArrived = currentStatus === 'DESTINATION_PROCESSING' || currentStatus === 'CUSTOMS_CLEARANCE';
+    const isOverallAtFacility = isOverallArrived || currentStatus === 'AT_FACILITY' || (currentProgress !== undefined && currentProgress >= 65);
+    const isOverallDeparted = currentStatus === 'DEPARTED_FACILITY' || (currentStatus === 'IN_TRANSIT' && (currentProgress !== undefined ? currentProgress >= 20 : true));
 
     let isMatchedConfirmed = false;
     if (isOverallDelivered) {
       isMatchedConfirmed = true;
     } else if (m.id === 'plan-orig-intake') {
       isMatchedConfirmed = confirmedEvents.some(e => 
-        e.status === 'RECEIVED' || e.status === 'BOOKED' || e.title.toLowerCase().includes('received') || e.title.toLowerCase().includes('registered') || e.title.toLowerCase().includes('created') || e.title.toLowerCase().includes('picked up')
-      ) || (currentStatus !== undefined && currentStatus !== 'CREATED' && currentStatus !== 'AWAITING_PICKUP');
+        e.status === 'RECEIVED' || e.title.toLowerCase().includes('received') || e.title.toLowerCase().includes('registered') || e.title.toLowerCase().includes('created') || e.title.toLowerCase().includes('picked up')
+      ) || (currentStatus !== undefined && currentStatus !== 'CREATED' && currentStatus !== 'AWAITING_PICKUP' && currentStatus !== 'BOOKED');
     } else if (m.id === 'plan-linehaul-depart') {
       isMatchedConfirmed = isOverallOutForDelivery || isOverallAtFacility || (isOverallDeparted && (confirmedEvents.some(e => 
         e.title.toLowerCase().includes('departed') || (e.status === 'IN_TRANSIT' && !e.title.toLowerCase().includes('corridor') && !e.title.toLowerCase().includes('intermediate'))
@@ -324,8 +326,8 @@ export function generateShipmentPlan(
         e.title.toLowerCase().includes('corridor') || e.title.toLowerCase().includes('intermediate') || e.title.toLowerCase().includes('waypoint') || e.title.toLowerCase().includes('weigh') || (e.facility && e.facility.toLowerCase().includes('linehaul'))
       ) || (currentProgress !== undefined && currentProgress >= 60);
     } else if (m.id === 'plan-dest-arrive') {
-      isMatchedConfirmed = isOverallOutForDelivery || confirmedEvents.some(e => 
-        e.status === 'AT_FACILITY' || (e.title.toLowerCase().includes('arrived') && e.title.toLowerCase().includes('destination'))
+      isMatchedConfirmed = isOverallOutForDelivery || isOverallArrived || confirmedEvents.some(e => 
+        e.status === 'AT_FACILITY' || e.status === 'DESTINATION_PROCESSING' || (e.title.toLowerCase().includes('arrived') && e.title.toLowerCase().includes('destination'))
       ) || (currentProgress !== undefined && currentProgress >= 88);
     } else if (m.id === 'plan-out-delivery') {
       isMatchedConfirmed = isOverallDelivered || confirmedEvents.some(e => 
@@ -452,7 +454,7 @@ export function applyHoldState(
   const updatedShipment: Shipment = {
     ...shipment,
     status: 'ON_HOLD',
-    statusText: `On Hold (${holdReason})`,
+    statusText: `${shipmentStatusLabel('ON_HOLD')} (${holdReason})`,
     statusMessage: `Shipment temporarily paused: ${holdReason}. Delivery ETA extended by +${holdHours} hours.`,
     isHoldFrozen: true,
     frozenProgressPercent: currentProgress,
@@ -519,7 +521,7 @@ export function applyResumeState(
   const updatedShipment: Shipment = {
     ...shipment,
     status: 'IN_TRANSIT',
-    statusText: 'In Linehaul Transit (Resumed)',
+    statusText: shipmentStatusLabel('IN_TRANSIT'),
     statusMessage: 'Hold condition resolved. Shipment movement has resumed along its planned route.',
     isHoldFrozen: false,
     progressPercent: currentProgress,
@@ -579,7 +581,7 @@ export function applyDelayState(
   const updatedShipment: Shipment = {
     ...shipment,
     status: 'DELAYED',
-    statusText: `Transit Delayed (${delayReason})`,
+    statusText: `${shipmentStatusLabel('DELAYED')} (${delayReason})`,
     statusMessage: `Corridor transit delay: ${delayReason}. New estimated delivery is ${newETADate}.`,
     // Split date/time, matching the app's ETA convention — see the same fix in applyHoldState.
     estimatedDelivery: newETADate,

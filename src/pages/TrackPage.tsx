@@ -1,34 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search,
-  Lock,
   ArrowRight,
   Truck,
   FileText,
   AlertTriangle,
-  Copy,
-  Check,
-  ShieldCheck,
-  Building,
   Clock,
   Layers,
   Phone,
-  HelpCircle,
+  Headphones,
   X
 } from 'lucide-react';
 import { SupportModal } from '../components/SupportModal';
-import { PRIMARY_SHIPMENT, getShipmentByTrackingNumber } from '../data/mockShipments';
+import { ResponsiveImage } from '../components/ResponsiveImage';
+import { getShipmentByTrackingNumber } from '../data/mockShipments';
 import { Shipment } from '../types/shipment';
 import { api } from '../services/api';
 import { useCompanyContact } from '../utils/useCompanyContact';
-import { COMPANY } from '../config/brand';
 import { parseTrackingInput } from '../shared/trackingId';
+import { shipmentStatusLabel, shipmentStatusTone } from '../shared/shipmentStatus';
 import './TrackPage.css';
 
 interface TrackPageProps {
   onTrack: (trackingNumber: string) => void;
   onNavigate: (page: string) => void;
   notFoundQuery?: string | null;
+}
+
+// CONTENT §6.1 multi-track limit.
+const MAX_BATCH = 10;
+
+type BatchResult = { query: string; shipment: Shipment | null };
+
+// Status pill colour on a batch card.
+function batchPillClass(shipment: Shipment): 'delivered' | 'delayed' | 'transit' {
+  const tone = shipmentStatusTone(shipment.status);
+  if (tone === 'delivered') return 'delivered';
+  if (tone === 'hold' || tone === 'delayed' || tone === 'returning') return 'delayed';
+  return 'transit';
+}
+
+function isDelayedOrHeld(shipment: Shipment): boolean {
+  return batchPillClass(shipment) === 'delayed' || shipment.health === 'POTENTIAL_DELAY' || shipment.health === 'ATTENTION_REQUIRED';
+}
+
+function placeText(place: any): string {
+  if (!place) return '';
+  if (typeof place === 'string') return place;
+  return place.facility || [place.city, place.state].filter(Boolean).join(', ');
 }
 
 export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFoundQuery }) => {
@@ -39,12 +58,10 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
   const [multiInput, setMultiInput] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
-  const [supportIssue, setSupportIssue] = useState('General Inquiry');
-  const [copiedTracking, setCopiedTracking] = useState<string | null>(null);
 
   // Batch Multi-Tracking Drawer State
   const [batchModalOpen, setBatchModalOpen] = useState(false);
-  const [batchShipments, setBatchShipments] = useState<Shipment[]>([]);
+  const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [batchFilter, setBatchFilter] = useState<'ALL' | 'IN_TRANSIT' | 'DELIVERED' | 'DELAYED'>('ALL');
 
   // Load recent searches from localStorage
@@ -88,7 +105,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
 
   const handleMultiSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const rawNumbers = multiInput.split('\n').map(s => s.trim()).filter(Boolean);
+    const rawNumbers = multiInput.split('\n').map(s => s.trim()).filter(Boolean).slice(0, MAX_BATCH);
     if (rawNumbers.length === 0) return;
 
     if (rawNumbers.length === 1) {
@@ -97,60 +114,60 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
     }
 
     // Each number is looked up through the same masked public endpoint single tracking
-    // uses (api.trackShipment -> /api/track/:id) — this used to search the raw admin
-    // shipments list directly, which meant pasting in any handful of tracking numbers (not
-    // just your own) returned full unmasked sender/recipient/pricing details for whichever
-    // ones happened to match a real shipment.
-    const resolved: Shipment[] = await Promise.all(
+    // uses (api.trackShipment -> /api/track/:id), so no unmasked details are exposed. An ID
+    // that isn't found is shown as not found (nothing is made up for it).
+    const resolved: BatchResult[] = await Promise.all(
       rawNumbers.map(async (num) => {
         const clean = num.toUpperCase();
         try {
           const real = await api.trackShipment(clean);
-          if (real) return real;
+          if (real) return { query: clean, shipment: real };
         } catch {
-          // not found via API — fall through to mock/placeholder below
+          // not found via API — try the demo data below
         }
-        const inMock = getShipmentByTrackingNumber(clean);
-        if (inMock) return inMock;
-        return {
-          ...PRIMARY_SHIPMENT,
-          trackingNumber: clean,
-          status: 'IN_TRANSIT',
-          statusText: 'In Linehaul Transit · Active Corridor',
-          lastUpdated: 'Just now'
-        } as Shipment;
+        // DEMO DATA — remove before launch (tracker 6.7). Client mock-shipment fallback.
+        return { query: clean, shipment: getShipmentByTrackingNumber(clean) ?? null };
       })
     );
 
-    setBatchShipments(resolved);
+    setBatchResults(resolved);
+    setBatchFilter('ALL');
     setBatchModalOpen(true);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedTracking(text);
-    setTimeout(() => setCopiedTracking(null), 2000);
-  };
+  const found = batchResults.filter((r): r is { query: string; shipment: Shipment } => r.shipment !== null);
+  const inTransitCount = found.filter(r => batchPillClass(r.shipment) === 'transit').length;
+  const deliveredCount = found.filter(r => batchPillClass(r.shipment) === 'delivered').length;
+  const delayedCount = found.filter(r => isDelayedOrHeld(r.shipment)).length;
+
+  const visibleResults = batchResults.filter(r => {
+    if (batchFilter === 'ALL') return true;
+    if (!r.shipment) return false;
+    if (batchFilter === 'IN_TRANSIT') return batchPillClass(r.shipment) === 'transit';
+    if (batchFilter === 'DELIVERED') return batchPillClass(r.shipment) === 'delivered';
+    return isDelayedOrHeld(r.shipment);
+  });
 
   return (
     <div className="sdl-page-track">
       {/* =========================================================================
-          1. CLEAN EXECUTIVE TRACKING PORTAL HERO
+          1. TRACKING HERO
           ========================================================================= */}
       <section className="track-hero-section">
+        <ResponsiveImage
+          name="track-hero"
+          alt="SDL truck, cargo ship and aircraft at a container port at sunset"
+          eager
+          sizes="100vw"
+          className="track-hero-media"
+          imgClassName="track-hero-img"
+        />
         <div className="track-hero-bg-overlay" />
         <div className="sdl-container-wide track-hero-container">
           <div className="track-hero-header">
-            <div className="track-hero-pill animate-fade-in">
-              <span className="track-pulse-dot" />
-              <span>NATIONWIDE COURIER & LINEHAUL TRACKING ENGINE</span>
-            </div>
-
-            <h1 className="track-hero-headline animate-fade-in">
-              Track Your Shipment with <span className="track-highlight-accent">Piece-Level Precision.</span>
-            </h1>
+            <h1 className="track-hero-headline animate-fade-in">Track your shipment</h1>
             <p className="track-hero-subtext animate-fade-in">
-              Enter your tracking identifier or Bill of Lading (BOL) reference to inspect real-time linehaul progress, verified scan milestones, and dynamic arrival estimates.
+              Enter your 8-character SDL tracking ID to see where your shipment is right now.
             </p>
           </div>
 
@@ -161,25 +178,19 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
               {/* Malformed input (neither a tracking ID nor a quote reference) gets format help;
                   a well-formed ID that isn't on file gets "not found" (same split as /api/track 400/404). */}
               {!parseTrackingInput(notFoundQuery) && !notFoundQuery.trim().toUpperCase().startsWith('QR') ? (
-                <div>
-                  <strong>That doesn't look like a tracking ID</strong>
-                  <p>
-                    <span className="font-mono font-bold">"{notFoundQuery}"</span> isn't in the right format. Enter your 8-character tracking ID, e.g. <span className="font-mono">DLS7K2M9</span> (piece labels such as <span className="font-mono">DLS7K2M9-01</span> work too), or a quote reference starting with QR.
-                  </p>
-                </div>
+                <p>Tracking IDs start with DLS and are 8 characters long, e.g. <span className="font-mono">DLS7K2M9</span>.</p>
               ) : (
-                <div>
-                  <strong>Consignment Reference Not Found</strong>
-                  <p>
-                    No active shipment or rate inquiry matches <span className="font-mono font-bold">"{notFoundQuery}"</span>. Please check the tracking number printed on your physical label or dispatch manifest.
-                  </p>
-                </div>
+                <p>
+                  We couldn't find a shipment with ID <span className="font-mono font-bold">{notFoundQuery.trim().toUpperCase()}</span>. Check the characters and try again, or{' '}
+                  <button type="button" className="track-inline-link" onClick={() => onNavigate('contact')}>contact us</button>{' '}
+                  and we'll look it up for you.
+                </p>
               )}
             </div>
           )}
 
           {/* =========================================================================
-              2. CENTRAL INTERACTIVE TRACKING TERMINAL CARD
+              2. TRACKING CARD
               ========================================================================= */}
           <div className="track-terminal-card animate-fade-in">
             {/* Mode Switcher Tabs */}
@@ -190,7 +201,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 onClick={() => setActiveTab('single')}
               >
                 <Search size={16} />
-                <span>Single Tracking Number</span>
+                <span>Track a shipment</span>
               </button>
 
               <button
@@ -199,7 +210,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 onClick={() => setActiveTab('batch')}
               >
                 <Layers size={16} />
-                <span>Batch Multi-Tracking</span>
+                <span>Track several shipments</span>
               </button>
             </div>
 
@@ -210,7 +221,8 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                   <Search size={22} className="terminal-search-icon" />
                   <input
                     type="text"
-                    placeholder="Enter tracking ID (e.g. DLS7K2M9) or quote ID"
+                    placeholder="e.g. DLS7K2M9"
+                    aria-label="Tracking ID"
                     value={trackingNumber}
                     onChange={(e) => setTrackingNumber(e.target.value)}
                     className="terminal-input font-mono"
@@ -221,6 +233,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                       type="button"
                       className="terminal-clear-btn"
                       onClick={() => setTrackingNumber('')}
+                      aria-label="Clear"
                     >
                       <X size={16} />
                     </button>
@@ -228,7 +241,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 </div>
 
                 <button type="submit" className="btn-corp-primary terminal-submit-btn">
-                  <span>Track Shipment</span>
+                  <span>Track</span>
                   <ArrowRight size={17} />
                 </button>
               </form>
@@ -237,10 +250,11 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
             {/* TAB 2: BATCH MULTI-TRACKING */}
             {activeTab === 'batch' && (
               <form onSubmit={handleMultiSubmit} className="terminal-form-batch">
-                <label className="batch-label">
-                  Enter up to 10 tracking numbers (one per line):
+                <label className="batch-label" htmlFor="track-batch-input">
+                  Enter up to 10 tracking IDs, one per line.
                 </label>
                 <textarea
+                  id="track-batch-input"
                   rows={4}
                   value={multiInput}
                   onChange={(e) => setMultiInput(e.target.value)}
@@ -248,23 +262,19 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                   placeholder="DLS7K2M9&#10;DLS8M4PQ&#10;DLS3J7NK"
                 />
                 <div className="batch-actions-row">
-                  <span className="batch-hint-text">
-                    Consolidates multiple commercial dispatches into a single fleet monitor.
-                  </span>
                   <button type="submit" className="btn-corp-primary terminal-submit-btn">
-                    <span>Track Batch Shipments</span>
+                    <span>Track</span>
                     <ArrowRight size={17} />
                   </button>
                 </div>
               </form>
             )}
 
-            {/* Terminal Helper & Recent Searches (No Fake Dummy Numbers) */}
-            <div className="terminal-footer">
-              {/* Only show recent searches if the user has previously queried a number */}
-              {recentSearches.length > 0 && (
+            {/* Recent searches (only numbers this visitor has looked up) */}
+            {recentSearches.length > 0 && (
+              <div className="terminal-footer">
                 <div className="recent-searches-group">
-                  <span className="quick-samples-label">Your Recent Lookups:</span>
+                  <span className="quick-samples-label">Recent lookups:</span>
                   <div className="quick-chips-row">
                     {recentSearches.map((num, i) => (
                       <button
@@ -279,41 +289,19 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* Security & Access Strip */}
-              <div className="terminal-trust-strip">
-                <div className="trust-item">
-                  <Lock size={14} className="text-emerald" />
-                  <span>Public Ledger · Zero Login Required</span>
-                </div>
-                <div className="trust-divider" />
-                <div className="trust-item">
-                  <ShieldCheck size={14} className="text-accent" />
-                  <span>Piece-Level Linear Code 128 Audited</span>
-                </div>
-                <div className="trust-divider" />
-                <div className="trust-item">
-                  <Clock size={14} className="text-sky" />
-                  <span>Verified Checkpoint Timestamps</span>
-                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          3. REFERENCE GUIDE: WHERE TO FIND YOUR TRACKING NUMBER
+          3. WHERE TO FIND YOUR ID
           ========================================================================= */}
       <section className="track-reference-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">OFFICIAL DISPATCH DOCUMENTATION</span>
-            <h2>Where to Locate Your Consignment Reference</h2>
-            <p className="section-desc-sub">
-              All official shipping documents, tracking numbers, and bills of lading are issued directly by the {COMPANY} dispatch desk and provided to you through your designated communication channel.
-            </p>
+            <h2>Where to find your ID</h2>
             <div className="section-header-line" />
           </div>
 
@@ -322,84 +310,56 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
               <div className="ref-icon-box accent">
                 <FileText size={24} />
               </div>
-              <h3>Direct Dispatch Confirmation</h3>
-              <p>
-                Your dedicated {COMPANY} logistics coordinator sends your official tracking identifier and booking receipt directly to you via email, SMS, or dispatch message upon consignment tender.
-              </p>
-              <div className="ref-format-pill font-mono">Issued Directly by Dispatch</div>
+              <h3>Booking confirmation</h3>
+              <p>It's in the email or SMS we sent when your shipment was booked.</p>
             </div>
 
             <div className="reference-card">
               <div className="ref-icon-box emerald">
                 <Truck size={24} />
               </div>
-              <h3>Agency Bill of Lading (BOL)</h3>
-              <p>
-                The official signed Bill of Lading (BOL) manifest provided by our agency includes your primary reference code at the top right of the consignment paperwork.
-              </p>
-              <div className="ref-format-pill font-mono">Official BOL Manifest</div>
+              <h3>Waybill / label</h3>
+              <p>Printed at the top of your waybill and on every piece label.</p>
             </div>
 
             <div className="reference-card">
               <div className="ref-icon-box sky">
-                <Clock size={24} />
+                <Headphones size={24} />
               </div>
-              <h3>Coordinator Verification</h3>
-              <p>
-                If you have misplaced your reference code, contact your assigned logistics coordinator or our 24/7 central desk to verify your shipment details instantly.
-              </p>
-              <div className="ref-format-pill font-mono">24/7 Dispatch Verification</div>
+              <h3>Your coordinator</h3>
+              <p>Any SDL coordinator can find it from your name, reference or phone number.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          4. 24/7 CENTRAL DISPATCH & CONTEXTUAL SUPPORT
+          4. HELP BANNER
           ========================================================================= */}
       <section className="track-support-section">
         <div className="sdl-container-wide">
           <div className="track-support-card">
             <div className="support-card-content">
-              <span className="support-card-eyebrow font-mono">24/7 CENTRAL DISPATCH DESK</span>
-              <h2>Need Immediate Assistance with an Active Shipment?</h2>
-              <p>
-                Our experienced logistics coordinators are available around the clock to assist with address updates, delivery holds, or urgent linehaul status inquiries.
-              </p>
-              <div className="support-contact-strip">
-                {supportPhone && (
+              <h2>Need help with an active shipment?</h2>
+              <p>Our operations desk is available 24/7.</p>
+              {supportPhone && (
+                <div className="support-contact-strip">
                   <div className="support-phone-badge">
                     <Phone size={16} className="text-accent" />
                     <span className="font-mono font-bold">{supportPhone}</span>
-                    <small>(Toll-Free Dispatch)</small>
                   </div>
-                )}
-                <div className="support-status-beacon">
-                  <span className="beacon-dot" />
-                  <span>Operations Center Active</span>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="support-card-actions">
               <button
                 type="button"
                 className="btn-corp-primary"
-                onClick={() => onNavigate('contact')}
+                onClick={() => setSupportModalOpen(true)}
               >
-                <span>Contact Operations Desk</span>
+                <span>Contact Support</span>
                 <ArrowRight size={16} />
-              </button>
-
-              <button
-                type="button"
-                className="btn-corp-ghost"
-                onClick={() => {
-                  setSupportIssue('Tracking Assistance');
-                  setSupportModalOpen(true);
-                }}
-              >
-                <span>Submit Inquiry Ticket</span>
               </button>
             </div>
           </div>
@@ -410,25 +370,29 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
       <SupportModal
         isOpen={supportModalOpen}
         onClose={() => setSupportModalOpen(false)}
-        initialTrackingNumber={trackingNumber || ''}
-        defaultIssueType={supportIssue}
+        initialTrackingNumber={trackingNumber.trim().toUpperCase()}
       />
 
       {/* =========================================================================
-          5. BATCH MULTI-TRACKING MODAL / DRAWER
+          5. SEVERAL SHIPMENTS: RESULTS
           ========================================================================= */}
       {batchModalOpen && (
         <div className="batch-modal-backdrop animate-fade-in" onClick={() => setBatchModalOpen(false)}>
-          <div className="batch-modal-dialog animate-scale-in" onClick={e => e.stopPropagation()}>
+          <div
+            className="batch-modal-dialog animate-scale-in"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="batch-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="batch-modal-header">
               <div>
                 <div className="batch-header-title">
                   <Truck size={20} className="text-accent" />
-                  <h3>Batch Multi-Shipment Fleet Monitor</h3>
+                  <h3 id="batch-modal-title">Track several shipments</h3>
                 </div>
-                <p>Real-time consolidated status across {batchShipments.length} queried trade corridor consignments.</p>
               </div>
-              <button className="batch-modal-close" onClick={() => setBatchModalOpen(false)}>×</button>
+              <button className="batch-modal-close" onClick={() => setBatchModalOpen(false)} aria-label="Close">×</button>
             </div>
 
             <div className="batch-filter-bar">
@@ -438,125 +402,117 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                   className={`batch-filter-btn ${batchFilter === 'ALL' ? 'active' : ''}`}
                   onClick={() => setBatchFilter('ALL')}
                 >
-                  All Consignments ({batchShipments.length})
+                  All ({batchResults.length})
                 </button>
                 <button
                   type="button"
                   className={`batch-filter-btn ${batchFilter === 'IN_TRANSIT' ? 'active' : ''}`}
                   onClick={() => setBatchFilter('IN_TRANSIT')}
                 >
-                  In Transit ({batchShipments.filter(s => s.status === 'IN_TRANSIT' || s.status === 'RECEIVED' || s.status === 'OUT_FOR_DELIVERY').length})
+                  {shipmentStatusLabel('IN_TRANSIT')} ({inTransitCount})
                 </button>
                 <button
                   type="button"
                   className={`batch-filter-btn ${batchFilter === 'DELIVERED' ? 'active' : ''}`}
                   onClick={() => setBatchFilter('DELIVERED')}
                 >
-                  Delivered ({batchShipments.filter(s => s.status === 'DELIVERED').length})
+                  {shipmentStatusLabel('DELIVERED')} ({deliveredCount})
                 </button>
                 <button
                   type="button"
                   className={`batch-filter-btn ${batchFilter === 'DELAYED' ? 'active' : ''}`}
                   onClick={() => setBatchFilter('DELAYED')}
                 >
-                  Delayed ({batchShipments.filter(s => s.status === 'DELAYED' || s.health === 'POTENTIAL_DELAY' || s.health === 'ATTENTION_REQUIRED').length})
+                  {shipmentStatusLabel('DELAYED')} / {shipmentStatusLabel('ON_HOLD').toLowerCase()} ({delayedCount})
                 </button>
               </div>
-
-              <span className="batch-audit-label">Verified Checkpoint Records · Contiguous U.S.</span>
             </div>
 
             <div className="batch-modal-body">
               <div className="batch-cards-grid">
-                {batchShipments
-                  .filter(s => {
-                    if (batchFilter === 'IN_TRANSIT') return s.status === 'IN_TRANSIT' || s.status === 'RECEIVED' || s.status === 'OUT_FOR_DELIVERY';
-                    if (batchFilter === 'DELIVERED') return s.status === 'DELIVERED';
-                    if (batchFilter === 'DELAYED') return s.status === 'DELAYED' || s.health === 'POTENTIAL_DELAY' || s.health === 'ATTENTION_REQUIRED';
-                    return true;
-                  })
-                  .map((shipment, index) => {
-                    const isDelivered = shipment.status === 'DELIVERED';
-                    const isDelayed = shipment.status === 'DELAYED' || shipment.health === 'POTENTIAL_DELAY';
-
+                {visibleResults.map(({ query, shipment }, index) => {
+                  if (!shipment) {
                     return (
-                      <div key={index} className="batch-shipment-card">
+                      <div key={`${query}-${index}`} className="batch-shipment-card batch-not-found">
                         <div className="batch-card-top">
-                          <div>
-                            <span className="batch-tracking-id">{shipment.trackingNumber}</span>
-                            <span className="batch-service-sub">{shipment.service || 'Priority Express'} · {shipment.shipmentType || 'Parcel'}</span>
-                          </div>
-
-                          <div>
-                            {isDelivered ? (
-                              <span className="batch-status-pill delivered">DELIVERED</span>
-                            ) : isDelayed ? (
-                              <span className="batch-status-pill delayed">DELAYED</span>
-                            ) : (
-                              <span className="batch-status-pill transit">IN TRANSIT</span>
-                            )}
-                          </div>
+                          <span className="batch-tracking-id">{query}</span>
                         </div>
-
-                        <div className="batch-route-strip">
-                          <div className="batch-route-point">
-                            <small>ORIGIN</small>
-                            <strong>{shipment.origin?.city || 'New York'}, {shipment.origin?.state || 'NY'}</strong>
-                          </div>
-
-                          <div className="batch-route-arrow">
-                            <Truck size={14} />
-                            <ArrowRight size={14} />
-                          </div>
-
-                          <div className="batch-route-point right">
-                            <small>DESTINATION</small>
-                            <strong>{shipment.destination?.city || 'Los Angeles'}, {shipment.destination?.state || 'CA'}</strong>
-                          </div>
-                        </div>
-
-                        <div className="batch-metrics-row">
-                          <div className="batch-metric-box">
-                            <small>CURRENT FACILITY</small>
-                            <strong>
-                              {shipment.currentFacility ||
-                                (typeof shipment.currentLocation === 'string'
-                                  ? shipment.currentLocation
-                                  : (shipment.currentLocation as any)?.facility ||
-                                    [(shipment.currentLocation as any)?.city, (shipment.currentLocation as any)?.state].filter(Boolean).join(', ')) ||
-                                `${shipment.origin?.city || 'New York'} Sort Hub`}
-                            </strong>
-                          </div>
-                          <div className="batch-metric-box">
-                            <small>ESTIMATED DELIVERY</small>
-                            <strong>
-                              {typeof shipment.estimatedDelivery === 'string'
-                                ? shipment.estimatedDelivery
-                                : (shipment.estimatedDelivery as any)?.date || 'On Schedule'}
-                            </strong>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="btn-inspect-batch-item"
-                          onClick={() => {
-                            setBatchModalOpen(false);
-                            handleQuickTrack(shipment.trackingNumber);
-                          }}
-                        >
-                          <span>Inspect Live 60 FPS Telemetry & Map</span>
-                          <ArrowRight size={14} />
-                        </button>
+                        <p className="batch-not-found-text">
+                          {parseTrackingInput(query)
+                            ? `We couldn't find a shipment with ID ${query}. Check the characters and try again.`
+                            : 'Tracking IDs start with DLS and are 8 characters long, e.g. DLS7K2M9.'}
+                        </p>
                       </div>
                     );
-                  })}
+                  }
+
+                  const origin = placeText(shipment.origin);
+                  const destination = placeText(shipment.destination);
+                  const current = shipment.currentFacility || placeText(shipment.currentLocation);
+                  const eta = typeof shipment.estimatedDelivery === 'string'
+                    ? shipment.estimatedDelivery
+                    : (shipment.estimatedDelivery as any)?.date;
+
+                  return (
+                    <div key={`${query}-${index}`} className="batch-shipment-card">
+                      <div className="batch-card-top">
+                        <div>
+                          <span className="batch-tracking-id">{shipment.trackingNumber}</span>
+                          {shipment.service && <span className="batch-service-sub">{shipment.service}</span>}
+                        </div>
+
+                        <span className={`batch-status-pill ${batchPillClass(shipment)}`}>
+                          {shipmentStatusLabel(shipment.status)}
+                        </span>
+                      </div>
+
+                      <div className="batch-route-strip">
+                        <div className="batch-route-point">
+                          <small>Origin</small>
+                          <strong>{origin || '—'}</strong>
+                        </div>
+
+                        <div className="batch-route-arrow">
+                          <ArrowRight size={14} />
+                        </div>
+
+                        <div className="batch-route-point right">
+                          <small>Destination</small>
+                          <strong>{destination || '—'}</strong>
+                        </div>
+                      </div>
+
+                      <div className="batch-metrics-row">
+                        <div className="batch-metric-box">
+                          <small>Current location</small>
+                          <strong>{current || '—'}</strong>
+                        </div>
+                        <div className="batch-metric-box">
+                          <small>Estimated delivery</small>
+                          <strong>{eta || '—'}</strong>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="btn-inspect-batch-item"
+                        onClick={() => {
+                          setBatchModalOpen(false);
+                          handleQuickTrack(shipment.trackingNumber);
+                        }}
+                      >
+                        <span>View details</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             <div className="batch-modal-footer">
               <span className="batch-footer-count">
-                Showing <strong>{batchShipments.length}</strong> active consignments in fleet monitor
+                Found <strong>{found.length}</strong> of {batchResults.length}
               </span>
               <button
                 type="button"
@@ -564,7 +520,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 onClick={() => setBatchModalOpen(false)}
                 style={{ padding: '0.5rem 1.25rem' }}
               >
-                Close Batch View
+                Close
               </button>
             </div>
           </div>

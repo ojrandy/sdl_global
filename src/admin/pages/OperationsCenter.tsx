@@ -22,6 +22,18 @@ import { AdminViewType } from '../AdminLayout';
 import { Shipment } from '../../types/shipment';
 import './OperationsCenter.css';
 import { WeightText } from '../../components/forms/UnitControls';
+import { shipmentStatusLabel, shipmentStatusTone, type StatusTone } from '../../shared/shipmentStatus';
+
+// Badge colours per status family (names come from CONTENT §6.3).
+const OPS_STATUS_CHIP: Record<StatusTone, { className: string; dot: string }> = {
+  booked: { className: 'arrived', dot: 'slate' },
+  transit: { className: 'in-transit', dot: 'blue' },
+  out: { className: 'out-delivery', dot: 'amber' },
+  delivered: { className: 'delivered', dot: 'green' },
+  hold: { className: 'delayed', dot: 'red' },
+  delayed: { className: 'delayed', dot: 'red' },
+  returning: { className: 'delayed', dot: 'red' },
+};
 
 interface OperationsCenterProps {
   onSelectView: (view: AdminViewType) => void;
@@ -340,7 +352,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
                 className={`filter-tab-btn ${tableFilter === 'IN_TRANSIT' ? 'active' : ''}`}
                 onClick={() => setTableFilter('IN_TRANSIT')}
               >
-                In Transit ({inTransitCount})
+                {shipmentStatusLabel('IN_TRANSIT')} ({inTransitCount})
               </button>
               <button
                 className={`filter-tab-btn ${tableFilter === 'DELIVERED' ? 'active' : ''}`}
@@ -353,7 +365,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
                   className={`filter-tab-btn ${tableFilter === 'HELD' ? 'active' : ''}`}
                   onClick={() => setTableFilter('HELD')}
                 >
-                  Holds ({exceptionCount})
+                  {shipmentStatusLabel('ON_HOLD')} ({exceptionCount})
                 </button>
               )}
             </div>
@@ -498,23 +510,9 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
 
                       {/* 5. STATUS */}
                       <td>
-                        {shipment.status === 'IN_TRANSIT' || shipment.status === 'OUT_FOR_DELIVERY' ? (
-                          <span className="ops-status-chip in-transit">
-                            <span className="chip-dot blue" /> In Transit
-                          </span>
-                        ) : shipment.status === 'DELIVERED' ? (
-                          <span className="ops-status-chip delivered">
-                            <span className="chip-dot green" /> Delivered
-                          </span>
-                        ) : shipment.status === 'HELD' || shipment.status === 'EXCEPTION' ? (
-                          <span className="ops-status-chip delayed">
-                            <span className="chip-dot red" /> On Hold
-                          </span>
-                        ) : (
-                          <span className="ops-status-chip arrived">
-                            <span className="chip-dot slate" /> Received
-                          </span>
-                        )}
+                        <span className={`ops-status-chip ${OPS_STATUS_CHIP[shipmentStatusTone(shipment.status)].className}`}>
+                          <span className={`chip-dot ${OPS_STATUS_CHIP[shipmentStatusTone(shipment.status)].dot}`} /> {shipmentStatusLabel(shipment.status)}
+                        </span>
                       </td>
 
                       {/* 6. EST. DELIVERY */}

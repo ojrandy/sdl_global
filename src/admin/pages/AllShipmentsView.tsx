@@ -36,6 +36,18 @@ import { DeleteShipmentModal } from '../components/DeleteShipmentModal';
 import { RecentlyDeletedModal } from '../components/RecentlyDeletedModal';
 import './AllShipmentsView.css';
 import { WeightText } from '../../components/forms/UnitControls';
+import { canonicalStatus, shipmentStatusLabel, shipmentStatusTone, type StatusTone } from '../../shared/shipmentStatus';
+
+// Badge colours per status family (names come from CONTENT §6.3).
+const STATUS_CHIP: Record<StatusTone, { className: string; dot: string }> = {
+  booked: { className: 'default', dot: 'slate' },
+  transit: { className: 'in-transit', dot: 'blue' },
+  out: { className: 'out-delivery', dot: 'amber' },
+  delivered: { className: 'delivered', dot: 'green' },
+  hold: { className: 'delayed', dot: 'red' },
+  delayed: { className: 'delayed', dot: 'red' },
+  returning: { className: 'delayed', dot: 'red' },
+};
 
 interface AllShipmentsViewProps {
   onOpenShipmentDetail: (trackingNumber: string) => void;
@@ -84,51 +96,19 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
       (s.origin?.city || (typeof s.origin === 'string' ? s.origin : '')).toLowerCase().includes(term) ||
       (s.destination?.city || (typeof s.destination === 'string' ? s.destination : '')).toLowerCase().includes(term);
 
-    const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
+    const code = canonicalStatus(s.status);
+    const matchesStatus = statusFilter === 'ALL' || code === statusFilter || (statusFilter === 'DELAYED' && code === 'ON_HOLD');
     const matchesService = serviceFilter === 'ALL' || s.service === serviceFilter;
     return matchesSearch && matchesStatus && matchesService;
   });
 
   const getStatusBadge = (status: ShipmentStatus) => {
-    switch (status) {
-      case 'IN_TRANSIT':
-        return (
-          <span className="ship-status-chip in-transit">
-            <span className="chip-dot blue" /> In Transit
-          </span>
-        );
-      case 'AT_FACILITY':
-        return (
-          <span className="ship-status-chip arrived">
-            <span className="chip-dot teal" /> At Facility
-          </span>
-        );
-      case 'OUT_FOR_DELIVERY':
-        return (
-          <span className="ship-status-chip out-delivery">
-            <span className="chip-dot amber" /> Out for Delivery
-          </span>
-        );
-      case 'DELIVERED':
-        return (
-          <span className="ship-status-chip delivered">
-            <span className="chip-dot green" /> Delivered
-          </span>
-        );
-      case 'DELAYED':
-      case 'ON_HOLD':
-        return (
-          <span className="ship-status-chip delayed">
-            <span className="chip-dot red" /> {status === 'ON_HOLD' ? 'On Hold' : 'Delayed'}
-          </span>
-        );
-      default:
-        return (
-          <span className="ship-status-chip default">
-            <span className="chip-dot slate" /> {String(status).replace(/_/g, ' ')}
-          </span>
-        );
-    }
+    const chip = STATUS_CHIP[shipmentStatusTone(status)];
+    return (
+      <span className={`ship-status-chip ${chip.className}`}>
+        <span className={`chip-dot ${chip.dot}`} /> {shipmentStatusLabel(status)}
+      </span>
+    );
   };
 
   const formatEtaDate = (est: any) => {
@@ -184,7 +164,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
         currentLocation: `${senderCity}, ${senderState}`,
         currentFacility: `${senderCity} Regional Gateway`,
         status: 'BOOKED',
-        statusText: 'Consignment Registered'
+        statusText: shipmentStatusLabel('BOOKED')
       });
     } catch (err: any) {
       setSuccessToast(`Could not register the shipment: ${err?.message || 'the server did not respond'}. Nothing was saved.`);
@@ -199,8 +179,8 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
 
   // Metrics summary counts
   const totalCount = shipments.length;
-  const inTransitCount = shipments.filter(s => s.status === 'IN_TRANSIT').length;
-  const atFacilityCount = shipments.filter(s => s.status === 'AT_FACILITY').length;
+  const inTransitCount = shipments.filter(s => canonicalStatus(s.status) === 'IN_TRANSIT').length;
+  const arrivedCount = shipments.filter(s => s.status === 'DESTINATION_PROCESSING').length;
   const outDeliveryCount = shipments.filter(s => s.status === 'OUT_FOR_DELIVERY').length;
   const deliveredCount = shipments.filter(s => s.status === 'DELIVERED').length;
   const delayedCount = shipments.filter(s => s.status === 'DELAYED' || s.status === 'EXCEPTION' || s.status === 'ON_HOLD').length;
@@ -374,7 +354,7 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
             <div className="stat-circle-icon red">
               <AlertCircle size={15} />
             </div>
-            <span className="stat-label">EXCEPTIONS & HOLDS</span>
+            <span className="stat-label">DELAYED & ON HOLD</span>
           </div>
           <strong className="stat-number">{delayedCount}</strong>
           <span className="stat-subtext">{delayedCount === 0 ? 'Zero Holds' : 'Requires Intervention'}</span>
@@ -434,21 +414,21 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
             className={`tab-btn ${statusFilter === 'IN_TRANSIT' ? 'active' : ''}`}
             onClick={() => setStatusFilter('IN_TRANSIT')}
           >
-            In Transit <span className="tab-count-badge">{inTransitCount}</span>
+            {shipmentStatusLabel('IN_TRANSIT')} <span className="tab-count-badge">{inTransitCount}</span>
           </button>
           <button
             type="button"
-            className={`tab-btn ${statusFilter === 'AT_FACILITY' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('AT_FACILITY')}
+            className={`tab-btn ${statusFilter === 'DESTINATION_PROCESSING' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('DESTINATION_PROCESSING')}
           >
-            At Facility <span className="tab-count-badge">{atFacilityCount}</span>
+            {shipmentStatusLabel('DESTINATION_PROCESSING')} <span className="tab-count-badge">{arrivedCount}</span>
           </button>
           <button
             type="button"
             className={`tab-btn ${statusFilter === 'OUT_FOR_DELIVERY' ? 'active' : ''}`}
             onClick={() => setStatusFilter('OUT_FOR_DELIVERY')}
           >
-            Out for Delivery <span className="tab-count-badge">{outDeliveryCount}</span>
+            {shipmentStatusLabel('OUT_FOR_DELIVERY')} <span className="tab-count-badge">{outDeliveryCount}</span>
           </button>
           <button
             type="button"

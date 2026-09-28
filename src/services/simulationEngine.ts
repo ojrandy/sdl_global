@@ -3,6 +3,7 @@ import { calculateRouteGeometry, calculateEstimatedPosition, inferTransportMode 
 import { resolveLocation, findNearestMetro } from './geocodingService';
 import { normalizeLng } from '../utils/greatCircle';
 import { formatInZone, timeZoneForPlace } from '../shared/timeZones';
+import { shipmentStatusLabel } from '../shared/shipmentStatus';
 
 export type SimulationListener = (updatedShipment: Shipment) => void;
 
@@ -84,16 +85,16 @@ class SimulationEngine {
     let currentTimeline = [...(shipment.timeline || (shipment as any).events || [])];
     if (clamped === 0) {
       status = 'RECEIVED';
-      statusText = 'Consignment Staged at Origin Terminal';
+      statusText = shipmentStatusLabel('RECEIVED');
     } else if (clamped > 0 && clamped < 85) {
       status = 'IN_TRANSIT';
-      statusText = `In Transit (${Math.round(clamped)}% Completed)`;
+      statusText = shipmentStatusLabel('IN_TRANSIT');
     } else if (clamped >= 85 && clamped < 100) {
       status = 'OUT_FOR_DELIVERY';
-      statusText = `Out for Delivery in ${shipment.destination.city}`;
+      statusText = shipmentStatusLabel('OUT_FOR_DELIVERY');
     } else {
       status = 'DELIVERED';
-      statusText = `Delivered to ${shipment.recipient?.name || 'Recipient'}`;
+      statusText = shipmentStatusLabel('DELIVERED');
       const hasDelivered = currentTimeline.some(e => e.status === 'DELIVERED' || e.title.toLowerCase().includes('delivered'));
       if (!hasDelivered) {
         const now = new Date();
@@ -217,7 +218,7 @@ class SimulationEngine {
     const updated: Shipment = {
       ...shipment,
       status: 'DELAYED',
-      statusText: `Transit Delayed (+${delayHours}h) · ${reason}`,
+      statusText: `${shipmentStatusLabel('DELAYED')} (${reason})`,
       health: 'ATTENTION_REQUIRED',
       healthExplanation: `Operational delay logged: ${reason}. Delivery schedule pushed by ${delayHours} hours.`,
       delayNotice: {
@@ -243,7 +244,7 @@ class SimulationEngine {
     const updated: Shipment = {
       ...shipment,
       status: 'IN_TRANSIT',
-      statusText: `In Transit (${Math.round(shipment.progressPercent ?? 35)}% Completed)`,
+      statusText: shipmentStatusLabel('IN_TRANSIT'),
       health: 'ON_TRACK',
       healthExplanation: 'Consignment progressing normally on its planned route.',
       delayNotice: undefined,

@@ -5,6 +5,8 @@ import 'leaflet/dist/leaflet.css';
 import { RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { calculateRouteGeometry, calculateEstimatedPosition, fetchLiveRoadRoute, findNearestPointOnPolyline, type TransportMode } from '../services/routingEngine';
 import { Layers, ZoomIn, ZoomOut, Compass, ChevronDown, AlertTriangle, ShieldAlert, Pause, Truck, ArrowRight } from 'lucide-react';
+import { shipmentStatusLabel } from '../shared/shipmentStatus';
+import { TRANSPORT_LEG_LABELS } from '../shared/transportMode';
 import './JourneyMap.css';
 
 // 1x1 transparent pixel — used as the errorTileUrl so a tile that fails to load
@@ -57,6 +59,16 @@ function splitRouteAt(polyline: RoutePoint[], pos: { lat: number; lng: number; i
     completed: [...polyline.slice(0, index + 1), at],
     remaining: [at, ...polyline.slice(index + 1)]
   };
+}
+
+// Caption on the moving marker: the status name (CONTENT §6.3) when it explains where the
+// shipment is, otherwise a reminder that the position is schedule-based.
+function markerRoleText(status: string | undefined, progress: number, hasDelay: boolean): string {
+  if (progress >= 100 || status === 'DELIVERED') return shipmentStatusLabel('DELIVERED').toUpperCase();
+  if (status === 'ON_HOLD') return shipmentStatusLabel('ON_HOLD').toUpperCase();
+  if (hasDelay || status === 'DELAYED') return shipmentStatusLabel('DELAYED').toUpperCase();
+  if (progress === 0) return shipmentStatusLabel(status).toUpperCase();
+  return 'ESTIMATED POSITION';
 }
 
 export const JourneyMap: React.FC<JourneyMapProps> = ({
@@ -316,15 +328,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
       // Create or update Moving Vehicle Marker
       const estPos = vehiclePos;
-      const roleText = (clampedProgress >= 100 || shipmentStatus === 'DELIVERED')
-        ? 'CONSIGNMENT DELIVERED'
-        : clampedProgress === 0
-          ? 'STAGED AT ORIGIN'
-          : shipmentStatus === 'ON_HOLD'
-            ? 'TRANSIT PAUSED (HOLD)'
-            : delayNotice?.hasDelay
-              ? 'DELAY ADVISORY ACTIVE'
-              : 'ESTIMATED POSITION';
+      const roleText = markerRoleText(shipmentStatus, clampedProgress, Boolean(delayNotice?.hasDelay));
 
       if (!vehicleMarkerRef.current) {
         vehicleMarkerRef.current = L.marker([estPos.lat, estPos.lng], {
@@ -435,15 +439,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
     // 3. Smoothly glide vehicle marker position along the route coordinates
     const estPos = vehiclePos;
-    const roleText = (clampedProgress >= 100 || shipmentStatus === 'DELIVERED')
-      ? 'CONSIGNMENT DELIVERED'
-      : clampedProgress === 0
-        ? 'STAGED AT ORIGIN'
-        : shipmentStatus === 'ON_HOLD'
-          ? 'TRANSIT PAUSED (HOLD)'
-          : delayNotice?.hasDelay
-            ? 'DELAY ADVISORY ACTIVE'
-            : 'ESTIMATED POSITION';
+    const roleText = markerRoleText(shipmentStatus, clampedProgress, Boolean(delayNotice?.hasDelay));
 
     if (vehicleMarkerRef.current) {
       vehicleMarkerRef.current.setLatLng([estPos.lat, estPos.lng]);
@@ -517,8 +513,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
             <span className="dot-indicator green" />
             <span>ORIGIN</span>
           </div>
-          <h4 className="stage-city-title">{originDisplay || 'Origin Terminal'}</h4>
-          <span className="stage-facility-sub">Origin Gateway Terminal</span>
+          <h4 className="stage-city-title">{originDisplay || 'Origin'}</h4>
         </div>
 
         {/* Center Transit Corridor Pill */}
@@ -526,7 +521,13 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
           <div className="transit-status-pill">
             <Truck size={14} className="text-blue" />
             <span>
-              {isHold ? 'TRANSIT PAUSED (HOLD)' : isDelayed ? 'TRANSIT DELAY ADVISORY' : 'ESTIMATED TRANSIT CORRIDOR'}
+              {isHold
+                ? shipmentStatusLabel('ON_HOLD')
+                : isDelayed
+                ? shipmentStatusLabel('DELAYED')
+                : transportMode
+                ? TRANSPORT_LEG_LABELS[transportMode]
+                : shipmentStatusLabel(shipmentStatus)}
             </span>
           </div>
           <div className="transit-metrics-row">
@@ -544,8 +545,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
             <span className="dot-indicator red" />
             <span>DESTINATION</span>
           </div>
-          <h4 className="stage-city-title">{destDisplay || 'Destination Hub'}</h4>
-          <span className="stage-facility-sub">Consignee Destination</span>
+          <h4 className="stage-city-title">{destDisplay || 'Destination'}</h4>
         </div>
       </div>
 
@@ -599,20 +599,20 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
           <div className="map-floating-alert hold animate-fade-in">
             <div className="gps-alert-main">
               <Pause size={15} />
-              <span>Transit Paused: Shipment staged at intermediate checkpoint.</span>
+              <span>{shipmentStatusLabel('ON_HOLD')}</span>
             </div>
           </div>
         )}
         {delayNotice?.hasDelay && (
           <div className="map-floating-alert delayed animate-fade-in">
             <AlertTriangle size={15} />
-            <span>Transit Delay (+{delayNotice.delayHours}h): {delayNotice.reason} — {delayNotice.advisoryNote}</span>
+            <span>{shipmentStatusLabel('DELAYED')} (+{delayNotice.delayHours}h): {delayNotice.reason}</span>
           </div>
         )}
         {!delayNotice?.hasDelay && isDelayed && (
           <div className="map-floating-alert delayed animate-fade-in">
             <AlertTriangle size={15} />
-            <span>Transit delay: schedule extended.</span>
+            <span>{shipmentStatusLabel('DELAYED')}</span>
           </div>
         )}
       </div>
@@ -627,7 +627,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
         </div>
         {onScrollToTimeline && (
           <button className="view-timeline-shortcut-btn" onClick={onScrollToTimeline}>
-            <span>View Full Timeline</span>
+            <span>Journey timeline</span>
             <ChevronDown size={14} />
           </button>
         )}

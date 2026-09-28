@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, Clock, Mail } from 'lucide-react';
 import { FacilityNetworkMap } from '../components/FacilityNetworkMap';
-import { useCompanyContact } from '../utils/useCompanyContact';
+import { ResponsiveImage } from '../components/ResponsiveImage';
 import { useNow } from '../utils/useNow';
 import { GATEWAYS, formatGatewayTime, type GatewayRegion } from '../data/gateways';
 import './LocationsPage.css';
@@ -13,8 +13,6 @@ interface LocationsPageProps {
 const REGION_ORDER: GatewayRegion[] = ['Africa', 'Europe', 'Middle East', 'Asia', 'Americas', 'Oceania'];
 
 export const LocationsPage: React.FC<LocationsPageProps> = ({ onNavigate }) => {
-  // Empty regulatory line hides its element (no invented licence numbers).
-  const { regulatoryLine: dotNumber } = useCompanyContact();
   const now = useNow();
 
   const contactGateway = onNavigate ? (code: string) => onNavigate('contact', code) : undefined;
@@ -29,11 +27,19 @@ export const LocationsPage: React.FC<LocationsPageProps> = ({ onNavigate }) => {
           1. CINEMATIC HERO SECTION
           ========================================================================= */}
       <section className="sdl-locations-hero">
+        <ResponsiveImage
+          name="locations-hero"
+          alt="Aerial view of rows of shipping containers at a port terminal"
+          eager
+          sizes="100vw"
+          className="locations-hero-media"
+          imgClassName="locations-hero-img"
+        />
         <div className="locations-hero-bg-overlay" />
         <div className="sdl-container-wide locations-hero-inner">
           <div className="locations-hero-pill animate-fade-in">
             <span className="locations-pulse-dot" />
-            <span>{dotNumber ? `${dotNumber} · ` : ''}GLOBAL NETWORK</span>
+            <span>GLOBAL NETWORK</span>
           </div>
 
           <h1 className="locations-hero-title animate-fade-in">

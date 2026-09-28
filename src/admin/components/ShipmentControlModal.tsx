@@ -20,6 +20,7 @@ import {
 } from '../../services/planningEngine';
 import { simulationEngine } from '../../services/simulationEngine';
 import { ADMIN_ROLE_LABEL } from '../../config/brand';
+import { shipmentStatusLabel } from '../../shared/shipmentStatus';
 import { useAdminData } from '../../context/AdminDataContext';
 import { resolveLocation } from '../../services/geocodingService';
 import './ShipmentControlModal.css';
@@ -167,7 +168,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
         updated = {
           ...updated,
           status: 'IN_TRANSIT',
-          statusText: 'In Linehaul Transit',
+          statusText: shipmentStatusLabel('IN_TRANSIT'),
           progressPercent: Math.max(25, updated.progressPercent || 25),
           timeline: [event, ...(updated.timeline || []).map(t => ({ ...t, isCurrent: false }))],
           auditLog: [auditEntry, ...(updated.auditLog || [])],
@@ -212,7 +213,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
         } as any,
         currentFacility: customFacility,
         status: 'AT_FACILITY',
-        statusText: `At Facility (${city}, ${state})`,
+        statusText: `${shipmentStatusLabel('AT_FACILITY')} (${[city, state].filter(Boolean).join(', ')})`,
         progressPercent: Math.min(85, Math.max(50, (updated.progressPercent || 30) + 20)),
         timeline: [event, ...(updated.timeline || []).map(t => ({ ...t, isCurrent: false }))],
         auditLog: [auditEntry, ...(updated.auditLog || [])],
@@ -240,7 +241,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
       updated = {
         ...updated,
         status: 'OUT_FOR_DELIVERY',
-        statusText: 'Out for Delivery',
+        statusText: shipmentStatusLabel('OUT_FOR_DELIVERY'),
         progressPercent: 90,
         // Reuse the destination's own already-geocoded coordinates — "out for delivery"
         // means the shipment is now at/near its destination, so currentLocation should
@@ -279,7 +280,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
       updated = {
         ...updated,
         status: 'DELIVERED',
-        statusText: `Delivered (Signed by ${signedBy})`,
+        statusText: `${shipmentStatusLabel('DELIVERED')} (Signed by ${signedBy})`,
         progressPercent: 100,
         currentLocation: {
           city: destCity,
@@ -372,7 +373,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 {/* Relabeled when the shipment is currently on hold so resuming it is an
                     obvious, unambiguous single action instead of looking like just another
                     generic status option — this is the actual "remove from hold" control. */}
-                <span>{shipment.status === 'ON_HOLD' ? 'Resume Movement' : 'In Transit'}</span>
+                <span>{shipment.status === 'ON_HOLD' ? 'Resume Movement' : shipmentStatusLabel('IN_TRANSIT')}</span>
               </button>
 
               <button
@@ -381,7 +382,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('AT_FACILITY')}
               >
                 <MapPin size={14} />
-                <span>At Facility</span>
+                <span>Checkpoint scan</span>
               </button>
 
               <button
@@ -390,7 +391,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('OUT_FOR_DELIVERY')}
               >
                 <Truck size={14} />
-                <span>Out for Delivery</span>
+                <span>{shipmentStatusLabel('OUT_FOR_DELIVERY')}</span>
               </button>
 
               <button
@@ -399,7 +400,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('DELIVERED')}
               >
                 <CheckCircle2 size={14} />
-                <span>Delivered</span>
+                <span>{shipmentStatusLabel('DELIVERED')}</span>
               </button>
 
               <button
@@ -408,7 +409,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('ON_HOLD')}
               >
                 <Clock size={14} />
-                <span>On Hold</span>
+                <span>{shipmentStatusLabel('ON_HOLD')}</span>
               </button>
 
               <button
@@ -417,7 +418,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('DELAY')}
               >
                 <AlertTriangle size={14} />
-                <span>Log Delay</span>
+                <span>{shipmentStatusLabel('DELAYED')}</span>
               </button>
 
               <button
@@ -426,7 +427,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('RETURN')}
               >
                 <Undo2 size={14} />
-                <span>Return to Origin</span>
+                <span>{shipmentStatusLabel('RETURNED')}</span>
               </button>
             </div>
           </div>

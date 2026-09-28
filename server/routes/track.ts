@@ -20,6 +20,13 @@ function maskName(name: string): string {
   return parts.map(p => p.length > 1 ? `${p[0]}${'*'.repeat(Math.min(p.length - 1, 5))}` : p).join(' ');
 }
 
+// Masks the name after "signed by" / "signed for by" in free text ("Delivered (Signed by Ada
+// Obi)" -> "Delivered (Signed by A** O**)"). The admin records the signer there.
+function maskSignerName(text: string | null | undefined): string | null | undefined {
+  if (!text) return text;
+  return text.replace(/(signed (?:for )?by )([^().,;\n]+)/gi, (_m, lead: string, name: string) => `${lead}${maskName(name.trim())}`);
+}
+
 // Helper to mask phone (e.g. "(310) 555-0892" -> "(310) •••-0892"). Returns undefined rather
 // than a fake-looking "•••-•••-••••" placeholder when there's genuinely no phone on file —
 // Phone is an optional field at booking, and a masked-looking placeholder for a shipment that
@@ -82,7 +89,7 @@ trackRouter.get('/:trackingNumber', (req: Request, res: Response) => {
     const events = eventsStmt.all(tracking).map((e: any) => ({
       id: e.id,
       status: e.status,
-      title: e.title,
+      title: settings.piiMaskingEnabled ? maskSignerName(e.title) : e.title,
       location: e.location,
       ...splitLocation(e.location),
       // Local time where the event happened + UTC offset; older rows keep their stored text.
@@ -90,7 +97,7 @@ trackRouter.get('/:trackingNumber', (req: Request, res: Response) => {
       occurredAt: e.occurred_at_ts ? new Date(e.occurred_at_ts).toISOString() : undefined,
       facility: e.facility,
       timestamp: e.timestamp,
-      description: e.description,
+      description: settings.piiMaskingEnabled ? maskSignerName(e.description) : e.description,
       // Cloak internal operator notes if enabled
       operatorNotes: settings.cloakInternalNotes ? undefined : e.operator_notes,
       delayFlag: Boolean(e.delay_flag),
@@ -125,7 +132,7 @@ trackRouter.get('/:trackingNumber', (req: Request, res: Response) => {
       trackingNumber: row.tracking_number,
       barcodeCode: row.barcode_code,
       status: row.status,
-      statusText: row.status_text,
+      statusText: settings.piiMaskingEnabled ? maskSignerName(row.status_text) : row.status_text,
       progressPercent: row.progress_percent,
       lastUpdated: row.last_updated,
       createdAt: row.created_at,
