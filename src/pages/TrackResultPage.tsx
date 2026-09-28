@@ -330,6 +330,8 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
   ];
 
   // Timeline events
+  // DEMO DATA — remove before launch (tracker 6.7). Fabricated fallback timeline (and the fixed checkpoint dateLabels above),
+  // shown only when a shipment has no events.
   const defaultEvents: TrackingEvent[] = [
     {
       id: 'e-1',

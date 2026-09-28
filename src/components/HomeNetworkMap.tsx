@@ -11,7 +11,7 @@ interface HomeNetworkMapProps {
   onSelectGateway: (code: string) => void;
 }
 
-// Lane used for the "Live shipment (demo)" marker.
+// DEMO DATA — remove before launch (tracker 6.7). Lane used for the "Live shipment (demo)" marker.
 const DEMO_LANE: [string, string] = ['LOS', 'LHR'];
 // Below this zoom only the selected gateway keeps its code label (labels overlap in Europe).
 const LABEL_ZOOM = 3;

@@ -106,7 +106,12 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [ ] 6.4 SEO: per-page titles/descriptions, `robots.txt`, `sitemap.xml`, OG image, structured data (Organization). **Blocker for go-live:** the OG image URL is absolute (`https://sdlgloballogistics.com/brand/og-image.jpg`) and only works once the domain serves the site; verify it with DEPLOYMENT.md §7 before announcing the launch.
 - [ ] 6.5 Accessibility: keyboard nav, focus states, alt text, contrast, reduced motion.
 - [ ] 6.6 Take "after" screenshots → `screens/after/`.
-- [ ] 6.7 Remove the demo shipments from the public site: turn off the mock-shipment fallback in `App.tsx`/`AdminDataContext.tsx`, and set `SEED_DEMO_DATA=false` in production.
+- [ ] 6.7 **Remove ALL demo data before launch (launch blocker).** Every spot is marked `DEMO DATA — remove before launch (tracker 6.7).` in the code; `grep -rn "DEMO DATA" src server` lists them. Remove:
+  - the client mock-shipment fallback: `getShipmentByTrackingNumber` lookups in `src/App.tsx` and `INITIAL_SHIPMENTS` (MOCK_SHIPMENTS) in `src/context/AdminDataContext.tsx`, then `src/data/mockShipments.ts` itself;
+  - the fabricated fallback timeline (`defaultEvents`, "Aug 19 · 9:00 AM ET") and the hard-coded checkpoint `dateLabel`s in `src/pages/TrackResultPage.tsx`;
+  - the "Live shipment (demo)" dot and legend item on the Home network map (`src/components/HomeNetworkMap.tsx`), unless the owner wants to keep it labelled as a demo;
+  - the demo rows (DLS7K2M9, DLS8M4PQ, DLS3J7NK, DLS5P6TL, the demo quotes and the sample document) from the production database, if it was ever seeded;
+  - and keep `SEED_DEMO_DATA=false` in production (`server/seed.ts` + `src/shared/demoData.ts` can then be deleted).
 
 ## Phase 7 — Deploy (DEPLOYMENT.md)
 - [ ] 7.1 Hostinger Node.js app connected to the SDL GitHub repo; Node ≥ 22.5.

@@ -17,6 +17,7 @@ import { AdminApp } from './admin/AdminApp';
 import { AdminLogin } from './admin/AdminLogin';
 import { TrackingLoadingScreen } from './components/TrackingLoadingScreen';
 import { AdminDataProvider, useAdminData } from './context/AdminDataContext';
+// DEMO DATA — remove before launch (tracker 6.7). Client mock-shipment fallback used by the two lookups below.
 import { getShipmentByTrackingNumber } from './data/mockShipments';
 import { Shipment } from './types/shipment';
 import { QuoteRequest } from './types/admin';

@@ -105,9 +105,11 @@ docs/             Project docs — read the relevant one before each phase
    and has a static fallback and a `prefers-reduced-motion` path.
 9. **Don't touch** `.env`, the live database file, or `server/middleware/auth.ts` security logic unless the task
    is explicitly about them.
-10. **Don't rename the database tables or columns.** Renaming the DB *file* is handled once, in Phase 1, with
+10. **Demo data is temporary.** Demo shipments/quotes/documents (`src/shared/demoData.ts`, `src/data/mockShipments.ts`, spots marked
+    `DEMO DATA — remove before launch (tracker 6.7).`) must all be removed before launch — tracker 6.7 is a launch blocker. Never add new demo data without that marker.
+11. **Don't rename the database tables or columns.** Renaming the DB *file* is handled once, in Phase 1, with
     the migration note in DEPLOYMENT.md.
-11. After finishing a task: tick it in `PROJECT_TRACKER.md`, add a one-line entry to its **Change log**, and
+12. After finishing a task: tick it in `PROJECT_TRACKER.md`, add a one-line entry to its **Change log**, and
     list anything that needs the owner's input under **Blocked / Needs owner**.
 
 ## 7. Conventions

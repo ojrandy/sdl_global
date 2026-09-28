@@ -25,6 +25,7 @@ function withTrackingId<T extends Partial<Shipment>>(draft: T, trackingNumber: s
   };
 }
 
+// DEMO DATA — remove before launch (tracker 6.7). Seeds the console with the client mock shipments.
 // Deduped by object identity so a shipment listed under more than one key in MOCK_SHIPMENTS
 // can never produce duplicate React keys (and duplicate rows) where this list is rendered.
 const INITIAL_SHIPMENTS: Shipment[] = Array.from(new Set(Object.values(MOCK_SHIPMENTS)));

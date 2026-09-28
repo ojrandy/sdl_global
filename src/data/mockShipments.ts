@@ -1,3 +1,4 @@
+// DEMO DATA — remove before launch (tracker 6.7). This whole file.
 import { Shipment, ShipmentStatus, TrackingEvent } from '../types/shipment';
 import { parseTrackingInput, pieceLabel } from '../shared/trackingId';
 import { formatInZone, timeZoneForPlace } from '../shared/timeZones';

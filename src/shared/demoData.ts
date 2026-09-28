@@ -1,3 +1,4 @@
+// DEMO DATA — remove before launch (tracker 6.7). This whole file (and server/seed.ts).
 // SDL demo data (tracker 1.10): the one definition behind server/seed.ts (SEED_DEMO_DATA=true)
 // and src/data/mockShipments.ts (the client's placeholder records), so the two never disagree.
 // Everything here is fictional: "Demo" names, example.com emails, no phone numbers or street

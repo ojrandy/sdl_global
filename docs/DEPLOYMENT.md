@@ -96,6 +96,9 @@ this endpoint.**
 
 ## 7. Launch checklist (smoke test on the live domain)
 
+- [ ] **Demo data removed (launch blocker, tracker 6.7).** No demo shipments, quotes or documents on the public site or in the
+  production database; `SEED_DEMO_DATA=false`; `grep -rn "DEMO DATA" src server` returns nothing. Tracking DLS7K2M9 on the
+  live site must say "not found".
 - [ ] Home loads over HTTPS, and the globe loads (or falls back) with no console errors.
 - [ ] `/api/health` returns `ok` with the SDL service name.
 - [ ] Admin subdomain → login works with the new password; `#/admin` on the public domain does **not** open admin.
