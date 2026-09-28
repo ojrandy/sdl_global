@@ -1,7 +1,28 @@
 import { db } from './db.js';
-import { calculateRouteGeometry, calculateEstimatedPosition } from '../src/services/routingEngine.js';
+import { calculateRouteGeometry, calculateEstimatedPosition, inferTransportMode, type TransportMode } from '../src/services/routingEngine.js';
 import { resolveProgressPaceHours } from '../src/services/planningEngine.js';
 import { findNearestMetro } from '../src/services/geocodingService.js';
+import { normalizeLng } from '../src/utils/greatCircle.js';
+import { eventTime } from './eventTime.js';
+
+/** The shipment's stored transport mode, or the inferred one for rows created before it existed. */
+export function shipmentTransportMode(row: {
+  transport_mode?: string | null;
+  shipment_type?: string;
+  service?: string;
+  origin_lat: number;
+  origin_lng: number;
+  destination_lat: number;
+  destination_lng: number;
+}): TransportMode {
+  return inferTransportMode({
+    mode: row.transport_mode,
+    shipmentType: row.shipment_type,
+    service: row.service,
+    origin: { lat: row.origin_lat, lng: row.origin_lng },
+    destination: { lat: row.destination_lat, lng: row.destination_lng }
+  });
+}
 
 /**
  * Advances a shipment's progress based on real elapsed time, server-side, so it moves
@@ -61,6 +82,8 @@ interface ProgressRow {
   status: string;
   status_text?: string;
   service: string;
+  shipment_type?: string;
+  transport_mode?: string | null;
   progress_percent: number;
   progress_updated_at_ts: number | null;
   created_at_ts?: number | null;
@@ -105,14 +128,14 @@ export function syncTimeBasedProgress(row: ProgressRow): number {
     return row.progress_percent;
   }
 
-  // Recompute the estimated position along the same synthetic corridor geometry the map
-  // uses as its own fallback, so the persisted coordinate always matches the persisted
-  // progress instead of drifting apart the moment a shipment moves unattended. Computed here
-  // (rather than after the pace calc below) because getServiceCommitmentHours needs the real
-  // route distance too.
+  // Recompute the estimated position along the same route geometry the map uses as its own
+  // first paint (road, air or sea legs for this shipment's mode), so the persisted coordinate
+  // always matches the persisted progress instead of drifting apart the moment a shipment moves
+  // unattended. Computed here (rather than after the pace calc below) because
+  // getServiceCommitmentHours needs the real route distance too.
   const origin = { lat: row.origin_lat, lng: row.origin_lng };
   const destination = { lat: row.destination_lat, lng: row.destination_lng };
-  const routeGeom = calculateRouteGeometry(origin, destination);
+  const routeGeom = calculateRouteGeometry(origin, destination, shipmentTransportMode(row));
 
   const slaHours = resolveProgressPaceHours(row.service, routeGeom.distanceMiles, row.created_at_ts, row.estimated_delivery_date, row.estimated_delivery_time);
   const ratePerHour = 100 / slaHours;
@@ -124,8 +147,16 @@ export function syncTimeBasedProgress(row: ProgressRow): number {
   }
 
   const nextProgress = Math.max(0, Math.min(94, Math.round((row.progress_percent + advance) * 10) / 10));
-  const pos = calculateEstimatedPosition(routeGeom.polyline, nextProgress);
-  const nearestMetro = findNearestMetro(pos.lat, pos.lng);
+  const estimated = calculateEstimatedPosition(routeGeom.polyline, nextProgress, routeGeom.legs);
+  // Routes crossing the date line use continuous longitudes; store the real one.
+  const pos = { lat: estimated.lat, lng: normalizeLng(estimated.lng) };
+  // Away from every known place on a flight or voyage, say so, rather than keep showing the
+  // city it left (a Lagos -> London flight over the Sahara used to still read "Lagos, NG").
+  // Road legs keep the last known place, as before.
+  const enRoute = estimated.mode === 'Air' ? { city: 'In flight', state: '' }
+    : estimated.mode === 'Sea' ? { city: 'At sea', state: '' }
+    : null;
+  const nearestMetro = findNearestMetro(pos.lat, pos.lng) ?? enRoute;
 
   // Advance status alongside progress: once a pre-transit shipment has genuinely started
   // moving, it should read IN_TRANSIT rather than staying stuck on "Received"/"Processing"
@@ -133,7 +164,7 @@ export function syncTimeBasedProgress(row: ProgressRow): number {
   // still an explicit admin action, matching the 94% progress ceiling just above.
   const nextStatus = PRE_TRANSIT_STATUSES.has(row.status) && nextProgress > 0 ? 'IN_TRANSIT' : row.status;
   const nextStatusText = nextStatus !== row.status
-    ? `In Linehaul Transit (${Math.round(nextProgress)}% Complete)`
+    ? `In Transit (${Math.round(nextProgress)}% Complete)`
     : (row.status_text ?? null);
 
   db.prepare(`
@@ -158,23 +189,26 @@ export function syncTimeBasedProgress(row: ProgressRow): number {
   if (nextStatus !== row.status) {
     db.prepare('UPDATE tracking_events SET current_flag = 0 WHERE shipment_tracking = ?').run(row.tracking_number);
     const eventCount = (db.prepare('SELECT COUNT(*) as count FROM tracking_events WHERE shipment_tracking = ?').get(row.tracking_number) as any).count;
-    const nowDate = new Date(now);
+    const location = nearestMetro ? [nearestMetro.city, nearestMetro.state].filter(Boolean).join(', ') : 'In transit';
+    const time = eventTime(location, { occurredAt: now, lat: pos.lat, lng: pos.lng });
     db.prepare(`
       INSERT INTO tracking_events (
         id, shipment_tracking, status, title, location, facility,
-        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order,
+        occurred_at_ts, time_zone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       `e-${now}`,
       row.tracking_number,
       nextStatus,
-      'Departed Facility — Linehaul Transit Underway',
-      nearestMetro ? `${nearestMetro.city}, ${nearestMetro.state}` : 'In transit',
+      'Departed Facility — Transit Underway',
+      location,
       'Automated Schedule-Based Checkpoint',
-      `${nowDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${nowDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
-      'Consignment departed origin facility and is proceeding along the scheduled linehaul corridor.',
+      time.timestamp,
+      'Consignment departed origin facility and is proceeding along its planned route.',
       'Auto-generated by schedule-based progress sync.',
-      0, 1, 1, eventCount + 1
+      0, 1, 1, eventCount + 1,
+      time.occurredAtTs, time.timeZone
     );
   }
 

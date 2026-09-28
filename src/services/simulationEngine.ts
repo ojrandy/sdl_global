@@ -1,6 +1,8 @@
 import { Shipment, TrackingEvent, ShipmentStatus } from '../types/shipment';
-import { calculateRouteGeometry, calculateEstimatedPosition } from './routingEngine';
+import { calculateRouteGeometry, calculateEstimatedPosition, inferTransportMode } from './routingEngine';
 import { resolveLocation, findNearestMetro } from './geocodingService';
+import { normalizeLng } from '../utils/greatCircle';
+import { formatInZone, timeZoneForPlace } from '../shared/timeZones';
 
 export type SimulationListener = (updatedShipment: Shipment) => void;
 
@@ -85,7 +87,7 @@ class SimulationEngine {
       statusText = 'Consignment Staged at Origin Terminal';
     } else if (clamped > 0 && clamped < 85) {
       status = 'IN_TRANSIT';
-      statusText = `In Linehaul Transit (${Math.round(clamped)}% Completed)`;
+      statusText = `In Transit (${Math.round(clamped)}% Completed)`;
     } else if (clamped >= 85 && clamped < 100) {
       status = 'OUT_FOR_DELIVERY';
       statusText = `Out for Delivery in ${shipment.destination.city}`;
@@ -95,12 +97,17 @@ class SimulationEngine {
       const hasDelivered = currentTimeline.some(e => e.status === 'DELIVERED' || e.title.toLowerCase().includes('delivered'));
       if (!hasDelivered) {
         const now = new Date();
+        // Local time at the destination, plus its UTC offset (same format the server stores).
+        const zone = timeZoneForPlace({ city: shipment.destination.city, state: shipment.destination.state, lat: shipment.destination.lat, lng: shipment.destination.lng });
+        const local = formatInZone(now.getTime(), zone);
         const delEvent: TrackingEvent = {
           id: `evt-del-scrub-${Date.now()}`,
           timestamp: now.toISOString(),
-          timezone: 'ET',
-          displayDate: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          displayTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+          occurredAt: now.toISOString(),
+          timezone: zone,
+          utcOffset: local.utcOffset,
+          displayDate: local.displayDate,
+          displayTime: local.displayTime,
           title: `Delivered to Consignee — ${shipment.destination.city}, ${shipment.destination.state}`,
           facility: `${shipment.destination.city} Consignee Delivery Address`,
           city: shipment.destination.city,
@@ -133,8 +140,12 @@ class SimulationEngine {
       lng: shipment.destination?.lng || destResolved?.lng || -118.2437,
       name: `${destCity}, ${destState}`
     };
-    const routeGeom = calculateRouteGeometry(origin, dest);
-    const pos = calculateEstimatedPosition(routeGeom.polyline, clamped);
+    // Same route the server and the map use for this shipment (road, air or sea legs)
+    const mode = inferTransportMode({ mode: shipment.transportMode, shipmentType: shipment.shipmentType, service: shipment.service, origin, destination: dest });
+    const routeGeom = calculateRouteGeometry(origin, dest, mode);
+    const estimated = calculateEstimatedPosition(routeGeom.polyline, clamped, routeGeom.legs);
+    // Routes across the date line use continuous longitudes; keep the real one.
+    const pos = { lat: estimated.lat, lng: normalizeLng(estimated.lng) };
     const nearestMetro = clamped >= 100
       ? { city: destCity, state: destState }
       : clamped <= 0
@@ -187,7 +198,7 @@ class SimulationEngine {
       milestoneState: 'CONFIRMED',
       title: `Transit Delay Advisory: ${reason} (+${delayHours} Hours)`,
       location: shipment.currentLocation || `${shipment.origin.city}, ${shipment.origin.state}`,
-      facility: shipment.currentFacility || 'Interstate Transit Corridor',
+      facility: shipment.currentFacility || 'In transit',
       city: shipment.origin.city,
       state: shipment.origin.state,
       timestamp: timestampStr,
@@ -232,9 +243,9 @@ class SimulationEngine {
     const updated: Shipment = {
       ...shipment,
       status: 'IN_TRANSIT',
-      statusText: `In Linehaul Transit (${Math.round(shipment.progressPercent ?? 35)}% Completed)`,
+      statusText: `In Transit (${Math.round(shipment.progressPercent ?? 35)}% Completed)`,
       health: 'ON_TRACK',
-      healthExplanation: 'Consignment progressing normally on interstate route.',
+      healthExplanation: 'Consignment progressing normally on its planned route.',
       delayNotice: undefined,
       lastUpdated: 'Just now'
     };

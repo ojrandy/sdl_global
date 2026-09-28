@@ -45,7 +45,7 @@ import {
   Heart
 } from 'lucide-react';
 import { resolveLocation, resolveLocationPrecise, STATE_NAMES } from '../../services/geocodingService';
-import { calculateRouteGeometry } from '../../services/routingEngine';
+import { calculateRouteGeometry, inferTransportMode, type TransportMode } from '../../services/routingEngine';
 import { generateShipmentPlan } from '../../services/planningEngine';
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminViewType } from '../AdminLayout';
@@ -89,6 +89,9 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
   const [shipmentType, setShipmentType] = useState<ShipmentTypeOption>('Parcel');
   const [cargoCategory, setCargoCategory] = useState('Automotive & Parts');
   const [service, setService] = useState<ServiceOption>('Express');
+  // 'Auto' leaves the mode to inference (road within ~1,500 mi or North America, sea for
+  // containers/freight, otherwise air); the server applies the same rule on read.
+  const [transportModeChoice, setTransportModeChoice] = useState<'Auto' | TransportMode>('Auto');
   const [customerRef, setCustomerRef] = useState('PO-45821');
   const [invoiceRef, setInvoiceRef] = useState('INV-2026-892');
   const [internalRef, setInternalRef] = useState('INT-CORP-01');
@@ -342,13 +345,16 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       const destGeo = resolveLocation([recipientCity, recipientState].filter(Boolean).join(', ').trim())
         || resolveLocation(recipientCity.trim())
         || { city: recipientCity || 'Destination', state: recipientState || 'US', lat: 38.9072, lng: -77.0369, facilityName: `${recipientCity || 'Destination'} Facility` };
+      const routeFrom = { lat: originGeo.lat, lng: originGeo.lng, name: originGeo.city };
+      const routeTo = { lat: destGeo.lat, lng: destGeo.lng, name: destGeo.city };
       const routePlan = calculateRouteGeometry(
-        { lat: originGeo.lat, lng: originGeo.lng, name: originGeo.city },
-        { lat: destGeo.lat, lng: destGeo.lng, name: destGeo.city }
+        routeFrom,
+        routeTo,
+        inferTransportMode({ mode: transportModeChoice === 'Auto' ? undefined : transportModeChoice, shipmentType, service, origin: routeFrom, destination: routeTo })
       );
       const plan = generateShipmentPlan(
-        { city: originGeo.city, state: originGeo.state, facilityName: (originGeo as any).facilityName },
-        { city: destGeo.city, state: destGeo.state, facilityName: (destGeo as any).facilityName },
+        { city: originGeo.city, state: originGeo.state ?? '', facilityName: (originGeo as any).facilityName },
+        { city: destGeo.city, state: destGeo.state ?? '', facilityName: (destGeo as any).facilityName },
         service,
         routePlan.distanceMiles,
         pickupDate
@@ -357,7 +363,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     } catch {
       return null;
     }
-  }, [senderCity, senderState, recipientCity, recipientState, service, pickupDate]);
+  }, [senderCity, senderState, recipientCity, recipientState, service, pickupDate, transportModeChoice, shipmentType]);
 
   useEffect(() => {
     if (!expectedDeliveryDateTouched && previewEstimatedDeliveryDate) {
@@ -469,7 +475,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       const geo = resolveLocation(zip);
       if (geo) {
         setSenderCity(geo.city);
-        setSenderState(geo.state);
+        setSenderState(geo.state ?? '');
       }
     }
   };
@@ -480,7 +486,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       const geo = resolveLocation(zip);
       if (geo) {
         setRecipientCity(geo.city);
-        setRecipientState(geo.state);
+        setRecipientState(geo.state ?? '');
       }
     }
   };
@@ -860,7 +866,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       zip: senderZip.trim() || '75201',
       lat: 31.9686,
       lng: -99.9018,
-      timezone: 'CT',
+      timezone: 'America/Chicago',
       facilityName: `${senderCity.trim() || 'Origin'} Hub`
     };
 
@@ -871,16 +877,20 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       zip: recipientZip.trim() || '20001',
       lat: 38.9072,
       lng: -77.0369,
-      timezone: 'ET',
+      timezone: 'America/New_York',
       facilityName: `${recipientCity.trim() || 'Destination'} Facility`
     };
+    const routeFrom = { lat: originGeo.lat, lng: originGeo.lng, name: originGeo.city };
+    const routeTo = { lat: destGeo.lat, lng: destGeo.lng, name: destGeo.city };
+    const chosenMode = transportModeChoice === 'Auto' ? undefined : transportModeChoice;
     const routePlan = calculateRouteGeometry(
-      { lat: originGeo.lat, lng: originGeo.lng, name: originGeo.city },
-      { lat: destGeo.lat, lng: destGeo.lng, name: destGeo.city }
+      routeFrom,
+      routeTo,
+      inferTransportMode({ mode: chosenMode, shipmentType, service, origin: routeFrom, destination: routeTo })
     );
     const shipmentPlan = generateShipmentPlan(
-      { city: originGeo.city, state: originGeo.state, facilityName: originGeo.facilityName },
-      { city: destGeo.city, state: destGeo.state, facilityName: destGeo.facilityName },
+      { city: originGeo.city, state: originGeo.state ?? '', facilityName: originGeo.facilityName },
+      { city: destGeo.city, state: destGeo.state ?? '', facilityName: destGeo.facilityName },
       service,
       routePlan.distanceMiles,
       pickupDate
@@ -890,7 +900,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
       {
         id: `evt-${Date.now()}-1`,
         timestamp: new Date().toISOString(),
-        timezone: originGeo.timezone || 'ET',
+        timezone: originGeo.timezone,
         displayDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
         displayTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         title: initialLocationMode === 'NOT_RECEIVED'
@@ -910,7 +920,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
              'Shipment Received & Ingested'),
         facility: initialLocationMode === 'CUSTOM' ? customInitialLocation : originGeo.facilityName,
         city: originGeo.city,
-        state: originGeo.state,
+        state: originGeo.state ?? '',
         description: initialLocationMode === 'NOT_RECEIVED'
           ? `Physical waybill registered by ${ADMIN_ROLE_LABEL}. Awaiting carrier collection.`
           : (shipmentType === 'Vehicle'
@@ -1027,6 +1037,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         contentsDescription: docContentsDescription
       } : undefined,
       service: service === 'Priority' ? 'Priority' : service === 'Freight' ? 'Freight LTL' : service === 'Standard' ? 'Standard' : 'Express',
+      transportMode: chosenMode,
       shipmentDate: new Date().toISOString().split('T')[0],
       // Honors the admin's manual ETA override if they typed one; otherwise this already
       // equals the same route-aware calculated date shown live in the Service step.
@@ -1064,7 +1075,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         company: senderCompany.trim(),
         addressLine: senderAddress.trim(),
         city: senderCity.trim() || originGeo.city,
-        state: senderState.trim() || originGeo.state,
+        state: senderState.trim() || originGeo.state || '',
         postalCode: senderZip.trim() || originGeo.zip,
         phone: senderPhone.trim(),
         email: senderEmail.trim(),
@@ -1075,7 +1086,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         company: recipientCompany.trim(),
         addressLine: recipientAddress.trim(),
         city: recipientCity.trim() || destGeo.city,
-        state: recipientState.trim() || destGeo.state,
+        state: recipientState.trim() || destGeo.state || '',
         postalCode: recipientZip.trim() || destGeo.zip,
         phone: recipientPhone.trim(),
         email: recipientEmail.trim(),
@@ -1092,8 +1103,8 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         invoiceNumber: invoiceRef || undefined
       },
       routeCheckpoints: [
-        { id: '1', name: `${originGeo.city}, ${originGeo.state}`, state: originGeo.state, type: 'origin', statusLabel: 'Ingested', lat: originGeo.lat, lng: originGeo.lng },
-        { id: '2', name: `${destGeo.city}, ${destGeo.state}`, state: destGeo.state, type: 'destination', statusLabel: 'Destination', lat: destGeo.lat, lng: destGeo.lng }
+        { id: '1', name: `${originGeo.city}, ${originGeo.state}`, state: originGeo.state ?? '', type: 'origin', statusLabel: 'Ingested', lat: originGeo.lat, lng: originGeo.lng },
+        { id: '2', name: `${destGeo.city}, ${destGeo.state}`, state: destGeo.state ?? '', type: 'destination', statusLabel: 'Destination', lat: destGeo.lat, lng: destGeo.lng }
       ],
       timeline: initialTimeline,
       pieces: formattedPieces,
@@ -3304,6 +3315,35 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                       <div className="srv-tile-body">
                         <strong>{s.label}</strong>
                         <small>{s.desc}</small>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transport Mode (main leg) */}
+              <div className="form-group-block">
+                <label className="section-field-label">Transport Mode</label>
+                <div className="service-radio-grid">
+                  {([
+                    { id: 'Auto', label: 'Auto', desc: 'Chosen from distance and cargo' },
+                    { id: 'Road', label: 'Road', desc: 'Truck on real roads' },
+                    { id: 'Air', label: 'Air', desc: 'Flight between gateways' },
+                    { id: 'Sea', label: 'Sea', desc: 'Ocean freight between ports' }
+                  ] as const).map(m => (
+                    <label
+                      key={m.id}
+                      className={`service-radio-tile ${transportModeChoice === m.id ? 'active' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="transportMode"
+                        checked={transportModeChoice === m.id}
+                        onChange={() => setTransportModeChoice(m.id)}
+                      />
+                      <div className="srv-tile-body">
+                        <strong>{m.label}</strong>
+                        <small>{m.desc}</small>
                       </div>
                     </label>
                   ))}

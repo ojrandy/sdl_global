@@ -8,6 +8,7 @@ import { MOCK_SHIPMENTS } from '../data/mockShipments';
 import { applyForwardOnlyShipmentUpdate } from '../utils/shipmentSync';
 import { parseTrackingInput, pieceLabel } from '../shared/trackingId';
 import { ADMIN_ROLE_LABEL, COMPANY_SHORT } from '../config/brand';
+import { formatInZone, timeZoneForLocationLabel } from '../shared/timeZones';
 
 // The server assigns every tracking ID (BRAND_GUIDE §7). Shipments are built here as drafts
 // without one, and this stamps the ID the server returned onto the draft: the ID, the barcode,
@@ -341,12 +342,16 @@ const normalizeShipment = (s: any): Shipment => {
         // prepended on top of the real one every time, burying it as soon as it was created.
         let eventFields = {};
         if (!skipLocalEventDuplicate) {
+          // Local time at the event's location + UTC offset, as the server will store it.
+          const zone = timeZoneForLocationLabel(location, lat, lng);
+          const local = formatInZone(Date.now(), zone);
           const newEvent: TrackingEvent = {
             id: `t-${Date.now()}`,
             timestamp: new Date().toISOString(),
-            timezone: 'ET',
-            displayDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            displayTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            timezone: zone,
+            utcOffset: local.utcOffset,
+            displayDate: local.displayDate,
+            displayTime: local.displayTime,
             title: eventTitleOverride || `Status: ${newStatus.replace(/_/g, ' ')}`,
             facility: facility || s.currentFacility || 'Sorting Hub',
             city: location.split(',')[0] || s.origin?.city || 'Transit Hub',
@@ -415,7 +420,7 @@ const normalizeShipment = (s: any): Shipment => {
         const newEvent: TrackingEvent = {
           id: event.id || `ev-${Date.now()}`,
           timestamp: event.timestamp || new Date().toISOString(),
-          timezone: event.timezone || 'ET',
+          timezone: event.timezone,
           displayDate: event.displayDate || new Date().toLocaleDateString('en-US'),
           displayTime: event.displayTime || new Date().toLocaleTimeString('en-US'),
           title: event.title || 'Checkpoint Scan',

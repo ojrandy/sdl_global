@@ -37,18 +37,35 @@ import { AdminViewType } from '../AdminLayout';
 import { resolveLocation, resolveLocationPrecise } from '../../services/geocodingService';
 import './TrackingEventsView.css';
 import { ADMIN_ROLE_LABEL, COMPANY_SHORT, displayOperator } from '../../config/brand';
+import { GATEWAYS } from '../../data/gateways';
+import { formatInZone, isValidTimeZone, timeZoneForPlace, utcOffsetLabel, zonedTimeToUtc } from '../../shared/timeZones';
 
-// Pre-defined structured standard network locations
-const NETWORK_LOCATIONS = [
-  { city: 'New York', state: 'NY', timezone: 'ET', facility: 'New York Gateway Facility' },
-  { city: 'Newark', state: 'NJ', timezone: 'ET', facility: 'Newark Regional Sort Hub' },
-  { city: 'Chicago', state: 'IL', timezone: 'CT', facility: 'Chicago Regional Sort Facility' },
-  { city: 'Dallas', state: 'TX', timezone: 'CT', facility: 'Dallas Freight Intermodal Hub' },
-  { city: 'Denver', state: 'CO', timezone: 'MT', facility: 'Rocky Mountain Gateway' },
-  { city: 'Los Angeles', state: 'CA', timezone: 'PT', facility: 'Los Angeles Metro Sort Hub' },
-  { city: 'Seattle', state: 'WA', timezone: 'PT', facility: 'Pacific Northwest Terminal' },
-  { city: 'Atlanta', state: 'GA', timezone: 'ET', facility: 'Atlanta Gateway Center' }
-];
+// Preset event locations: the global gateway network, each with its IANA time zone.
+const NETWORK_LOCATIONS = GATEWAYS.map((g) => ({
+  city: g.city,
+  state: g.iso,
+  timezone: g.timeZone,
+  facility: `${g.city} Gateway (${g.code})`
+}));
+
+// Time zones offered for an event's local time: every gateway zone, plus a few others and UTC.
+const EVENT_TIME_ZONES = Array.from(new Set([
+  ...GATEWAYS.map((g) => g.timeZone),
+  'America/Denver',
+  'America/Phoenix',
+  'UTC'
+]));
+
+const timeZoneOptionLabel = (tz: string) => `${tz.replace(/_/g, ' ')} (${utcOffsetLabel(tz)})`;
+
+// "August 20, 2026" / "Sep 28, 2026" / "2026-09-28" -> "2026-09-28", or null.
+const toIsoDate = (text: string): string | null => {
+  const trimmed = (text || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const parsed = new Date(`${trimmed} 12:00`);
+  if (isNaN(parsed.getTime())) return null;
+  return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+};
 
 // Customer-facing message templates for normal customer understanding
 const MESSAGE_TEMPLATES: Record<string, string> = {
@@ -144,15 +161,15 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
 
   // Form State: Add Tracking Event (Fully Editable Date & Time!)
   const [formEventStatus, setFormEventStatus] = useState<string>('ARRIVED');
-  const [formLocationIndex, setFormLocationIndex] = useState<number>(2); // Chicago
+  const [formLocationIndex, setFormLocationIndex] = useState<number>(0);
   const [formCustomLocation, setFormCustomLocation] = useState<string>('');
-  const [formFacility, setFormFacility] = useState<string>('Chicago Regional Sort Facility');
+  const [formFacility, setFormFacility] = useState<string>(NETWORK_LOCATIONS[0].facility);
   const [formCustomerMessage, setFormCustomerMessage] = useState<string>(MESSAGE_TEMPLATES.ARRIVED);
   const [formInternalNote, setFormInternalNote] = useState<string>('Shipment arrived after scheduled departure. Processing for next available movement.');
   const [formDelayReason, setFormDelayReason] = useState<string>('Weather-related transportation delay');
   const [formEventDate, setFormEventDate] = useState<string>(getTodayDateStr());
   const [formEventTime, setFormEventTime] = useState<string>(getCurrentTimeStr());
-  const [formTimezone, setFormTimezone] = useState<string>('CT');
+  const [formTimezone, setFormTimezone] = useState<string>(NETWORK_LOCATIONS[0].timezone);
 
   // Form State: Correct / Edit Event (Fully Editable Date & Time!)
   const [correctedLocation, setCorrectedLocation] = useState<string>('');
@@ -160,7 +177,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
   const [correctedCustomerMessage, setCorrectedCustomerMessage] = useState<string>('');
   const [correctedEventDate, setCorrectedEventDate] = useState<string>('');
   const [correctedEventTime, setCorrectedEventTime] = useState<string>('');
-  const [correctedTimezone, setCorrectedTimezone] = useState<string>('CT');
+  const [correctedTimezone, setCorrectedTimezone] = useState<string>('UTC');
 
   const currentShipment: Shipment | undefined = shipments.find(
     s => s.trackingNumber.toUpperCase() === selectedTracking.toUpperCase()
@@ -254,11 +271,11 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
       EXCEPTION: 'Delivery Exception'
     };
 
-    // Format display date
-    const parsedDate = new Date(formEventDate + 'T12:00:00');
-    const formattedDisplayDate = isNaN(parsedDate.getTime())
-      ? new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-      : parsedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    // The event's instant from the entered local date + time in the chosen zone. The server
+    // stores the instant and zone and shows local time + UTC offset.
+    const eventZone = isValidTimeZone(formTimezone) ? formTimezone : 'UTC';
+    const occurredAtTs = zonedTimeToUtc(formEventDate, formEventTime, eventZone) ?? Date.now();
+    const local = formatInZone(occurredAtTs, eventZone);
 
     // Determine equivalent shipment status. Previously missing ON_HOLD/DEPARTED/
     // SHIPMENT_CREATED branches meant logging one of those events silently set the
@@ -279,10 +296,12 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
 
     const newEvent: TrackingEvent = {
       id: `ev-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      timezone: formTimezone,
-      displayDate: formattedDisplayDate,
-      displayTime: `${formEventTime} ${formTimezone}`,
+      timestamp: new Date(occurredAtTs).toISOString(),
+      occurredAt: new Date(occurredAtTs).toISOString(),
+      timezone: eventZone,
+      utcOffset: local.utcOffset,
+      displayDate: local.displayDate,
+      displayTime: local.displayTime,
       title: eventTitle,
       status: mappedShipmentStatus,
       eventStatus: formEventStatus,
@@ -335,12 +354,20 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
     const newCity = correctedLocation.split(',')[0]?.trim() || correctingEvent.city;
     const newState = correctedLocation.split(',')[1]?.trim() || correctingEvent.state;
 
+    const correctedZone = isValidTimeZone(correctedTimezone) ? correctedTimezone : 'UTC';
+    const correctedIsoDate = toIsoDate(correctedEventDate || correctingEvent.displayDate);
+    const correctedTs = correctedIsoDate && correctedEventTime
+      ? zonedTimeToUtc(correctedIsoDate, correctedEventTime, correctedZone)
+      : null;
+    const correctedLocal = correctedTs !== null ? formatInZone(correctedTs, correctedZone) : null;
+
     correctTrackingEvent(currentShipment.trackingNumber, correctingEvent.id, {
       city: newCity,
       state: newState,
-      displayDate: correctedEventDate || correctingEvent.displayDate,
-      displayTime: correctedEventTime ? `${correctedEventTime} ${correctedTimezone}` : correctingEvent.displayTime,
-      timezone: correctedTimezone,
+      displayDate: correctedLocal?.displayDate || correctedEventDate || correctingEvent.displayDate,
+      displayTime: correctedLocal?.displayTime || correctingEvent.displayTime,
+      ...(correctedTs !== null ? { occurredAt: new Date(correctedTs).toISOString(), utcOffset: correctedLocal?.utcOffset } : {}),
+      timezone: correctedZone,
       description: correctedCustomerMessage || correctingEvent.description,
       correctionAudit: {
         originalLocation: `${originalLocation} (${originalTime})`,
@@ -688,8 +715,8 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                               setCorrectedLocation(`${event.city}, ${event.state}`);
                               setCorrectedCustomerMessage(event.description);
                               setCorrectedEventDate(event.displayDate);
-                              setCorrectedEventTime(event.displayTime.split(' ')[0] + ' ' + (event.displayTime.split(' ')[1] || ''));
-                              setCorrectedTimezone(event.timezone || 'CT');
+                              setCorrectedEventTime(event.displayTime.match(/\d{1,2}:\d{2}\s*[AaPp][Mm]/)?.[0] || event.displayTime);
+                              setCorrectedTimezone(isValidTimeZone(event.timezone) ? event.timezone : timeZoneForPlace({ city: event.city, state: event.state }));
                             }}
                           >
                             <Edit3 size={14} />
@@ -811,11 +838,9 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                       onChange={e => setFormTimezone(e.target.value)}
                       className="modal-select-input"
                     >
-                      <option value="ET">Eastern (ET)</option>
-                      <option value="CT">Central (CT)</option>
-                      <option value="MT">Mountain (MT)</option>
-                      <option value="PT">Pacific (PT)</option>
-                      <option value="UTC">UTC / GMT</option>
+                      {(EVENT_TIME_ZONES.includes(formTimezone) ? EVENT_TIME_ZONES : [formTimezone, ...EVENT_TIME_ZONES]).map(tz => (
+                        <option key={tz} value={tz}>{timeZoneOptionLabel(tz)}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -832,7 +857,7 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                   >
                     {NETWORK_LOCATIONS.map((loc, idx) => (
                       <option key={idx} value={idx}>
-                        {loc.city}, {loc.state} ({loc.timezone})
+                        {loc.city}, {loc.state} ({utcOffsetLabel(loc.timezone)})
                       </option>
                     ))}
                     <option value={NETWORK_LOCATIONS.length}>Custom Location...</option>
@@ -992,11 +1017,9 @@ export const TrackingEventsView: React.FC<TrackingEventsViewProps> = ({ onSelect
                       onChange={e => setCorrectedTimezone(e.target.value)}
                       className="modal-select-input"
                     >
-                      <option value="ET">Eastern (ET)</option>
-                      <option value="CT">Central (CT)</option>
-                      <option value="MT">Mountain (MT)</option>
-                      <option value="PT">Pacific (PT)</option>
-                      <option value="UTC">UTC</option>
+                      {(EVENT_TIME_ZONES.includes(correctedTimezone) ? EVENT_TIME_ZONES : [correctedTimezone, ...EVENT_TIME_ZONES]).map(tz => (
+                        <option key={tz} value={tz}>{timeZoneOptionLabel(tz)}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

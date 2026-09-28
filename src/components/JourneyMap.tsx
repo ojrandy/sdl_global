@@ -3,7 +3,7 @@ import L from 'leaflet';
 import { destroyMap } from '../utils/leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RouteCheckpoint, ShipmentStatus } from '../types/shipment';
-import { calculateRouteGeometry, calculateEstimatedPosition, fetchLiveRoadRoute, findNearestPointOnPolyline } from '../services/routingEngine';
+import { calculateRouteGeometry, calculateEstimatedPosition, fetchLiveRoadRoute, findNearestPointOnPolyline, type TransportMode } from '../services/routingEngine';
 import { Layers, ZoomIn, ZoomOut, Compass, ChevronDown, AlertTriangle, ShieldAlert, Pause, Truck, ArrowRight } from 'lucide-react';
 import './JourneyMap.css';
 
@@ -39,11 +39,29 @@ interface JourneyMapProps {
   onScrollToTimeline?: () => void;
   className?: string;
   showLegend?: boolean;
+  /** Main-leg mode: road legs follow roads, air and sea legs are great-circle arcs. */
+  transportMode?: TransportMode;
+}
+
+type RoutePoint = [number, number];
+
+// Splits the route line at the vehicle's point: solid behind it, dashed ahead. The split is at
+// the vehicle's own segment (not a share of the point count), so it stays right on routes whose
+// legs have very different point densities (a detailed road leg next to a long flight arc).
+function splitRouteAt(polyline: RoutePoint[], pos: { lat: number; lng: number; index: number }, progress: number) {
+  if (progress <= 0) return { completed: [] as RoutePoint[], remaining: polyline };
+  if (progress >= 100) return { completed: polyline, remaining: [] as RoutePoint[] };
+  const at: RoutePoint = [pos.lat, pos.lng];
+  const index = Math.max(0, Math.min(polyline.length - 1, pos.index));
+  return {
+    completed: [...polyline.slice(0, index + 1), at],
+    remaining: [at, ...polyline.slice(index + 1)]
+  };
 }
 
 export const JourneyMap: React.FC<JourneyMapProps> = ({
   checkpoints = [],
-  currentLocationText = 'Chicago, IL',
+  currentLocationText = 'In transit',
   currentLat,
   currentLng,
   lastEventDescription = 'Shipment in transit on its planned route.',
@@ -55,6 +73,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   onScrollToTimeline,
   className = '',
   showLegend = true,
+  transportMode,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -172,10 +191,13 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   const resolveVehiclePosition = (polyline: [number, number][], progress: number) => {
     if (hasRealPosition && polyline.length > 1) {
       const nearest = findNearestPointOnPolyline(polyline, currentLat as number, currentLng as number);
-      return { lat: nearest.lat, lng: nearest.lng, splitProgress: nearest.progressPercent };
+      return { lat: nearest.lat, lng: nearest.lng, index: nearest.index, splitProgress: nearest.progressPercent };
     }
     const est = calculateEstimatedPosition(polyline, progress);
-    return { lat: est.lat, lng: est.lng, splitProgress: progress };
+    // Segment the estimate falls on (the point before it along the line)
+    const nearest = findNearestPointOnPolyline(polyline, est.lat, est.lng);
+    const index = nearest.progressPercent > progress ? Math.max(0, nearest.index - 1) : nearest.index;
+    return { lat: est.lat, lng: est.lng, index, splitProgress: progress };
   };
 
   // 1. Separate Tile Layer Switcher (Preserves camera pan/zoom without resetting)
@@ -220,10 +242,11 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
       }).addTo(map);
     }
 
-    // Compute route geometry
+    // Compute route geometry (road, air or sea legs for this shipment's mode)
     const routePlan = calculateRouteGeometry(
       { lat: originPt.lat, lng: originPt.lng, name: originPt.name },
-      { lat: destPt.lat, lng: destPt.lng, name: destPt.name }
+      { lat: destPt.lat, lng: destPt.lng, name: destPt.name },
+      transportMode
     );
     fullPolylineRef.current = routePlan.polyline;
     const fullPolyline = routePlan.polyline;
@@ -232,23 +255,11 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
       const clampedProgress = Math.max(0, Math.min(100, progressPercent ?? 0));
       const vehiclePos = resolveVehiclePosition(fullPolyline, clampedProgress);
       const splitProgress = Math.max(0, Math.min(100, vehiclePos.splitProgress));
-      let completedSegment: [number, number][] = [];
-      let remainingSegment: [number, number][] = [];
-
-      if (splitProgress <= 0) {
-        completedSegment = [];
-        remainingSegment = fullPolyline;
-      } else if (splitProgress >= 100) {
-        completedSegment = fullPolyline;
-        remainingSegment = [];
-      } else {
-        const splitIndex = Math.min(
-          fullPolyline.length - 1,
-          Math.max(1, Math.floor((splitProgress / 100) * (fullPolyline.length - 1)))
-        );
-        completedSegment = fullPolyline.slice(0, splitIndex + 1);
-        remainingSegment = fullPolyline.slice(splitIndex);
-      }
+      const { completed: completedSegment, remaining: remainingSegment } = splitRouteAt(fullPolyline, vehiclePos, splitProgress);
+      // End pins sit on the line's own ends (a route across the date line uses continuous
+      // longitudes, so its far end can be one world-width away from the raw coordinate).
+      const originLatLng = fullPolyline[0];
+      const destLatLng = fullPolyline[fullPolyline.length - 1];
 
       // Create or update Completed Polyline (Solid Royal Blue)
       if (!completedLineRef.current) {
@@ -281,11 +292,11 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
       // Create or update Origin Marker
       if (!originMarkerRef.current) {
-        originMarkerRef.current = L.marker([originPt.lat, originPt.lng], {
+        originMarkerRef.current = L.marker(originLatLng, {
           icon: createCustomPin('pin-origin', originPt.name || 'Origin Terminal', 'ORIGIN TERMINAL')
         }).addTo(map);
       } else {
-        originMarkerRef.current.setLatLng([originPt.lat, originPt.lng]);
+        originMarkerRef.current.setLatLng(originLatLng);
         originMarkerRef.current.setIcon(
           createCustomPin('pin-origin', originPt.name || 'Origin Terminal', 'ORIGIN TERMINAL')
         );
@@ -293,11 +304,11 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
       // Create or update Destination Marker
       if (!destMarkerRef.current) {
-        destMarkerRef.current = L.marker([destPt.lat, destPt.lng], {
+        destMarkerRef.current = L.marker(destLatLng, {
           icon: createCustomPin('pin-destination', destPt.name || 'Destination Hub', 'DESTINATION HUB')
         }).addTo(map);
       } else {
-        destMarkerRef.current.setLatLng([destPt.lat, destPt.lng]);
+        destMarkerRef.current.setLatLng(destLatLng);
         destMarkerRef.current.setIcon(
           createCustomPin('pin-destination', destPt.name || 'Destination Hub', 'DESTINATION HUB')
         );
@@ -317,18 +328,18 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
       if (!vehicleMarkerRef.current) {
         vehicleMarkerRef.current = L.marker([estPos.lat, estPos.lng], {
-          icon: createCustomPin('pin-current', currentLocationText || 'In Linehaul Transit', roleText),
+          icon: createCustomPin('pin-current', currentLocationText || 'In transit', roleText),
           zIndexOffset: 1000
         }).addTo(map);
       } else {
         vehicleMarkerRef.current.setLatLng([estPos.lat, estPos.lng]);
         vehicleMarkerRef.current.setIcon(
-          createCustomPin('pin-current', currentLocationText || 'In Linehaul Transit', roleText)
+          createCustomPin('pin-current', currentLocationText || 'In transit', roleText)
         );
       }
 
       // Fit bounds to entire route on initial mount or when origin/destination change
-      const currentRouteKey = `${originPt.lat.toFixed(4)},${originPt.lng.toFixed(4)}->${destPt.lat.toFixed(4)},${destPt.lng.toFixed(4)}`;
+      const currentRouteKey = `${transportMode || 'auto'}:${originPt.lat.toFixed(4)},${originPt.lng.toFixed(4)}->${destPt.lat.toFixed(4)},${destPt.lng.toFixed(4)}`;
       const routeChanged = lastFittedRouteRef.current !== currentRouteKey;
       if (routeChanged || !isInitializedRef.current) {
         lastFittedRouteRef.current = currentRouteKey;
@@ -362,34 +373,20 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
       }
     }, 150);
 
-    // Asynchronously upgrade to real road geometry
+    // Asynchronously upgrade road legs to real road geometry (air/sea legs stay arcs; a road
+    // leg OSRM can't drive becomes an arc too)
     let isCancelled = false;
     fetchLiveRoadRoute(
       { lat: originPt.lat, lng: originPt.lng, name: originPt.name },
-      { lat: destPt.lat, lng: destPt.lng, name: destPt.name }
+      { lat: destPt.lat, lng: destPt.lng, name: destPt.name },
+      transportMode
     ).then(liveRoad => {
       if (isCancelled || !mapInstanceRef.current || !liveRoad.polyline || liveRoad.polyline.length < 2) return;
       fullPolylineRef.current = liveRoad.polyline;
       const roadProgress = Math.max(0, Math.min(100, progressPercent ?? 0));
       const roadVehiclePos = resolveVehiclePosition(liveRoad.polyline, roadProgress);
       const roadSplitProgress = Math.max(0, Math.min(100, roadVehiclePos.splitProgress));
-      let compSeg: [number, number][] = [];
-      let remSeg: [number, number][] = [];
-
-      if (roadSplitProgress <= 0) {
-        compSeg = [];
-        remSeg = liveRoad.polyline;
-      } else if (roadSplitProgress >= 100) {
-        compSeg = liveRoad.polyline;
-        remSeg = [];
-      } else {
-        const roadSplit = Math.min(
-          liveRoad.polyline.length - 1,
-          Math.max(1, Math.floor((roadSplitProgress / 100) * (liveRoad.polyline.length - 1)))
-        );
-        compSeg = liveRoad.polyline.slice(0, roadSplit + 1);
-        remSeg = liveRoad.polyline.slice(roadSplit);
-      }
+      const { completed: compSeg, remaining: remSeg } = splitRouteAt(liveRoad.polyline, roadVehiclePos, roadSplitProgress);
 
       if (completedLineRef.current) completedLineRef.current.setLatLngs(compSeg);
       if (remainingLineRef.current) remainingLineRef.current.setLatLngs(remSeg);
@@ -410,7 +407,8 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     originPt.name,
     destPt.lat,
     destPt.lng,
-    destPt.name
+    destPt.name,
+    transportMode
   ]);
 
   // =========================================================================
@@ -423,23 +421,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     const clampedProgress = Math.max(0, Math.min(100, progressPercent ?? 0));
     const vehiclePos = resolveVehiclePosition(fullPolyline, clampedProgress);
     const splitProgress = Math.max(0, Math.min(100, vehiclePos.splitProgress));
-    let completedSegment: [number, number][] = [];
-    let remainingSegment: [number, number][] = [];
-
-    if (splitProgress <= 0) {
-      completedSegment = [];
-      remainingSegment = fullPolyline;
-    } else if (splitProgress >= 100) {
-      completedSegment = fullPolyline;
-      remainingSegment = [];
-    } else {
-      const splitIndex = Math.min(
-        fullPolyline.length - 1,
-        Math.max(1, Math.floor((splitProgress / 100) * (fullPolyline.length - 1)))
-      );
-      completedSegment = fullPolyline.slice(0, splitIndex + 1);
-      remainingSegment = fullPolyline.slice(splitIndex);
-    }
+    const { completed: completedSegment, remaining: remainingSegment } = splitRouteAt(fullPolyline, vehiclePos, splitProgress);
 
     // 1. Smoothly update completed path
     if (completedLineRef.current) {
@@ -466,7 +448,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     if (vehicleMarkerRef.current) {
       vehicleMarkerRef.current.setLatLng([estPos.lat, estPos.lng]);
       vehicleMarkerRef.current.setIcon(
-        createCustomPin('pin-current', currentLocationText || 'In Linehaul Transit', roleText)
+        createCustomPin('pin-current', currentLocationText || 'In transit', roleText)
       );
     }
   }, [

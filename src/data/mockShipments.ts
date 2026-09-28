@@ -1,5 +1,6 @@
 import { Shipment, ShipmentStatus, TrackingEvent } from '../types/shipment';
 import { parseTrackingInput, pieceLabel } from '../shared/trackingId';
+import { formatInZone, timeZoneForPlace } from '../shared/timeZones';
 import {
   DEMO_SHIPMENTS, DemoShipment, DemoPlace,
   hoursFrom, demoTimestamp, demoDate, demoShortDate, placeLabel
@@ -29,11 +30,15 @@ function toShipment(s: DemoShipment): Shipment {
   // Newest first, as the timeline renders it.
   const timeline: TrackingEvent[] = s.events.map((e, i) => {
     const at = hoursFrom(now, -e.hoursAgo);
-    const [displayDate, displayTime] = demoTimestamp(at).split(' · ');
+    // Same as the seeded rows: local time in the event's own zone, plus its UTC offset.
+    const zone = timeZoneForPlace({ city: e.place.city, state: e.place.region, country: e.place.country, lat: e.place.lat, lng: e.place.lng });
+    const { displayDate, displayTime, utcOffset } = formatInZone(at.getTime(), zone);
     return {
       id: `ev-${s.trackingNumber}-${i + 1}`,
       timestamp: at.toISOString(),
-      timezone: 'UTC',
+      occurredAt: at.toISOString(),
+      timezone: zone,
+      utcOffset,
       displayDate,
       displayTime,
       title: e.title,
@@ -57,6 +62,7 @@ function toShipment(s: DemoShipment): Shipment {
     health: s.health,
     healthExplanation: s.healthExplanation,
     shipmentType: s.shipmentType,
+    transportMode: s.mode,
     cargoCategory: s.cargoCategory,
     cargoDescription: s.cargoDescription,
     service: s.service,

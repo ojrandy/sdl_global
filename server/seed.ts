@@ -1,6 +1,7 @@
 import { db } from './db.js';
 import { LEGAL_NAME } from '../src/config/brand.js';
 import { pieceLabel } from '../src/shared/trackingId.js';
+import { timeZoneForPlace, formatEventTimestamp } from '../src/shared/timeZones.js';
 import {
   DEMO_SHIPMENTS, DEMO_QUOTES, DemoShipment,
   hoursFrom, demoTimestamp, demoDate, demoShortDate, placeLabel
@@ -29,9 +30,9 @@ export function seedDatabaseIfEmpty() {
       current_location_city, current_location_state, current_location_lat, current_location_lng,
       current_facility, sender_json, recipient_json, dimensions_json,
       container_json, pallet_json, references_json, cargo_category,
-      created_at_ts, progress_updated_at_ts
+      created_at_ts, progress_updated_at_ts, transport_mode
     ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     )
   `);
 
@@ -45,8 +46,9 @@ export function seedDatabaseIfEmpty() {
   const insertEvent = db.prepare(`
     INSERT OR IGNORE INTO tracking_events (
       id, shipment_tracking, status, title, location, facility,
-      timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order,
+      occurred_at_ts, time_zone
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const insertQuote = db.prepare(`
@@ -98,7 +100,7 @@ export function seedDatabaseIfEmpty() {
       s.containerDetails ? JSON.stringify(s.containerDetails) : null,
       s.palletDetails ? JSON.stringify(s.palletDetails) : null,
       JSON.stringify(s.references), s.cargoCategory,
-      created.getTime(), now
+      created.getTime(), now, s.mode
     );
 
     for (let n = 1; n <= s.pieces; n++) {
@@ -111,10 +113,14 @@ export function seedDatabaseIfEmpty() {
 
     s.events.forEach((e, i) => {
       const isCurrent = i === s.events.length - 1;
+      // Each demo event in its own place's zone (Lagos events in Africa/Lagos, and so on).
+      const at = hoursFrom(now, -e.hoursAgo).getTime();
+      const zone = timeZoneForPlace({ city: e.place.city, state: e.place.region, country: e.place.country, lat: e.place.lat, lng: e.place.lng });
       insertEvent.run(
         `ev-${s.trackingNumber}-${i + 1}`, s.trackingNumber, e.status, e.title, placeLabel(e.place), e.facility,
-        demoTimestamp(hoursFrom(now, -e.hoursAgo)), e.description, null,
-        e.status === 'DELAYED' ? 1 : 0, 1, isCurrent ? 1 : 0, i + 1
+        formatEventTimestamp(at, zone), e.description, null,
+        e.status === 'DELAYED' ? 1 : 0, 1, isCurrent ? 1 : 0, i + 1,
+        at, zone
       );
     });
   };

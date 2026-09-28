@@ -334,6 +334,13 @@ export function initDatabase() {
   // able to cover the gap between when it was created and when it was deleted the same day;
   // this makes that specific kind of loss structurally impossible going forward.
   try { db.exec(`ALTER TABLE shipments ADD COLUMN deleted_at_ts INTEGER;`); } catch (e) {}
+  // Worldwide operations (tracker 2.3/2.5). transport_mode: 'Road' | 'Air' | 'Sea' for the main
+  // leg (NULL on older rows, which infer it from distance and cargo). occurred_at_ts + time_zone:
+  // the instant and IANA zone of an event, used for "local time + UTC offset" display; older
+  // rows without them keep displaying their stored timestamp text.
+  try { db.exec(`ALTER TABLE shipments ADD COLUMN transport_mode TEXT;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE tracking_events ADD COLUMN occurred_at_ts INTEGER;`); } catch (e) {}
+  try { db.exec(`ALTER TABLE tracking_events ADD COLUMN time_zone TEXT;`); } catch (e) {}
 
   // Backfill existing rows so they don't all collapse to "unknown, sort last": preserve
   // today's best-effort relative order (by rowid, which reflects insertion order) as a

@@ -1,11 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db.js';
-import { syncTimeBasedProgress } from '../progress.js';
+import { syncTimeBasedProgress, shipmentTransportMode } from '../progress.js';
+import { eventTime } from '../eventTime.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
 import { generateUniqueTrackingId } from '../trackingIds.js';
 import { parseTrackingInput, pieceLabel } from '../../src/shared/trackingId.js';
 import { COMPANY_SHORT } from '../../src/config/brand.js';
+import { eventTimeDisplay } from '../../src/shared/timeZones.js';
+import { parseTransportMode } from '../../src/shared/transportMode.js';
 
 export const shipmentsRouter = Router();
 
@@ -14,29 +17,6 @@ export const shipmentsRouter = Router();
 function splitLocation(location: string): { city: string; state: string } {
   const parts = (location || '').split(',').map((s: string) => s.trim());
   return { city: parts[0] || '', state: parts[1] || '' };
-}
-
-// Tracking events store a single pre-formatted "timestamp" string (e.g.
-// "August 20, 2026 · 4:35 PM CT" or "Aug 19, 2026 4:35 PM") rather than separate date/time
-// columns. The frontend timeline renders `displayDate` / `displayTime` directly and has no
-// fallback for them — leaving them undefined rendered every persisted event's timestamp as a
-// blank "—". This splits the stored string back into those fields instead.
-function splitEventTimestamp(raw: string): { displayDate: string; displayTime: string; timezone?: string } {
-  const str = (raw || '').trim();
-  if (!str) return { displayDate: '', displayTime: '' };
-
-  const tzMatch = str.match(/\b(ET|CT|MT|PT|UTC|GMT)\b\s*$/);
-  const timezone = tzMatch ? tzMatch[1] : undefined;
-
-  const timeMatch = str.match(/\d{1,2}:\d{2}\s*[AaPp][Mm]/);
-  if (timeMatch) {
-    const timeIdx = str.indexOf(timeMatch[0]);
-    const displayDate = str.slice(0, timeIdx).replace(/[·\-–—]+\s*$/, '').trim() || str;
-    const displayTime = str.slice(timeIdx).trim();
-    return { displayDate, displayTime, timezone };
-  }
-
-  return { displayDate: str, displayTime: '', timezone };
 }
 
 // Helper to format shipment row from DB to JSON model
@@ -68,7 +48,9 @@ function formatShipment(row: any) {
     title: e.title,
     location: e.location,
     ...splitLocation(e.location),
-    ...splitEventTimestamp(e.timestamp),
+    // Local time where the event happened + UTC offset; older rows keep their stored text.
+    ...eventTimeDisplay(e.timestamp, e.occurred_at_ts, e.time_zone),
+    occurredAt: e.occurred_at_ts ? new Date(e.occurred_at_ts).toISOString() : undefined,
     facility: e.facility,
     timestamp: e.timestamp,
     description: e.description,
@@ -96,6 +78,7 @@ function formatShipment(row: any) {
     },
     service: row.service,
     shipmentType: row.shipment_type,
+    transportMode: shipmentTransportMode(row),
     cargoDescription: row.cargo_description,
     totalWeightLbs: row.total_weight_lbs,
     totalPieces: row.total_pieces,
@@ -225,9 +208,9 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
         vehicle_json, pet_json, pallet_json, container_json, freight_json, document_json,
         references_json, cargo_category, photos_json,
         handling_requirements_json, pickup_window, internal_pricing_note,
-        progress_updated_at_ts, created_at_ts
+        progress_updated_at_ts, created_at_ts, transport_mode
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `);
 
@@ -279,7 +262,9 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
       // created_at_ts: always server-authoritative (never trust a client-supplied value —
       // that's exactly how "Today" as a literal string ended up in the display column and
       // broke sorting) so newest-first ordering is always reliably correct.
-      Date.now()
+      Date.now(),
+      // NULL when not given: the mode is then inferred from distance and cargo on read.
+      parseTransportMode(s.transportMode) ?? null
     );
 
     // Insert Pieces
@@ -325,21 +310,25 @@ shipmentsRouter.post('/', publicWriteLimiter, (req: Request, res: Response) => {
     const insertEvent = db.prepare(`
       INSERT INTO tracking_events (
         id, shipment_tracking, status, title, location, facility,
-        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order,
+        occurred_at_ts, time_zone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
+    const originLabel = `${s.origin?.city || 'New York'}, ${s.origin?.state || 'NY'}`;
+    const createdTime = eventTime(originLabel, { lat: s.origin?.lat, lng: s.origin?.lng });
     insertEvent.run(
       `e-${Date.now()}`,
       trackingNumber,
       s.status || 'RECEIVED',
       'Consignment Registered & Barcode Issued',
-      `${s.origin?.city || 'New York'}, ${s.origin?.state || 'NY'}`,
+      originLabel,
       s.currentLocation?.facility || 'Intake Gateway',
-      `${createdAt} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
+      createdTime.timestamp,
       `Shipment received into the ${COMPANY_SHORT} network. Linear Code 128 barcode assigned.`,
       'Initial entry scan.',
-      0, 1, 1, 1
+      0, 1, 1, 1,
+      createdTime.occurredAtTs, createdTime.timeZone
     );
 
     const createdRow = db.prepare('SELECT * FROM shipments WHERE tracking_number = ?').get(trackingNumber);
@@ -451,11 +440,13 @@ shipmentsRouter.patch('/:trackingNumber/status', requireAdminAuth, (req: Request
       // when the caller has one; otherwise falls back to the generic status label exactly as
       // before, so callers that never had a richer title (like Tracking Events, which always
       // skips this block) are unaffected.
+      const statusTime = eventTime(location || '', hasCoords ? { lat, lng } : {});
       db.prepare(`
         INSERT INTO tracking_events (
           id, shipment_tracking, status, title, location, facility,
-          timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order,
+          occurred_at_ts, time_zone
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         `e-${Date.now()}`,
         tracking,
@@ -463,11 +454,12 @@ shipmentsRouter.patch('/:trackingNumber/status', requireAdminAuth, (req: Request
         eventTitle || statusText,
         location || 'Regional Transit Gateway',
         facility || `${COMPANY_SHORT} Facility`,
-        `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
+        statusTime.timestamp,
         notes || `Status transitioned to ${newStatus}.`,
         notes || null,
         newStatus === 'EXCEPTION' ? 1 : 0,
-        1, 1, eventCount + 1
+        1, 1, eventCount + 1,
+        statusTime.occurredAtTs, statusTime.timeZone
       );
     }
 
@@ -508,8 +500,9 @@ shipmentsRouter.post('/:trackingNumber/return', requireAdminAuth, (req: Request,
 
     const now = Date.now();
     const nowDate = new Date(now);
-    const timestamp = `${nowDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${nowDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
     const currentLabel = [row.current_location_city, row.current_location_state].filter(Boolean).join(', ') || `${row.destination_city}, ${row.destination_state}`;
+    const returnTime = eventTime(currentLabel, { occurredAt: now, lat: row.current_location_lat, lng: row.current_location_lng });
+    const timestamp = returnTime.timestamp;
 
     db.exec('BEGIN');
     inTransaction = true;
@@ -566,15 +559,16 @@ shipmentsRouter.post('/:trackingNumber/return', requireAdminAuth, (req: Request,
     const insertEvent = db.prepare(`
       INSERT INTO tracking_events (
         id, shipment_tracking, status, title, location, facility,
-        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order, recorded_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order, recorded_by,
+        occurred_at_ts, time_zone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     insertEvent.run(
       `e-${now}-r`, returnId, 'RECEIVED', 'Return Shipment Registered', currentLabel,
       row.current_facility || `${COMPANY_SHORT} Facility`, timestamp,
       `Return of ${tracking} to the sender at ${row.origin_city}, ${row.origin_state} (${reason}).`,
-      null, 0, 1, 1, 1, operator
+      null, 0, 1, 1, 1, operator, returnTime.occurredAtTs, returnTime.timeZone
     );
 
     const returnLeg = {
@@ -600,7 +594,7 @@ shipmentsRouter.post('/:trackingNumber/return', requireAdminAuth, (req: Request,
       `e-${now}`, tracking, 'EXCEPTION', `Return to Origin Initiated: ${reason}`, currentLabel,
       row.current_facility || `${COMPANY_SHORT} Facility`, timestamp,
       `Original journey concluded (${reason}). Returning to the sender at ${row.origin_city}, ${row.origin_state} under tracking ID ${returnId}.`,
-      null, 1, 1, 1, eventCount + 1, operator
+      null, 1, 1, 1, eventCount + 1, operator, returnTime.occurredAtTs, returnTime.timeZone
     );
 
     db.exec('COMMIT');
@@ -630,24 +624,19 @@ shipmentsRouter.post('/:trackingNumber/events', requireAdminAuth, (req: Request,
 
     const eventCount = (db.prepare('SELECT COUNT(*) as count FROM tracking_events WHERE shipment_tracking = ?').get(tracking) as any).count;
 
-    // Prefer the caller's own displayDate/displayTime (e.g. TrackingEventsView's Add Event
-    // form, which lets the admin pick an exact date/time) recombined into the single stored
-    // display string, over a raw e.timestamp — which is sometimes an ISO string that would
-    // otherwise get stored verbatim and fail to split back into a readable date/time on read.
-    const storedTimestamp = (e.displayDate && e.displayTime)
-      ? `${e.displayDate} · ${e.displayTime}`
-      : (e.timestamp && !/^\d{4}-\d{2}-\d{2}T/.test(e.timestamp)
-          ? e.timestamp
-          : `${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`);
-
     const eventLocation = e.location || (e.city && e.state ? `${e.city}, ${e.state}` : (e.city || 'Sorting Facility'));
+    // The instant and IANA zone come from the caller when it has them (TrackingEventsView's
+    // Add Event form lets the admin pick an exact date, time and zone); otherwise it's now, in
+    // the event location's own zone. Browser-formatted displayDate/displayTime strings are no
+    // longer stored, as they carried the admin's own clock rather than the location's.
+    const time = eventTime(eventLocation, { occurredAt: e.occurredAt, timeZone: e.timeZone ?? e.timezone });
 
     db.prepare(`
       INSERT INTO tracking_events (
         id, shipment_tracking, status, title, location, facility,
         timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order,
-        recorded_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        recorded_by, occurred_at_ts, time_zone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       e.id || `e-${Date.now()}`,
       tracking,
@@ -655,12 +644,13 @@ shipmentsRouter.post('/:trackingNumber/events', requireAdminAuth, (req: Request,
       e.title || 'Checkpoint Scan Verified',
       eventLocation,
       e.facility || 'Gateway Hub',
-      storedTimestamp,
+      time.timestamp,
       e.description || 'Barcode scanned and verified.',
       e.internalNote || e.operatorNotes || null,
       e.delayFlag ? 1 : 0,
       1, 1, eventCount + 1,
-      e.recordedBy || null
+      e.recordedBy || null,
+      time.occurredAtTs, time.timeZone
     );
 
     // Also update shipment status if provided
@@ -701,20 +691,42 @@ shipmentsRouter.patch('/:trackingNumber/events/:eventId', requireAdminAuth, (req
     const newLocation = (e.city || e.state)
       ? `${e.city || eventRow.location.split(',')[0]?.trim() || ''}, ${e.state || eventRow.location.split(',')[1]?.trim() || ''}`
       : eventRow.location;
-    const newTimestamp = (e.displayDate && e.displayTime)
-      ? `${e.displayDate} · ${e.displayTime}`
-      : eventRow.timestamp;
+    // A corrected instant or zone re-formats the event in that zone; a location-only correction
+    // keeps the event's instant and zone. Rows from before IANA zones with only display text
+    // (no instant) keep accepting a display-text correction.
+    let occurredAtTs: number | null = eventRow.occurred_at_ts ?? null;
+    let timeZone: string | null = eventRow.time_zone ?? null;
+    let newTimestamp: string = eventRow.timestamp;
+    // Re-format from an instant only when there is one (sent, or already stored): an older row
+    // with display text only must not be reset to "now" by a zone-only correction.
+    if (e.occurredAt || (eventRow.occurred_at_ts && (e.timeZone || e.timezone))) {
+      const corrected = eventTime(newLocation, {
+        occurredAt: e.occurredAt ?? eventRow.occurred_at_ts ?? undefined,
+        timeZone: e.timeZone ?? e.timezone ?? eventRow.time_zone ?? undefined
+      });
+      occurredAtTs = corrected.occurredAtTs;
+      timeZone = corrected.timeZone;
+      newTimestamp = corrected.timestamp;
+    } else if (e.displayDate && e.displayTime) {
+      newTimestamp = `${e.displayDate} · ${e.displayTime}`;
+      occurredAtTs = null;
+      timeZone = null;
+    }
 
     db.prepare(`
       UPDATE tracking_events SET
         location = ?,
         timestamp = ?,
+        occurred_at_ts = ?,
+        time_zone = ?,
         description = COALESCE(?, description),
         correction_audit_json = ?
       WHERE id = ? AND shipment_tracking = ?
     `).run(
       newLocation,
       newTimestamp,
+      occurredAtTs,
+      timeZone,
       e.description || null,
       e.correctionAudit ? JSON.stringify(e.correctionAudit) : eventRow.correction_audit_json,
       eventId,
@@ -797,7 +809,8 @@ shipmentsRouter.put('/:trackingNumber', requireAdminAuth, (req: Request, res: Re
         pallet_json = COALESCE(?, pallet_json),
         container_json = COALESCE(?, container_json),
         freight_json = COALESCE(?, freight_json),
-        document_json = COALESCE(?, document_json)
+        document_json = COALESCE(?, document_json),
+        transport_mode = COALESCE(?, transport_mode)
       WHERE tracking_number = ?
     `).run(
       s.status || null,
@@ -834,6 +847,7 @@ shipmentsRouter.put('/:trackingNumber', requireAdminAuth, (req: Request, res: Re
       s.containerDetails ? JSON.stringify(s.containerDetails) : null,
       s.freightDetails ? JSON.stringify(s.freightDetails) : null,
       s.documentDetails ? JSON.stringify(s.documentDetails) : null,
+      parseTransportMode(s.transportMode) ?? null,
       tracking
     );
 

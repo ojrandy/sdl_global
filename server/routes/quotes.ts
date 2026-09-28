@@ -5,6 +5,8 @@ import { publicWriteLimiter } from '../middleware/rateLimit.js';
 import { generateUniqueTrackingId } from '../trackingIds.js';
 import { pieceLabel } from '../../src/shared/trackingId.js';
 import { ADMIN_ROLE_LABEL } from '../../src/config/brand.js';
+import { parseTransportMode } from '../../src/shared/transportMode.js';
+import { eventTime } from '../eventTime.js';
 
 export const quotesRouter = Router();
 
@@ -294,9 +296,9 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
         destination_city, destination_state, destination_lat, destination_lng,
         current_location_city, current_location_state, current_location_lat, current_location_lng,
         current_facility, sender_json, recipient_json, dimensions_json, progress_updated_at_ts,
-        created_at_ts
+        created_at_ts, transport_mode
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `).run(
       trackingNumber,
@@ -328,7 +330,8 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
       JSON.stringify(recipient),
       JSON.stringify(dimensions && Object.keys(dimensions).length ? dimensions : { length: 12, width: 12, height: 12 }),
       Date.now(),
-      Date.now()
+      Date.now(),
+      parseTransportMode(s.transportMode) ?? null
     );
 
     // 2. Create pieces
@@ -351,22 +354,26 @@ quotesRouter.post('/:id/convert', requireAdminAuth, (req: Request, res: Response
     );
 
     // 3. Create initial event
+    const originLabel = `${origin.city}, ${origin.state}`;
+    const createdTime = eventTime(originLabel, { lat: origin.lat, lng: origin.lng });
     db.prepare(`
       INSERT INTO tracking_events (
         id, shipment_tracking, status, title, location, facility,
-        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        timestamp, description, operator_notes, delay_flag, completed, current_flag, sort_order,
+        occurred_at_ts, time_zone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       `e-${Date.now()}`,
       trackingNumber,
       'RECEIVED',
       'Consignment Registered from Rate Quote',
-      `${origin.city}, ${origin.state}`,
+      originLabel,
       'Origin Gateway',
-      `${createdAt} ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
+      createdTime.timestamp,
       `Consignment generated from approved quote ${q.id}. Linear Code 128 barcode assigned.`,
-      `Converted by ${ADMIN_ROLE_LABEL}. Tariff: $${q.pricing?.finalPrice || '350.00'}`,
-      0, 1, 1, 1
+      `Converted by ${ADMIN_ROLE_LABEL}. Tariff: ${q.pricing?.finalPrice || '350.00'}`,
+      0, 1, 1, 1,
+      createdTime.occurredAtTs, createdTime.timeZone
     );
 
     // 4. Mark the quote CONVERTED (the actual terminal status for this action — it previously

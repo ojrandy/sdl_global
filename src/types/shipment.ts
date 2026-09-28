@@ -1,3 +1,5 @@
+import type { TransportMode } from '../shared/transportMode.js';
+
 export type ShipmentStatus =
   | 'CREATED'
   | 'BOOKED'
@@ -26,10 +28,15 @@ export type MilestoneState = 'CONFIRMED' | 'ESTIMATED' | 'PENDING_CONFIRMATION';
 
 export interface TrackingEvent {
   id: string;
-  timestamp: string; // ISO 8601 UTC
-  timezone?: string; // 'ET' | 'CT' | 'MT' | 'PT'
-  displayDate: string; // e.g. "August 17, 2026"
-  displayTime: string; // e.g. "10:42 AM CT"
+  timestamp: string; // stored display string, or ISO 8601 UTC for events built in the browser
+  /** When the event happened (ISO 8601), for events stored with an instant. */
+  occurredAt?: string;
+  /** IANA zone of the event's location, e.g. "Africa/Lagos". */
+  timezone?: string;
+  /** e.g. "UTC+1" */
+  utcOffset?: string;
+  displayDate: string; // e.g. "Sep 28, 2026"
+  displayTime: string; // local time where it happened + offset, e.g. "3:04 PM UTC+1"
   title: string;
   status?: ShipmentStatus | string;
   milestoneState?: MilestoneState;
@@ -233,6 +240,8 @@ export interface Shipment {
   };
   photos?: string[];
   service: 'Express' | 'Standard' | 'Priority' | 'Freight LTL' | string;
+  /** Main-leg transport mode; the server infers it for records created before it was stored. */
+  transportMode?: TransportMode;
   shipmentDate?: string;
   createdAt?: string;
   createdAtTs?: number;

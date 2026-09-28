@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db.js';
-import { syncTimeBasedProgress } from '../progress.js';
+import { syncTimeBasedProgress, shipmentTransportMode } from '../progress.js';
+import { eventTimeDisplay } from '../../src/shared/timeZones.js';
 import { parseTrackingInput } from '../../src/shared/trackingId.js';
 
 export const trackRouter = Router();
@@ -10,28 +11,6 @@ export const trackRouter = Router();
 function splitLocation(location: string): { city: string; state: string } {
   const parts = (location || '').split(',').map((s: string) => s.trim());
   return { city: parts[0] || '', state: parts[1] || '' };
-}
-
-// Tracking events store a single pre-formatted "timestamp" string (e.g.
-// "August 20, 2026 · 4:35 PM CT") rather than separate date/time columns. The public
-// tracking page renders `displayDate` / `displayTime` directly with no fallback for them,
-// so leaving them undefined rendered every event's timestamp as a blank "—" to customers.
-function splitEventTimestamp(raw: string): { displayDate: string; displayTime: string; timezone?: string } {
-  const str = (raw || '').trim();
-  if (!str) return { displayDate: '', displayTime: '' };
-
-  const tzMatch = str.match(/\b(ET|CT|MT|PT|UTC|GMT)\b\s*$/);
-  const timezone = tzMatch ? tzMatch[1] : undefined;
-
-  const timeMatch = str.match(/\d{1,2}:\d{2}\s*[AaPp][Mm]/);
-  if (timeMatch) {
-    const timeIdx = str.indexOf(timeMatch[0]);
-    const displayDate = str.slice(0, timeIdx).replace(/[·\-–—]+\s*$/, '').trim() || str;
-    const displayTime = str.slice(timeIdx).trim();
-    return { displayDate, displayTime, timezone };
-  }
-
-  return { displayDate: str, displayTime: '', timezone };
 }
 
 // Helper to mask name (e.g. "Daniel" -> "D*****")
@@ -106,7 +85,9 @@ trackRouter.get('/:trackingNumber', (req: Request, res: Response) => {
       title: e.title,
       location: e.location,
       ...splitLocation(e.location),
-      ...splitEventTimestamp(e.timestamp),
+      // Local time where the event happened + UTC offset; older rows keep their stored text.
+      ...eventTimeDisplay(e.timestamp, e.occurred_at_ts, e.time_zone),
+      occurredAt: e.occurred_at_ts ? new Date(e.occurred_at_ts).toISOString() : undefined,
       facility: e.facility,
       timestamp: e.timestamp,
       description: e.description,
@@ -155,6 +136,7 @@ trackRouter.get('/:trackingNumber', (req: Request, res: Response) => {
       },
       service: row.service,
       shipmentType: row.shipment_type,
+      transportMode: shipmentTransportMode(row),
       cargoDescription: row.cargo_description,
       cargoCategory: row.cargo_category || (row.shipment_type === 'Vehicle' ? 'Automotive & Parts' : 'General Freight'),
       vehicleDetails: row.vehicle_json ? JSON.parse(row.vehicle_json) : undefined,

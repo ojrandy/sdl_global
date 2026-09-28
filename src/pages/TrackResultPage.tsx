@@ -51,7 +51,8 @@ import { Barcode } from '../components/Barcode';
 import { JourneyMap } from '../components/JourneyMap';
 import { COMPANY_SHORT, OPERATIONS_CENTRE } from '../config/brand';
 import { SupportModal } from '../components/SupportModal';
-import { calculateRouteGeometry } from '../services/routingEngine';
+import { calculateRouteGeometry, inferTransportMode } from '../services/routingEngine';
+import { timeZoneForPlace } from '../shared/timeZones';
 import { simulationEngine } from '../services/simulationEngine';
 import { api } from '../services/api';
 import { generateShipmentPlan, calculateDynamicTimeProgress, getServiceCommitmentHours } from '../services/planningEngine';
@@ -226,13 +227,16 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
 
   const currentCity = typeof liveShipment?.currentLocation === 'string'
     ? liveShipment.currentLocation.split(',')[0].trim()
-    : (typeof liveShipment?.currentLocation === 'object' && (liveShipment.currentLocation as any)?.city) || (typeof shipment?.currentLocation === 'object' && (shipment?.currentLocation as any)?.city) || 'Chicago';
+    : (typeof liveShipment?.currentLocation === 'object' && (liveShipment.currentLocation as any)?.city) || (typeof shipment?.currentLocation === 'object' && (shipment?.currentLocation as any)?.city) || originCity;
     
   const currentState = typeof liveShipment?.currentLocation === 'string'
     ? liveShipment.currentLocation.split(',')[1]?.trim() || originState
-    : (typeof liveShipment?.currentLocation === 'object' && (liveShipment.currentLocation as any)?.state) || (typeof shipment?.currentLocation === 'object' && (shipment?.currentLocation as any)?.state) || 'IL';
+    : typeof liveShipment?.currentLocation === 'object'
+      ? ((liveShipment.currentLocation as any)?.state ?? '')
+      : ((typeof shipment?.currentLocation === 'object' && (shipment?.currentLocation as any)?.state) || '');
 
-  const currentLocationText = `${currentCity}, ${currentState}`;
+  // "In flight" / "At sea" positions have no region, so it's left off rather than filled in.
+  const currentLocationText = [currentCity, currentState].filter(Boolean).join(', ');
 
   // Real coordinates for wherever the shipment's currentLocation actually points — an
   // admin-set facility or a live simulation tick, both now kept accurate (see the routing
@@ -429,11 +433,18 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
     }
   };
 
-  // Automated routing & planned milestone calculations
-  const routeGeom = calculateRouteGeometry(
-    { lat: (liveShipment?.origin as any)?.lat || (shipment?.origin as any)?.lat || originGeo.lat, lng: (liveShipment?.origin as any)?.lng || (shipment?.origin as any)?.lng || originGeo.lng, name: originCity },
-    { lat: (liveShipment?.destination as any)?.lat || (shipment?.destination as any)?.lat || destGeo.lat, lng: (liveShipment?.destination as any)?.lng || (shipment?.destination as any)?.lng || destGeo.lng, name: destCity }
-  );
+  // Automated routing & planned milestone calculations. The mode (road, air or sea legs) comes
+  // from the shipment, or is inferred for older records the same way the server does.
+  const routeOrigin = { lat: (liveShipment?.origin as any)?.lat || (shipment?.origin as any)?.lat || originGeo.lat, lng: (liveShipment?.origin as any)?.lng || (shipment?.origin as any)?.lng || originGeo.lng, name: originCity };
+  const routeDestination = { lat: (liveShipment?.destination as any)?.lat || (shipment?.destination as any)?.lat || destGeo.lat, lng: (liveShipment?.destination as any)?.lng || (shipment?.destination as any)?.lng || destGeo.lng, name: destCity };
+  const transportMode = inferTransportMode({
+    mode: liveShipment?.transportMode ?? shipment?.transportMode,
+    shipmentType: cargoType,
+    service,
+    origin: routeOrigin,
+    destination: routeDestination
+  });
+  const routeGeom = calculateRouteGeometry(routeOrigin, routeDestination, transportMode);
 
   const timeProgress = calculateDynamicTimeProgress(liveShipment || shipment, 48);
 
@@ -493,7 +504,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         const delEvent: TrackingEvent = {
           id: 'auto-delivered-scan',
           timestamp: new Date().toISOString(),
-          timezone: 'ET',
+          timezone: timeZoneForPlace({ city: destCity, state: destState }),
           displayDate: dStr,
           displayTime: tStr,
           title: `Delivered to Consignee — ${destCity}, ${destState}`,
@@ -835,7 +846,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             </div>
           </div>
 
-          {/* Dynamic Highway Corridor Transit Rail */}
+          {/* Route transit rail */}
           <div className="hero-corridor-journey-strip">
             <div className="corridor-point origin">
               <div className="corridor-point-icon">
@@ -851,7 +862,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             <div className="corridor-track-wrapper">
               <div className="corridor-meta-badges">
                 <span className="corridor-dist-badge">
-                  <span>{routeGeom.distanceMiles.toLocaleString()} Total Highway Miles</span>
+                  <span>{routeGeom.distanceMiles.toLocaleString()} Total Route Miles · {transportMode}</span>
                 </span>
                 <span className="corridor-status-badge">
                   {status === 'DELIVERED' ? (
@@ -905,6 +916,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
             shipmentStatus={status}
             delayNotice={liveShipment.delayNotice}
             onScrollToTimeline={scrollToTimeline}
+            transportMode={transportMode}
           />
         </section>
 

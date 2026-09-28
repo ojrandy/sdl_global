@@ -205,11 +205,11 @@ export function generateShipmentPlan(
   const midStageName = intermediateHub
     ? `Corridor Transit Scan — ${intermediateHub.city}, ${intermediateHub.state}`
     : 'Intermediate Linehaul Corridor Scan';
-  const midLocation = intermediateHub ? `${intermediateHub.city}, ${intermediateHub.state}` : 'Interstate Transit Corridor';
+  const midLocation = intermediateHub ? `${intermediateHub.city}, ${intermediateHub.state}` : 'In transit';
   const midFacility = intermediateHub ? intermediateHub.facility : 'Regional Linehaul Sort Center';
   const midDescription = intermediateHub
     ? intermediateHub.description
-    : `Progressing through central interstate transit corridor toward ${destination.city}.`;
+    : `In transit toward ${destination.city}.`;
 
   // Milestone 1: Origin Intake
   const t0 = new Date(startDate.getTime());
@@ -520,7 +520,7 @@ export function applyResumeState(
     ...shipment,
     status: 'IN_TRANSIT',
     statusText: 'In Linehaul Transit (Resumed)',
-    statusMessage: 'Hold condition resolved. Shipment movement has resumed along scheduled interstate corridor.',
+    statusMessage: 'Hold condition resolved. Shipment movement has resumed along its planned route.',
     isHoldFrozen: false,
     progressPercent: currentProgress,
     lastUpdated: 'Just now'
@@ -597,7 +597,7 @@ export function applyDelayState(
     milestoneState: 'CONFIRMED',
     title: `Transit Delay Advisory: ${delayReason}`,
     location: formatLocationString(shipment.currentLocation),
-    facility: shipment.currentFacility || 'Interstate Linehaul Corridor',
+    facility: shipment.currentFacility || 'In transit',
     city: getLocationCityState(shipment.currentLocation).city || shipment.origin.city,
     state: getLocationCityState(shipment.currentLocation).state || shipment.origin.state,
     timestamp: timestampStr,
@@ -738,7 +738,7 @@ export function calculateDynamicTimeProgress(
   } else if (dynamicProgress >= 65) {
     activeMilestoneStage = 'Approaching Regional Hub';
   } else if (dynamicProgress >= 35) {
-    activeMilestoneStage = 'Interstate Linehaul Corridor';
+    activeMilestoneStage = 'In transit';
   }
 
   return {
