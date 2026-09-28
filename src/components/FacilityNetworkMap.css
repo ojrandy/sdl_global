@@ -1,6 +1,6 @@
 /* ============================================================
    FACILITY NETWORK MAP STYLES (EXECUTIVE CORPORATE DESIGN)
-   Zero In-Transit Simulation · Fixed Hubs · Interactive Corridors
+   Global gateways · Great-circle trade lanes
    ============================================================ */
 
 .facility-network-map-wrapper {
@@ -103,6 +103,8 @@
   overflow: hidden;
   border: 1.5px solid var(--sdl-slate-200);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  /* Keep Leaflet's pane/control z-indexes from painting over the sticky header */
+  isolation: isolate;
 }
 
 .facility-leaflet-container {
@@ -163,6 +165,19 @@
   transform: scale(1.15);
   background: var(--sdl-accent-500);
   border-color: var(--sdl-white);
+}
+
+/* World zoom: unselected pins become small dots */
+.pins-compact .facility-map-marker-pin:not(.active) .marker-pin-inner {
+  width: 12px;
+  height: 12px;
+  background: var(--sdl-accent-500);
+  border: 2px solid var(--sdl-white);
+}
+
+.pins-compact .facility-map-marker-pin:not(.active) .marker-pin-code,
+.pins-compact .facility-map-marker-pin:not(.active) .marker-pulse-ring {
+  display: none;
 }
 
 @keyframes pulse-ring {
@@ -292,31 +307,6 @@
   margin: 0 0 0.625rem;
 }
 
-.facility-map-popup .popup-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  background: #ecfdf5;
-  color: #059669;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-}
-
-.facility-map-popup .status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #059669;
-}
-
-.facility-map-popup .popup-phone {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--sdl-ink-900);
-}
 
 /* 3. Selected Facility Spotlight Card */
 .facility-spotlight-card {
@@ -347,14 +337,6 @@
   margin-bottom: 0.375rem;
 }
 
-.spotlight-status {
-  background: #ecfdf5;
-  color: #059669;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.6875rem;
-}
-
 .spotlight-header h3 {
   font-family: var(--sdl-font-display);
   font-size: 1.625rem;
@@ -369,27 +351,36 @@
   margin: 0;
 }
 
-.spotlight-phone-box {
-  background: #f8fafc;
-  border: 1.5px solid var(--sdl-slate-200);
-  border-radius: var(--sdl-radius-xl);
-  padding: 0.875rem 1.25rem;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.spotlight-phone-box small {
-  font-size: 0.6875rem;
+.spotlight-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--sdl-accent-500);
+  color: var(--sdl-white);
+  border: none;
+  border-radius: var(--sdl-radius-md);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: var(--sdl-slate-500);
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 0.125rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--sdl-transition);
 }
 
-.spotlight-phone-box strong {
-  font-size: 1rem;
-  color: var(--sdl-ink-900);
+.spotlight-contact-btn:hover {
+  background: var(--sdl-accent-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker-pulse-ring {
+    animation: none;
+  }
+}
+
+.spotlight-contact-btn:focus-visible {
+  outline: 2px solid var(--sdl-accent-500);
+  outline-offset: 2px;
 }
 
 .spotlight-details-grid {
@@ -454,16 +445,12 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  .spotlight-phone-box {
-    text-align: left;
+  .spotlight-contact-btn {
     width: 100%;
   }
   .spotlight-details-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
-  }
-  .spotlight-info-item.span-full {
-    grid-column: span 1;
   }
   .facility-map-legend {
     display: none;

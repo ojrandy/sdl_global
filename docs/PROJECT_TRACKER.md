@@ -59,10 +59,10 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 - [x] 1.12 Sweep: `grep -rniE "duolingo|dxp|dex\b" --exclude-dir=node_modules .` → only allowed hits remain (list them in REBRAND_MAP §6). *Listed in REBRAND_MAP §7 "Allowed hits"; `nationwide`/`interstate`/US hits are logged there as deferred to 2.x/3.x.*
 
 ## Phase 2 — Worldwide operations
-- [ ] 2.1 Replace the U.S. hub data with the global gateway network (CONTENT.md §9) in `HomeNetworkMap`, `FacilityNetworkMap`, `LocationsPage`.
+- [x] 2.1 Replace the U.S. hub data with the global gateway network (CONTENT.md §9) in `HomeNetworkMap`, `FacilityNetworkMap`, `LocationsPage`.
 - [ ] 2.2 `geocodingService.ts`: add a `GLOBAL_GATEWAY_DATABASE` (city, country, ISO code, lat/lng, IANA time zone); keep Nominatim for free-text; stop assuming `state`/`zip`.
 - [ ] 2.3 `routingEngine.ts`: when OSRM cannot route (different continents/oceans), draw air/sea legs as great-circle arcs instead of failing.
-- [ ] 2.4 Rename `USJourneyMap` → `JourneyMap` (component + CSS + imports); remove "interstate/highway" wording.
+- [x] 2.4 Rename `USJourneyMap` → `JourneyMap` (component + CSS + imports); remove "interstate/highway" wording.
 - [ ] 2.5 Time zones: replace `ET/CT/MT/PT` handling (server/routes/track.ts, shipments.ts) with IANA zones + UTC offset display.
 - [ ] 2.6 Address forms (Quote, Ship, Admin Create Shipment): country selector first, then fields that fit that country (postcode optional, "State/Region").
 - [ ] 2.7 Units: kg/cm by default with lb/in toggle; currency display configurable (default USD, allow NGN/GBP/EUR).
@@ -123,7 +123,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 1 | Logo files (full colour, white, icon) | 1.2, 1.4 |
 | 2 | Phone number(s) + WhatsApp number | 1.1, 3.1, 3.10 |
 | 3 | Head-office address (and any regional offices) | 1.1, 3.10, 6.4 |
-| 4 | Confirm the global gateway list (CONTENT.md §9) | 2.1 |
+| 4 | Confirm the global gateway list (CONTENT.md §9). **Now live on Home, Locations and Contact** from `src/data/gateways.ts`; edit that file (and CONTENT §9) if anything changes. Accra (ACC) has no trade lane in §9, so it shows no lane on the maps. | 2.1 |
 | 5 | Year founded / real stats (shipments, countries, years) or approve removing stat blocks | 3.2, 3.4 |
 | 6 | Real customer testimonials + permission, or approve removing the section | 3.14 |
 | 7 | Real partner/carrier logos you're authorised to show, or approve removing the strip | 3.14 |
@@ -133,6 +133,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 11 | Lawyer review of legal pages | 3.11 |
 | 12 | ~~Returns kept only in browser state~~ **Resolved 2026-09-28: a return is its own linked shipment row (`POST /api/shipments/:id/return`).** Still browser-only after a control action: `statusMessage`, the audit log and the hold "frozen" flag (no columns). Decide whether to persist them. | 1.8 follow-up |
 | 13 | Public site shows demo shipments from the client mock (`App.tsx` looks up `mockShipments` before the API), even when the DB has no demo data. Remove with the demo data before launch. | 6.7 |
+| 14 | Contact form: the "Gateway" field (pre-filled by "Contact this gateway") only shows on the ticket confirmation; the form still sends nothing to the server. Decide where gateway enquiries should go. | 2.1, 3.10 |
 
 ## Decisions log
 | Date | Decision |
@@ -176,6 +177,7 @@ The first baseline ran on older code (`0ae1ff4`). `main` then gained 11 upstream
 | 2026-09-28 | 1.8 follow-up | Server IDs now use `crypto.randomInt` (BRAND_GUIDE §7; the shared generator takes a random source). Returns are stored: `POST /api/shipments/:id/return` creates the return as its own shipment (new DLS ID, route and parties swapped, pieces relabelled) in one transaction; new columns `return_leg_json` / `return_of_tracking`; public page links both ways; `applyReturnToOrigin` removed from planningEngine. Verified: 15 API checks incl. 401/400/404/409, public lookup of the return's piece label, return from the admin control modal on a DB created before the migration. |
 | 2026-09-28 | 1.10 / 1.11 | Reference IDs via `src/shared/references.ts` (SDL-SL / SDL-TKT / SDL-INV + 6 digits; server default seal too; invoice auth ref stable per document; support ticket no longer re-rolls on render). Demo data rewritten from `src/shared/demoData.ts` (4 worldwide shipments, 2 quotes, 1 ocean BOL; Demo names, example.com, no phones). "Super Admin" → "Administrator" (UI + new records), "SDL Operations Centre" public facility, "SDL Intake Desk" default sender, Tacoma presets and personal-demo comments removed, US-only nearest-metro labels capped. `npm test` 13/13. Verified on a fresh DB with SEED_DEMO_DATA=true passed per process (`.env` unchanged, flag stays off): 10 API checks, all four demo IDs tracked in the browser with no old strings, admin shows Administrator, 0 page errors. |
 | 2026-09-28 | 1.12 | Phase 1 sweep (REBRAND_MAP §7) on source and a fresh build. Last 35 "Duolingo Express" strings in 9 public pages now read from `brand.ts` (name only, no new copy; the invented testimonial no longer names a brand, pending 3.14). localStorage keys `dxp_*` → `sdl_*` (recent tracking, admin draft, live stream: each resets once). Old brand removed from two comments (auth.ts, db.ts). Remaining hits are all in the Allowed table (legacy settings migration in db.ts, negative tests, docs, binary false positives, local WAL). `npm run build` passes, `npm test` 13/13. |
+| 2026-09-28 | 2.1 / 2.4 | Global gateway network: `src/data/gateways.ts` (18 gateways + 15 lanes from CONTENT §9) drives HomeNetworkMap, FacilityNetworkMap and LocationsPage. World view, great-circle lanes split at the antimeridian (`src/utils/greatCircle.ts`), live local time per gateway (`useNow`), Home section uses CONTENT §2.7 copy/stats (invented hub metrics removed). Invented facility phones, addresses and hours removed; "Contact this gateway" opens Contact with the gateway pre-selected. `USJourneyMap` → `JourneyMap` (component, CSS, import), its interstate/highway wording removed. Verified: build passes; headless Chrome at 375px and 1440px on Home, Locations and Contact pre-fill, no console errors, no horizontal overflow. |
 ---
 
 ## System notes (codebase walkthrough, updated 2026-09-26 for commit `6b8185f`)

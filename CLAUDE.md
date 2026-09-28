@@ -79,7 +79,7 @@ Local admin: `http://localhost:3000/#/admin`. Env vars: see `.env.example` and `
 
 ```
 src/pages/        Public pages (Home, Track, TrackResult, Services, Quote, Ship, About, Contact, Help, Legal, Locations, PublicQuoteResult)
-src/components/   Header, Footer, maps (HomeNetworkMap, FacilityNetworkMap, USJourneyMap), ShipmentTimeline, Barcode, etc.
+src/components/   Header, Footer, maps (HomeNetworkMap, FacilityNetworkMap, JourneyMap), ShipmentTimeline, Barcode, etc.
 src/admin/        Admin console (dashboard, create shipment, tracking events, documents, quotes, settings)
 src/services/     api.ts, geocodingService.ts, routingEngine.ts, planningEngine.ts, simulationEngine.ts
 src/data/         mockShipments.ts (demo data)

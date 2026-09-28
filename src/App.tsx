@@ -124,6 +124,7 @@ function MainAppContent() {
   const [notFoundQuery, setNotFoundQuery] = useState<string | null>(null);
   const [preselectedService, setPreselectedService] = useState<string>('Priority');
   const [legalSection, setLegalSection] = useState<string>('privacy');
+  const [contactGateway, setContactGateway] = useState<string>('');
   const [adminAuthChecked, setAdminAuthChecked] = useState(false);
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
   const [isTrackSearching, setIsTrackSearching] = useState(false);
@@ -247,6 +248,10 @@ function MainAppContent() {
     }
     if (page === 'legal' && param) {
       setLegalSection(param);
+    }
+    if (page === 'contact') {
+      // Gateway code from "Contact this gateway"; plain Contact links clear it.
+      setContactGateway(param || '');
     }
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -442,7 +447,7 @@ function MainAppContent() {
         )}
 
         {currentPage === 'contact' && (
-          <ContactPage onNavigate={handleNavigate} />
+          <ContactPage key={contactGateway} onNavigate={handleNavigate} initialGateway={contactGateway} />
         )}
 
         {currentPage === 'legal' && (

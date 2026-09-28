@@ -40,6 +40,8 @@ import {
 } from 'lucide-react';
 import { Barcode } from '../components/Barcode';
 import { HomeNetworkMap } from '../components/HomeNetworkMap';
+import { GATEWAYS, getGateway, getLanePartners, formatGatewayTime } from '../data/gateways';
+import { useNow } from '../utils/useNow';
 import { CLIENT_LOGOS } from '../components/ClientLogos';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
@@ -74,8 +76,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Active Gateway Hub State
-  const [activeHub, setActiveHub] = useState<'JFK' | 'ORD' | 'DFW' | 'DEN' | 'LAX'>('ORD');
+  // Global network map: selected gateway
+  const [activeGatewayCode, setActiveGatewayCode] = useState('LOS');
+  const activeGateway = getGateway(activeGatewayCode) ?? GATEWAYS[0];
+  const now = useNow();
+  const activeGatewayTime = formatGatewayTime(activeGateway.timeZone, now);
+  const activeGatewayLanes = getLanePartners(activeGateway.code).map((code) => getGateway(code)?.city ?? code);
 
   // Mini Rate Calculation
   const calculateRate = () => {
@@ -829,25 +835,27 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
       </section>
 
       {/* =========================================================================
-          7. REGIONAL GATEWAY HUBS & U.S. TRADE CORRIDORS MAP (INTERACTIVE RADAR)
+          7. GLOBAL NETWORK MAP (CONTENT.md §2.7)
           ========================================================================= */}
       <section className="corp-hubs-map-section">
         <div className="sdl-container-wide">
           <div className="hubs-map-header">
             <div>
-              <span className="section-eyebrow text-accent">NATIONWIDE INTERMODAL HUBS</span>
-              <h2>Active U.S. Trade Gateways & Sort Facilities</h2>
+              <span className="section-eyebrow text-accent">GLOBAL NETWORK</span>
+              <h2>Connected across the world's key trade lanes</h2>
             </div>
-            <div className="hubs-selector-pills">
-              {(['ORD', 'JFK', 'DFW', 'DEN', 'LAX'] as const).map((hubCode) => (
+            <div className="hubs-selector-pills" role="group" aria-label="Select a gateway">
+              {GATEWAYS.map((gw) => (
                 <button
-                  key={hubCode}
+                  key={gw.code}
                   type="button"
-                  className={`hub-pill-btn ${activeHub === hubCode ? 'active' : ''}`}
-                  onClick={() => setActiveHub(hubCode)}
+                  className={`hub-pill-btn ${activeGatewayCode === gw.code ? 'active' : ''}`}
+                  onClick={() => setActiveGatewayCode(gw.code)}
+                  aria-pressed={activeGatewayCode === gw.code}
+                  title={`${gw.city}, ${gw.country}`}
                 >
                   <MapPin size={13} />
-                  <span>{hubCode} Hub</span>
+                  <span>{gw.code}</span>
                 </button>
               ))}
             </div>
@@ -857,51 +865,48 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <div className="hub-info-card">
               <div className="hub-status-strip">
                 <span className="hub-dot-pulse" />
-                <strong>
-                  {activeHub === 'ORD' && 'Chicago Regional Gateway (ORD-03)'}
-                  {activeHub === 'JFK' && 'New York International Terminal (JFK-01)'}
-                  {activeHub === 'DFW' && 'Dallas Intermodal Gateway (DFW-04)'}
-                  {activeHub === 'DEN' && 'Denver Mountain Regional Hub (DEN-05)'}
-                  {activeHub === 'LAX' && 'Los Angeles Pacific Gateway (LAX-06)'}
-                </strong>
-                <span className="status-badge-live">ONLINE & SORTING</span>
+                <strong>{activeGateway.city}, {activeGateway.country} ({activeGateway.code})</strong>
               </div>
 
               <div className="hub-metrics-grid-2x2">
                 <div className="hm-box">
-                  <small>DAILY LINEHAUL DEPARTURES</small>
-                  <strong>142 Trucks/Day</strong>
+                  <small>MODES</small>
+                  <strong>{activeGateway.modes.join(' · ')}</strong>
                 </div>
                 <div className="hm-box">
-                  <small>SORT CAPACITY</small>
-                  <strong>48,000 Pcs/Hour</strong>
+                  <small>LOCAL TIME</small>
+                  <strong>{activeGatewayTime.time}{activeGatewayTime.offset && <span className="hm-offset"> {activeGatewayTime.offset}</span>}</strong>
                 </div>
-                <div className="hm-box">
-                  <small>AVERAGE DWELL TIME</small>
-                  <strong>1.4 Hours</strong>
-                </div>
-                <div className="hm-box">
-                  <small>ON-TIME DISPATCH</small>
-                  <strong className="text-emerald">99.6%</strong>
-                </div>
+                {activeGatewayLanes.length > 0 && (
+                  <div className="hm-box hm-box-wide">
+                    <small>DIRECT TRADE LANES</small>
+                    <strong>{activeGatewayLanes.join(' · ')}</strong>
+                  </div>
+                )}
               </div>
 
               <p className="hub-description-text">
-                Primary consolidation point connecting eastern manufacturing corridors with Midwest and Western interstate trade arteries. Equipped with automated high-speed linear laser sorting and climate-controlled cross-dock bays.
+                Our gateways link Africa, Europe, the Middle East, Asia and the Americas, so your shipment always has a direct, well-travelled route.
               </p>
+
+              <div className="network-side-stats">
+                <div><strong>5</strong><small>Continents served</small></div>
+                <div><strong>Air · Ocean · Road</strong><small>Modes connected</small></div>
+                <div><strong>24/7</strong><small>Operations desk</small></div>
+              </div>
 
               <button
                 type="button"
                 className="btn-why-readmore"
-                onClick={() => onNavigate('track')}
+                onClick={() => onNavigate('locations')}
               >
-                <span>Inspect Active Corridors</span>
+                <span>View our network</span>
                 <ArrowRight size={14} />
               </button>
             </div>
 
             {/* Interactive Leaflet Gateway Map */}
-            <HomeNetworkMap activeHub={activeHub} onSelectHub={(hub) => setActiveHub(hub)} />
+            <HomeNetworkMap activeCode={activeGatewayCode} onSelectGateway={setActiveGatewayCode} />
           </div>
         </div>
       </section>

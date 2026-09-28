@@ -19,13 +19,16 @@ import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { LEGAL_NAME } from '../config/brand';
 import { generateReference } from '../shared/references';
+import { GATEWAYS, getGateway } from '../data/gateways';
 import './ContactPage.css';
 
 interface ContactPageProps {
   onNavigate?: (page: string) => void;
+  /** Gateway code pre-filled by "Contact this gateway" on the Locations page. */
+  initialGateway?: string;
 }
 
-export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
+export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGateway = '' }) => {
   const { settings } = useAdminData();
   // Empty phone/address/regulatory values hide their element (no placeholders).
   const { phone: supportPhone, email: dispatchEmail, address: headquartersAddress, regulatoryLine: dotNumber } = useCompanyContact();
@@ -36,10 +39,13 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
   const [subject, setSubject] = useState('General Operations');
   const [priority, setPriority] = useState<'routine' | 'urgent' | 'critical'>('routine');
   const [tracking, setTracking] = useState('');
+  const [gatewayCode, setGatewayCode] = useState(getGateway(initialGateway) ? initialGateway : '');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+
+  const selectedGateway = getGateway(gatewayCode);
 
   // Accordion open states
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -66,6 +72,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
     setSubject('General Operations');
     setPriority('routine');
     setTracking('');
+    setGatewayCode('');
     setMessage('');
     setSubmitted(false);
     setFormError(null);
@@ -143,7 +150,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   <span className="tkt-label">OFFICIAL INQUIRY REFERENCE</span>
                   <span className="tkt-id font-mono">{ticketId}</span>
                   <p>
-                    Thank you, <strong>{name}</strong>. Your inquiry regarding <strong>{subject}</strong> has been logged into our central dispatch queue.
+                    Thank you, <strong>{name}</strong>. Your inquiry regarding <strong>{subject}</strong>{selectedGateway && <> for the <strong>{selectedGateway.city} ({selectedGateway.code})</strong> gateway</>} has been logged into our central dispatch queue.
                   </p>
                   <div className="tkt-details-row">
                     <span>Priority Status: <strong className={`prio-tag ${priority}`}>{priority.toUpperCase()}</strong></span>
@@ -286,6 +293,21 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     <option value="Vehicle Transport">Auto & Vehicle Transport Dispatch</option>
                     <option value="Secure Vault">Time-Critical Secure Vault Inquiries</option>
                     <option value="Billing & Claims">Billing Invoicing & Proof of Delivery</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="contact-gateway">Gateway (Optional)</label>
+                  <select
+                    id="contact-gateway"
+                    value={gatewayCode}
+                    onChange={(e) => setGatewayCode(e.target.value)}
+                    className="sdl-input"
+                  >
+                    <option value="">No specific gateway</option>
+                    {GATEWAYS.map((gw) => (
+                      <option key={gw.code} value={gw.code}>{gw.city}, {gw.country} ({gw.code})</option>
+                    ))}
                   </select>
                 </div>
 

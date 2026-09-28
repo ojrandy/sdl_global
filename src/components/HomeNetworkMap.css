@@ -7,6 +7,8 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
   background: var(--sdl-ink-950);
+  /* Keep Leaflet's pane/control z-indexes from painting over the sticky header */
+  isolation: isolate;
 }
 
 .home-leaflet-map-container {
@@ -115,15 +117,57 @@
 }
 
 .map-overlay-badge .live-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   background: #10b981;
+  border: 1.5px solid var(--sdl-white);
   border-radius: 50%;
-  box-shadow: 0 0 6px #10b981;
+  margin-left: 0.25rem;
+}
+
+.map-overlay-badge .legend-gateway-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--sdl-accent-500);
+  border: 1.5px solid var(--sdl-white);
+  border-radius: 50%;
+}
+
+.map-overlay-badge .legend-lane-dash {
+  width: 16px;
+  border-top: 2px dashed var(--sdl-accent-500);
+  margin-left: 0.25rem;
+}
+
+/* At world zoom only the selected gateway keeps its code label */
+.labels-compact .hub-marker-beacon:not(.active-beacon) .hub-marker-label {
+  display: none;
+}
+
+.labels-compact .hub-marker-ping {
+  width: 22px;
+  height: 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-corridor-line,
+  .hub-marker-ping {
+    animation: none;
+  }
 }
 
 @media (max-width: 768px) {
   .home-network-map-wrapper {
     height: 300px;
+  }
+
+  /* Top-left on small screens so it clears the bottom-right zoom control */
+  .map-overlay-badge {
+    left: 0.5rem;
+    top: 0.5rem;
+    bottom: auto;
+    font-size: 0.625rem;
+    padding: 0.3rem 0.5rem;
+    gap: 0.35rem;
   }
 }

@@ -1,54 +1,62 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { destroyMap } from '../utils/leaflet';
+import { destroyMap, fitWorldView } from '../utils/leaflet';
+import { greatCircleSegments } from '../utils/greatCircle';
+import { GATEWAYS, TRADE_LANES, getGateway } from '../data/gateways';
 import 'leaflet/dist/leaflet.css';
 import './HomeNetworkMap.css';
 
-interface HubData {
-  code: 'ORD' | 'JFK' | 'DFW' | 'DEN' | 'LAX';
-  name: string;
-  terminal: string;
-  lat: number;
-  lng: number;
-  status: string;
-  departures: string;
-}
-
-const HUBS: HubData[] = [
-  { code: 'JFK', name: 'New York JFK', terminal: 'JFK International Gateway (JFK-01)', lat: 40.6413, lng: -73.7781, status: 'ONLINE', departures: '128 Linehauls/Day' },
-  { code: 'ORD', name: 'Chicago ORD', terminal: 'Midwest Sortation Gateway (ORD-03)', lat: 41.9742, lng: -87.9073, status: 'ONLINE', departures: '142 Linehauls/Day' },
-  { code: 'DFW', name: 'Dallas DFW', terminal: 'Southwest Intermodal Gateway (DFW-04)', lat: 32.8998, lng: -97.0403, status: 'ONLINE', departures: '98 Linehauls/Day' },
-  { code: 'DEN', name: 'Denver DEN', terminal: 'Mountain Regional Hub (DEN-05)', lat: 39.8561, lng: -104.6737, status: 'ONLINE', departures: '76 Linehauls/Day' },
-  { code: 'LAX', name: 'Los Angeles LAX', terminal: 'Pacific Coast Gateway (LAX-06)', lat: 33.9416, lng: -118.4085, status: 'ONLINE', departures: '114 Linehauls/Day' },
-];
-
 interface HomeNetworkMapProps {
-  activeHub: 'ORD' | 'JFK' | 'DFW' | 'DEN' | 'LAX';
-  onSelectHub: (hub: 'ORD' | 'JFK' | 'DFW' | 'DEN' | 'LAX') => void;
+  activeCode: string;
+  onSelectGateway: (code: string) => void;
 }
 
-export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeHub, onSelectHub }) => {
+// Lane used for the "Live shipment (demo)" marker.
+const DEMO_LANE: [string, string] = ['LOS', 'LHR'];
+// Below this zoom only the selected gateway keeps its code label (labels overlap in Europe).
+const LABEL_ZOOM = 3;
+
+const gatewayIcon = (code: string, isSelected: boolean) =>
+  L.divIcon({
+    className: 'hub-leaflet-marker-wrap',
+    html: `
+      <div class="hub-marker-beacon ${isSelected ? 'active-beacon' : ''}">
+        <div class="hub-marker-ping"></div>
+        <div class="hub-marker-core"></div>
+        <div class="hub-marker-label font-mono">${code}</div>
+      </div>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
+  });
+
+export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeCode, onSelectGateway }) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<{ [key: string]: L.Marker }>({});
+  const markersRef = useRef<{ [code: string]: L.Marker }>({});
+  const lastCodeRef = useRef(activeCode);
+  const onSelectRef = useRef(onSelectGateway);
+  onSelectRef.current = onSelectGateway;
 
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Initialize map centered over Continental US
     const map = L.map(mapContainerRef.current, {
-      center: [39.5, -98.35],
-      zoom: 4,
-      minZoom: 3,
+      center: [20, 15],
+      zoom: 1,
+      minZoom: 0,
       maxZoom: 7,
+      zoomSnap: 0.25,
       zoomControl: false,
       scrollWheelZoom: false,
-      attributionControl: false
+      attributionControl: false,
+      worldCopyJump: true
     });
 
     // Esri's ArcGIS Online basemap tiles: no API key required, and unlike raw
     // tile.openstreetmap.org (which actively throttles/blocks this kind of client-side
-    // production traffic — see FacilityNetworkMap.tsx and USJourneyMap.tsx, already on
+    // production traffic — see FacilityNetworkMap.tsx and JourneyMap.tsx, already on
     // ArcGIS for the same reason), these are meant for exactly this kind of usage.
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
@@ -58,97 +66,99 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeHub, onSel
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Draw connecting corridor routes
-    const routes: [number, number][][] = [
-      [[40.6413, -73.7781], [41.9742, -87.9073]], // JFK - ORD
-      [[41.9742, -87.9073], [32.8998, -97.0403]], // ORD - DFW
-      [[41.9742, -87.9073], [39.8561, -104.6737]], // ORD - DEN
-      [[39.8561, -104.6737], [33.9416, -118.4085]], // DEN - LAX
-      [[32.8998, -97.0403], [33.9416, -118.4085]], // DFW - LAX
-    ];
-
-    routes.forEach((route) => {
-      L.polyline(route, {
+    // Trade lanes as great-circle arcs
+    TRADE_LANES.forEach(([from, to]) => {
+      const a = getGateway(from);
+      const b = getGateway(to);
+      if (!a || !b) return;
+      L.polyline(greatCircleSegments([a.lat, a.lng], [b.lat, b.lng]), {
         color: '#D3070B',
-        weight: 3,
-        opacity: 0.65,
+        weight: 2,
+        opacity: 0.7,
         dashArray: '6, 8',
         className: 'animated-corridor-line'
       }).addTo(map);
     });
 
-    // Create markers for each hub
-    HUBS.forEach((hub) => {
-      const isSelected = hub.code === activeHub;
-
-      const customIcon = L.divIcon({
-        className: 'hub-leaflet-marker-wrap',
-        html: `
-          <div class="hub-marker-beacon ${isSelected ? 'active-beacon' : ''}">
-            <div class="hub-marker-ping"></div>
-            <div class="hub-marker-core"></div>
-            <div class="hub-marker-label font-mono">${hub.code}</div>
-          </div>
-        `,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-      });
-
-      const marker = L.marker([hub.lat, hub.lng], { icon: customIcon }).addTo(map);
-      
-      marker.on('click', () => {
-        onSelectHub(hub.code);
-      });
-
-      markersRef.current[hub.code] = marker;
+    GATEWAYS.forEach((gw) => {
+      const marker = L.marker([gw.lat, gw.lng], {
+        icon: gatewayIcon(gw.code, gw.code === activeCode),
+        title: `${gw.name}, ${gw.country}`,
+        keyboard: true
+      }).addTo(map);
+      marker.on('click', () => onSelectRef.current(gw.code));
+      markersRef.current[gw.code] = marker;
     });
+
+    // "Live shipment (demo)": a dot travelling along one lane
+    let demoTimer: number | undefined;
+    const demoFrom = getGateway(DEMO_LANE[0]);
+    const demoTo = getGateway(DEMO_LANE[1]);
+    if (demoFrom && demoTo) {
+      const path = greatCircleSegments([demoFrom.lat, demoFrom.lng], [demoTo.lat, demoTo.lng]).flat();
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      let step = Math.floor(path.length / 2);
+      const dot = L.circleMarker(path[step], {
+        radius: 5,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#10b981',
+        fillOpacity: 1,
+        interactive: false
+      }).addTo(map);
+      if (!reduceMotion) {
+        demoTimer = window.setInterval(() => {
+          step = (step + 1) % path.length;
+          dot.setLatLng(path[step]);
+        }, 120);
+      }
+    }
+
+    const syncLabelMode = () => {
+      wrapperRef.current?.classList.toggle('labels-compact', map.getZoom() < LABEL_ZOOM);
+    };
+    map.on('zoomend', syncLabelMode);
+
+    fitWorldView(map, L.latLngBounds(GATEWAYS.map((g) => [g.lat, g.lng] as [number, number])));
+    syncLabelMode();
 
     mapInstanceRef.current = map;
 
     return () => {
+      if (demoTimer !== undefined) window.clearInterval(demoTimer);
       destroyMap(map);
       mapInstanceRef.current = null;
+      markersRef.current = {};
     };
   }, []);
 
-  // Update map view and active marker when activeHub prop changes
+  // Restyle markers when the selection changes and fly to a newly picked gateway
+  // (the initial view stays on the whole network).
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
-    const targetHub = HUBS.find((h) => h.code === activeHub);
-    if (!targetHub) return;
+    const map = mapInstanceRef.current;
+    if (!map) return;
 
-    mapInstanceRef.current.flyTo([targetHub.lat, targetHub.lng], 5, {
-      duration: 1.2
+    GATEWAYS.forEach((gw) => {
+      const marker = markersRef.current[gw.code];
+      marker?.setIcon(gatewayIcon(gw.code, gw.code === activeCode));
+      marker?.setZIndexOffset(gw.code === activeCode ? 1000 : 0);
     });
 
-    // Update marker styling
-    HUBS.forEach((hub) => {
-      const marker = markersRef.current[hub.code];
-      if (marker) {
-        const isSelected = hub.code === activeHub;
-        const customIcon = L.divIcon({
-          className: 'hub-leaflet-marker-wrap',
-          html: `
-            <div class="hub-marker-beacon ${isSelected ? 'active-beacon' : ''}">
-              <div class="hub-marker-ping"></div>
-              <div class="hub-marker-core"></div>
-              <div class="hub-marker-label font-mono">${hub.code}</div>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 20]
-        });
-        marker.setIcon(customIcon);
-      }
-    });
-  }, [activeHub]);
+    if (lastCodeRef.current === activeCode) return;
+    lastCodeRef.current = activeCode;
+    const target = getGateway(activeCode);
+    if (target) {
+      map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), LABEL_ZOOM), { duration: 1.2 });
+    }
+  }, [activeCode]);
 
   return (
-    <div className="home-network-map-wrapper">
+    <div ref={wrapperRef} className="home-network-map-wrapper">
       <div ref={mapContainerRef} className="home-leaflet-map-container" />
-      <div className="map-overlay-badge font-mono">
-        <span className="live-dot" />
-        <span>50+ LIVE U.S. GATEWAYS CONNECTED</span>
+      <div className="map-overlay-badge font-mono" aria-hidden="true">
+        <span className="legend-gateway-dot" /> <span>Gateway</span>
+        <span className="legend-lane-dash" /> <span>Trade lane</span>
+        <span className="live-dot" /> <span>Live shipment (demo)</span>
       </div>
     </div>
   );

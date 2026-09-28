@@ -48,7 +48,7 @@ import {
 } from 'lucide-react';
 import { Shipment, TrackingEvent, RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { Barcode } from '../components/Barcode';
-import { USJourneyMap } from '../components/USJourneyMap';
+import { JourneyMap } from '../components/JourneyMap';
 import { COMPANY_SHORT, OPERATIONS_CENTRE } from '../config/brand';
 import { SupportModal } from '../components/SupportModal';
 import { calculateRouteGeometry } from '../services/routingEngine';
@@ -236,7 +236,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
 
   // Real coordinates for wherever the shipment's currentLocation actually points — an
   // admin-set facility or a live simulation tick, both now kept accurate (see the routing
-  // fixes above). USJourneyMap uses these to plot the vehicle marker for real instead of
+  // fixes above). JourneyMap uses these to plot the vehicle marker for real instead of
   // guessing a point from progress % alone.
   const currentLat = typeof liveShipment?.currentLocation === 'object'
     ? (liveShipment.currentLocation as any)?.lat
@@ -890,10 +890,10 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
         </section>
 
         {/* =========================================================================
-            2. FULL-WIDTH INTERACTIVE HIGHWAY ROUTE MAP
+            2. FULL-WIDTH INTERACTIVE ROUTE MAP
             ========================================================================= */}
         <section className="sdl-route-map-section">
-          <USJourneyMap
+          <JourneyMap
             checkpoints={routeCheckpoints}
             currentLocationText={currentLocationText}
             currentLat={currentLat}

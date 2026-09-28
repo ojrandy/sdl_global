@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { calculateRouteGeometry, calculateEstimatedPosition, fetchLiveRoadRoute, findNearestPointOnPolyline } from '../services/routingEngine';
 import { Layers, ZoomIn, ZoomOut, Compass, ChevronDown, AlertTriangle, ShieldAlert, Pause, Truck, ArrowRight } from 'lucide-react';
-import './USJourneyMap.css';
+import './JourneyMap.css';
 
 // 1x1 transparent pixel — used as the errorTileUrl so a tile that fails to load
 // (slow/blocked network, provider hiccup) renders invisibly instead of a hard
@@ -13,7 +13,7 @@ import './USJourneyMap.css';
 const TRANSPARENT_TILE =
   'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
 
-interface USJourneyMapProps {
+interface JourneyMapProps {
   checkpoints?: RouteCheckpoint[];
   currentLocationText?: string;
   /** Real coordinates for the shipment's current location, when known (e.g. an admin-set
@@ -41,12 +41,12 @@ interface USJourneyMapProps {
   showLegend?: boolean;
 }
 
-export const USJourneyMap: React.FC<USJourneyMapProps> = ({
+export const JourneyMap: React.FC<JourneyMapProps> = ({
   checkpoints = [],
   currentLocationText = 'Chicago, IL',
   currentLat,
   currentLng,
-  lastEventDescription = 'Shipment in transit along verified interstate corridor.',
+  lastEventDescription = 'Shipment in transit on its planned route.',
   totalDistance = '2,790 miles',
   transitTime = '24 Hours',
   progressPercent = 15,
@@ -362,7 +362,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
       }
     }, 150);
 
-    // Asynchronously upgrade to actual US Interstate Highway road geometry
+    // Asynchronously upgrade to real road geometry
     let isCancelled = false;
     fetchLiveRoadRoute(
       { lat: originPt.lat, lng: originPt.lng, name: originPt.name },
@@ -451,7 +451,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
       remainingLineRef.current.setLatLngs(remainingSegment);
     }
 
-    // 3. Smoothly glide vehicle marker position along highway coordinates
+    // 3. Smoothly glide vehicle marker position along the route coordinates
     const estPos = vehiclePos;
     const roleText = (clampedProgress >= 100 || shipmentStatus === 'DELIVERED')
       ? 'CONSIGNMENT DELIVERED'
@@ -630,7 +630,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
         {!delayNotice?.hasDelay && isDelayed && (
           <div className="map-floating-alert delayed animate-fade-in">
             <AlertTriangle size={15} />
-            <span>Transit Delay: Highway linehaul schedule extended.</span>
+            <span>Transit delay: schedule extended.</span>
           </div>
         )}
       </div>
@@ -640,7 +640,7 @@ export const USJourneyMap: React.FC<USJourneyMapProps> = ({
         <div className="footer-status-left">
           <Compass size={16} className="text-blue" />
           <span>
-            <strong>Estimated Position (Schedule-based):</strong> {lastEventDescription || `Progressing along scheduled interstate corridor near ${currentLocationText}`}
+            <strong>Estimated Position (Schedule-based):</strong> {lastEventDescription || `Progressing along the planned route near ${currentLocationText}`}
           </span>
         </div>
         {onScrollToTimeline && (
