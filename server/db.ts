@@ -266,6 +266,23 @@ export function initDatabase() {
     );
   `);
 
+  // 7. Contact Messages Table (public Contact page form; read in the admin Messages inbox)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id TEXT PRIMARY KEY,
+      created_at_ts INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'NEW',
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      subject TEXT NOT NULL,
+      priority TEXT NOT NULL,
+      tracking_number TEXT,
+      gateway_code TEXT,
+      message TEXT NOT NULL
+    );
+  `);
+
   // Safe dynamic migrations for existing databases. Must run after every CREATE TABLE above
   // (shipments through settings) — these ALTER statements target quote_requests, documents
   // and tracking_events too, and running them any earlier throws "no such table" on a

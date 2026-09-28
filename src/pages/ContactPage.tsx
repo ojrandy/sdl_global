@@ -18,7 +18,7 @@ import {
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { LEGAL_NAME } from '../config/brand';
-import { generateReference } from '../shared/references';
+import { api } from '../services/api';
 import { GATEWAYS, getGateway } from '../data/gateways';
 import './ContactPage.css';
 
@@ -44,14 +44,16 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedGateway = getGateway(gatewayCode);
 
   // Accordion open states
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setFormError(null);
 
     if (!name.trim() || !email.trim() || !message.trim()) {
@@ -59,10 +61,27 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
       return;
     }
 
-    const generatedId = generateReference('ticket');
-    setTicketId(generatedId);
-    setSubmitted(true);
-    window.scrollTo({ top: 300, behavior: 'smooth' });
+    // The server stores the message and issues the SDL-TKT reference.
+    setSubmitting(true);
+    try {
+      const saved = await api.submitContactMessage({
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        subject,
+        priority,
+        trackingNumber: tracking.trim() || undefined,
+        gatewayCode: gatewayCode || undefined,
+        message: message.trim()
+      });
+      setTicketId(saved.id);
+      setSubmitted(true);
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    } catch (err: any) {
+      setFormError(`We couldn't send your message: ${err?.message || 'please try again'}. You can also email us at ${dispatchEmail}.`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -323,9 +342,9 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
                   />
                 </div>
 
-                <button type="submit" className="btn-corp-primary form-submit-btn">
+                <button type="submit" className="btn-corp-primary form-submit-btn" disabled={submitting} aria-busy={submitting}>
                   <Send size={16} />
-                  <span>Dispatch Ticket to Operations Desk</span>
+                  <span>{submitting ? 'Sending…' : 'Dispatch Ticket to Operations Desk'}</span>
                 </button>
               </form>
             )}

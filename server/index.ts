@@ -14,6 +14,7 @@ import { settingsRouter } from './routes/settings.js';
 import { trackRouter } from './routes/track.js';
 import { statsRouter } from './routes/stats.js';
 import { authRouter } from './routes/auth.js';
+import { messagesRouter } from './routes/messages.js';
 import { requireAdminAuth, SESSION_COOKIE } from './middleware/auth.js';
 
 dotenv.config(); // reload trigger for tsx watch after .env changes
@@ -174,6 +175,8 @@ if (ADMIN_PROXY_TARGET) {
   // toggle's value). PUT is gated per-route inside settings.ts instead.
   app.use('/api/settings', settingsRouter);
   app.use('/api/track', trackRouter);
+  // Contact form: POST is public (rate-limited); list and status changes are gated per-route.
+  app.use('/api/messages', messagesRouter);
   app.use('/api/stats', requireAdminAuth, statsRouter);
 
   // 404 for anything under /api that didn't match a route above.

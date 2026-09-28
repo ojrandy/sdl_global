@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AdminLayout, AdminViewType } from './AdminLayout';
 import { OperationsCenter } from './pages/OperationsCenter';
 import { QuoteRequestsView } from './pages/QuoteRequestsView';
@@ -7,6 +7,9 @@ import { CreateShipmentView } from './pages/CreateShipmentView';
 import { TrackingEventsView } from './pages/TrackingEventsView';
 import { DocumentCenterView } from './pages/DocumentCenterView';
 import { SettingsView } from './pages/SettingsView';
+import { MessagesView } from './pages/MessagesView';
+import { api } from '../services/api';
+import type { ContactMessage } from '../types/admin';
 import { ShipmentControlModal } from './components/ShipmentControlModal';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Shipment, ShipmentStatus } from '../types/shipment';
@@ -32,6 +35,18 @@ export const AdminApp: React.FC<AdminAppProps> = ({ onNavigatePublic, onViewPubl
   const { shipments, updateShipmentStatus, updateShipmentDirect } = useAdminData();
   const [currentView, setCurrentView] = useState<AdminViewType>('operations-center');
   const [globalSearch, setGlobalSearch] = useState<string>('');
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
+
+  // Sidebar badge for unread Contact page messages, refreshed every minute.
+  const handleMessagesChanged = useCallback((messages: ContactMessage[]) => {
+    setNewMessagesCount(messages.filter((m) => m.status === 'NEW').length);
+  }, []);
+  useEffect(() => {
+    const refresh = () => api.getContactMessages().then(handleMessagesChanged).catch(() => {});
+    refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => window.clearInterval(timer);
+  }, [handleMessagesChanged]);
 
   // 1-Click Operations Control Modal State — tracked by trackingNumber (not a frozen
   // snapshot) so the modal always reflects live progress/speed as the simulation ticks.
@@ -119,6 +134,7 @@ export const AdminApp: React.FC<AdminAppProps> = ({ onNavigatePublic, onViewPubl
       onNavigatePublic={onNavigatePublic}
       searchQuery={globalSearch}
       onSearchChange={setGlobalSearch}
+      newMessagesCount={newMessagesCount}
     >
       {/* Toast Alert */}
       {toastMessage && (
@@ -158,6 +174,11 @@ export const AdminApp: React.FC<AdminAppProps> = ({ onNavigatePublic, onViewPubl
         {/* QUOTE REQUESTS */}
         {currentView === 'quote-requests' && (
           <QuoteRequestsView />
+        )}
+
+        {/* CONTACT PAGE MESSAGES */}
+        {currentView === 'messages' && (
+          <MessagesView searchQuery={globalSearch} onMessagesChanged={handleMessagesChanged} />
         )}
 
         {/* TRACKING EVENTS & SCANNER */}

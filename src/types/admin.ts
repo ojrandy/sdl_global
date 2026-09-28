@@ -195,3 +195,21 @@ export interface AdminSettings {
   autoGenLabel?: boolean;
   autoGenReceipt?: boolean;
 }
+
+export type ContactMessageStatus = 'NEW' | 'READ' | 'RESOLVED';
+
+// A message sent from the public Contact page (server/routes/messages.ts).
+export interface ContactMessage {
+  id: string;
+  createdAt: string;
+  status: ContactMessageStatus;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  priority: 'routine' | 'urgent' | 'critical';
+  trackingNumber?: string;
+  gatewayCode?: string;
+  gatewayLabel?: string;
+  message: string;
+}

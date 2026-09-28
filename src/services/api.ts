@@ -1,5 +1,5 @@
 import { Shipment, ShipmentStatus, TrackingEvent } from '../types/shipment';
-import { QuoteRequest, QuoteRequestPricing, QuoteRequestStatus, AdminSettings, AdminDocument, DocumentStatus } from '../types/admin';
+import { QuoteRequest, QuoteRequestPricing, QuoteRequestStatus, AdminSettings, AdminDocument, DocumentStatus, ContactMessage, ContactMessageStatus } from '../types/admin';
 
 const API_BASE = '/api';
 
@@ -305,6 +305,31 @@ export const api = {
       body: JSON.stringify(settings)
     });
     return handleResponse<AdminSettings>(res);
+  },
+
+  // Contact form (public submit) and the admin Messages inbox
+  async submitContactMessage(message: Pick<ContactMessage, 'name' | 'email' | 'phone' | 'subject' | 'priority' | 'trackingNumber' | 'gatewayCode' | 'message'>): Promise<ContactMessage> {
+    const res = await fetch(`${API_BASE}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+    return handleResponse<ContactMessage>(res);
+  },
+
+  async getContactMessages(): Promise<ContactMessage[]> {
+    const res = await fetch(`${API_BASE}/messages`, { credentials: 'include' });
+    return handleResponse<ContactMessage[]>(res);
+  },
+
+  async updateContactMessageStatus(id: string, status: ContactMessageStatus): Promise<ContactMessage> {
+    const res = await fetch(`${API_BASE}/messages/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ status })
+    });
+    return handleResponse<ContactMessage>(res);
   },
 
   // Dashboard Stats

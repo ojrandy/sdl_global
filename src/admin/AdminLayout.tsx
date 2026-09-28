@@ -23,7 +23,8 @@ import {
   Activity,
   Layers,
   Sparkles,
-  LogOut
+  LogOut,
+  Inbox
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { api } from '../services/api';
@@ -36,6 +37,7 @@ export type AdminViewType =
   | 'create-shipment'
   | 'tracking-events'
   | 'quote-requests'
+  | 'messages'
   | 'document-center'
   | 'settings';
 
@@ -45,6 +47,7 @@ interface AdminLayoutProps {
   onNavigatePublic: (page: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  newMessagesCount?: number;
   children: React.ReactNode;
 }
 
@@ -74,6 +77,11 @@ const VIEW_METADATA: Record<AdminViewType, { title: string; category: string; de
     category: 'Commercial Tariffs',
     description: 'Review and certify customer quote requests.'
   },
+  'messages': {
+    title: 'Messages',
+    category: 'Commercial Tariffs',
+    description: 'Messages sent from the Contact page.'
+  },
   'document-center': {
     title: 'Documents',
     category: 'Compliance & Governance',
@@ -92,6 +100,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   onNavigatePublic,
   searchQuery,
   onSearchChange,
+  newMessagesCount = 0,
   children
 }) => {
   const { notifications, markNotificationRead, quoteRequests, shipments } = useAdminData();
@@ -209,6 +218,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 <span className="nav-badge-amber font-mono">{pendingQuotesCount} NEW</span>
               ) : (
                 <span className="nav-count-badge muted font-mono">{quoteRequests.length}</span>
+              )}
+            </button>
+
+            {/* Messages (Contact page) */}
+            <button
+              className={`admin-nav-btn ${currentView === 'messages' ? 'active' : ''}`}
+              onClick={() => { onSelectView('messages'); setMobileSidebarOpen(false); }}
+            >
+              <div className="nav-btn-icon-wrap">
+                <Inbox size={18} />
+              </div>
+              <span className="nav-title">Messages</span>
+              {newMessagesCount > 0 && (
+                <span className="nav-badge-amber font-mono">{newMessagesCount} NEW</span>
               )}
             </button>
           </div>
