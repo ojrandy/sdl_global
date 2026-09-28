@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { seedDatabaseIfEmpty } from './seed.js';
-import { EMAIL, LEGAL_NAME } from '../src/config/brand.js';
+import { COMPANY, DOMAIN, EMAIL, LEGAL_NAME } from '../src/config/brand.js';
 
 // Placeholder contact details the pre-rebrand seed wrote into settings, and what replaces them.
 const OLD_BRAND_SETTINGS: Record<string, { old: string; next: string }> = {
@@ -12,6 +12,40 @@ const OLD_BRAND_SETTINGS: Record<string, { old: string; next: string }> = {
   headquartersAddress: { old: 'JFK International Cargo Terminal, Jamaica, NY 11430', next: '' },
   dotNumber: { old: 'USDOT #3894210 · MC-892401', next: '' },
 };
+
+// Old-brand wording that rows written before the SDL rebrand still carry (tracking-event
+// descriptions, BOL carrier names, settings text). Most specific first, so a legal name
+// becomes the legal name rather than "SDL Global Logistics LLC".
+const OLD_BRAND_TEXT: [RegExp, string][] = [
+  [/Duolingo Express(?:\s+\w+){0,4}\s+(?:LLC|Inc|Ltd)\b\.?/gi, LEGAL_NAME],
+  [/dispatch@duolingoexpress\.com/gi, EMAIL],
+  [/[\w.+-]*@duolingoexpress\.com/gi, EMAIL],
+  [/duolingoexpress\.com/gi, DOMAIN],
+  [/Duolingo Express Logistics/gi, COMPANY],
+  [/Duolingo Express/gi, COMPANY],
+  [/Duolingo Logistics/gi, COMPANY],
+  [/Duolingo/gi, COMPANY],
+];
+
+// Rewrites old-brand wording in every text column of every table. Runs at startup; rows
+// without the old brand are never touched, so after the first run it only reads.
+function replaceOldBrandText() {
+  const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'`).all() as { name: string }[];
+  for (const { name: table } of tables) {
+    const columns = (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string; type: string }[])
+      .filter((c) => c.type.toUpperCase() === 'TEXT');
+    for (const { name: column } of columns) {
+      const rows = db.prepare(`SELECT rowid AS rid, ${column} AS v FROM ${table} WHERE lower(${column}) LIKE '%duolingo%'`).all() as { rid: number; v: string }[];
+      if (rows.length === 0) continue;
+      const update = db.prepare(`UPDATE ${table} SET ${column} = ? WHERE rowid = ?`);
+      for (const row of rows) {
+        const next = OLD_BRAND_TEXT.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), row.v);
+        update.run(next, row.rid);
+      }
+      console.log(`Rebrand: replaced old brand text in ${rows.length} ${table}.${column} value(s).`);
+    }
+  }
+}
 
 // DB_PATH lets a real deployment point the database file somewhere OUTSIDE the directory
 // git/the deploy process manages, e.g. a persistent storage path a host provides separately
@@ -350,6 +384,8 @@ export function initDatabase() {
       db.prepare(`UPDATE settings SET value_json = ? WHERE key = ?`).run(JSON.stringify(existing), 'general');
     }
   }
+
+  replaceOldBrandText();
 
   // Demo/sample data (the SDL demo shipments, sample quotes, a sample
   // document) is opt-in only, via SEED_DEMO_DATA=true — never automatic. This app is in real
