@@ -3,7 +3,6 @@ import { db } from '../db.js';
 import { requireAdminAuth } from '../middleware/auth.js';
 import { publicWriteLimiter } from '../middleware/rateLimit.js';
 import { ADMIN_ROLE_LABEL, LEGAL_NAME } from '../../src/config/brand.js';
-import { generateReference } from '../../src/shared/references.js';
 
 export const documentsRouter = Router();
 
@@ -156,30 +155,32 @@ documentsRouter.post('/generate', publicWriteLimiter, (req: Request, res: Respon
       d.senderName || 'Shipper',
       d.senderCompany || null,
       d.senderAddress || null,
-      d.senderCity || 'New York',
-      d.senderState || 'NY',
+      // Only real values: empty strings (NOT NULL columns) or null, never a placeholder
+      // city, size, trailer or seal number that would then print on the document.
+      d.senderCity || '',
+      d.senderState || '',
       d.senderZip || null,
       d.senderPhone || null,
       d.senderEmail || null,
       d.recipientName || 'Consignee',
       d.recipientCompany || null,
       d.recipientAddress || null,
-      d.recipientCity || 'Los Angeles',
-      d.recipientState || 'CA',
+      d.recipientCity || '',
+      d.recipientState || '',
       d.recipientZip || null,
       d.recipientPhone || null,
       d.recipientEmail || null,
-      d.cargoDescription || 'Consignment Cargo',
+      d.cargoDescription || '',
       d.shipmentType || 'Parcel',
-      d.service || 'Standard',
-      d.weightLbs || 10,
+      d.service || '',
+      d.weightLbs || 0,
       d.pieces || 1,
-      d.dimensions || '72 × 24 × 18 in',
+      d.dimensions || null,
       d.declaredValue || 0,
       d.charges ? JSON.stringify(d.charges) : null,
       d.bolCarrier || LEGAL_NAME,
-      d.bolTrailerNumber || 'TR-4091-E',
-      d.bolSealNumber || generateReference('seal'),
+      d.bolTrailerNumber || null,
+      d.bolSealNumber || null,
       d.bolSpecialInstructions || null,
       d.insurerName || null,
       d.policyNumber || null,

@@ -38,10 +38,19 @@ import {
 import { useAdminData } from '../../context/AdminDataContext';
 import { AdminDocument, DocumentType, DocumentStatus } from '../../types/admin';
 import { Barcode } from '../../components/Barcode';
-import { COMPANY, COMPANY_SHORT, LEGAL_NAME, LOGO, LOGO_ALT } from '../../config/brand';
-import { generateReference, referenceFor } from '../../shared/references';
+import { COMPANY_SHORT, LEGAL_NAME } from '../../config/brand';
+import { referenceFor } from '../../shared/references';
 import './DocumentCenterView.css';
 import { formatWeightBoth } from '../../shared/units';
+import { useCurrency } from '../../utils/useCurrency';
+import { MoneyInput } from '../../components/forms/UnitControls';
+import {
+  DocumentHeaderBrand,
+  DocumentIdLine,
+  DocumentLegalFooter,
+  DocumentPouchLine,
+  documentTitle
+} from '../../components/DocumentBrand';
 
 interface DocumentCenterViewProps {
   onOpenShipmentDetail?: (trackingNumber: string) => void;
@@ -99,8 +108,41 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [genDocType, setGenDocType] = useState<DocumentType>('SHIPPING_LABEL');
   const [genShipmentTracking, setGenShipmentTracking] = useState<string>(shipments[0]?.trackingNumber || '');
-  const [genInsuredValue, setGenInsuredValue] = useState<string>('');
+  const [genInsuredValue, setGenInsuredValue] = useState<number | ''>('');
   const [genInsuredValueTouched, setGenInsuredValueTouched] = useState(false);
+  // Values only the admin knows: nothing is invented when they're left empty (canonical USD).
+  const [genBaseCharge, setGenBaseCharge] = useState<number | ''>('');
+  const [genOversizeFee, setGenOversizeFee] = useState<number | ''>('');
+  const [genSpecialFee, setGenSpecialFee] = useState<number | ''>('');
+  const [genPaymentStatus, setGenPaymentStatus] = useState<'PENDING' | 'PAID'>('PENDING');
+  const [genInsurerName, setGenInsurerName] = useState('');
+  const [genPolicyNumber, setGenPolicyNumber] = useState('');
+  const [genCoverageType, setGenCoverageType] = useState('');
+  const [genPremium, setGenPremium] = useState<number | ''>('');
+  const [genDeductible, setGenDeductible] = useState<number | ''>('');
+  const money = useCurrency();
+
+  // The shipment behind the open document: transport mode (for the §11 title) and countries.
+  const previewShipment = previewDoc ? shipments.find(s => s.trackingNumber === previewDoc.shipmentTracking) : undefined;
+  const previewTitle = previewDoc ? documentTitle(previewDoc.docType, previewShipment?.transportMode) : '';
+  const placeLine = (city?: string, state?: string, zip?: string, country?: string) =>
+    [[city, state].filter(Boolean).join(', '), zip, country].filter(Boolean).join(' ');
+  const senderPlace = (d: AdminDocument) => placeLine(d.senderCity, d.senderState, d.senderZip, previewShipment?.origin?.country);
+  const recipientPlace = (d: AdminDocument) => placeLine(d.recipientCity, d.recipientState, d.recipientZip, previewShipment?.destination?.country);
+  // Documents saved before 3.12 may hold placeholder values the old code invented; they are
+  // treated as empty so they never print (stored data is left untouched).
+  const INVENTED_VALUES = new Set([
+    'Meridian Marine & Cargo Underwriters',
+    'MCC-2026-778120',
+    'All-Risk Cargo Coverage — Institute Cargo Clauses (A)',
+    '72 × 24 × 18 in'
+  ]);
+  const real = (v?: string) => (v && !INVENTED_VALUES.has(v) ? v : '');
+  const dims = (d: AdminDocument) => real(d.dimensions) || '—';
+  // A seal is shown only when it is the tamper-evident seal recorded on the shipment itself
+  // (document shipments); older documents carry randomly generated numbers.
+  const realSeal = (d: AdminDocument) =>
+    d.bolSealNumber && previewShipment?.documentDetails?.sealNumber === d.bolSealNumber ? d.bolSealNumber : '';
 
   // Regenerate Modal State
   const [regenerateDocTarget, setRegenerateDocTarget] = useState<AdminDocument | null>(null);
@@ -172,7 +214,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
       case 'INVOICE':
         return {
           icon: <FileText size={16} className="text-indigo" />,
-          label: 'Invoice',
+          label: 'Commercial Invoice',
           badgeClass: 'badge-type-invoice'
         };
       case 'BOL':
@@ -196,15 +238,6 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     }
   };
 
-  // Helper: derive a real freight sort-zone tag from the recipient's own ZIP/state
-  // (freight carriers genuinely route by the leading ZIP digit) instead of a fixed placeholder
-  const getZoneTag = (doc: AdminDocument) => {
-    const zip = doc.recipientZip || '';
-    const region = zip.trim().charAt(0) || '0';
-    const state = doc.recipientState || '—';
-    return `ZONE ${region} · ${state}`;
-  };
-
   // Helper for Status Badge
   const renderStatusBadge = (status: DocumentStatus) => {
     switch (status) {
@@ -221,7 +254,18 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
 
   // Handlers
   const openGenerateModal = () => {
+    // Every document starts blank: charges or insurance details from the previous one must
+    // never carry over onto a different shipment's document.
     setGenInsuredValueTouched(false);
+    setGenBaseCharge('');
+    setGenOversizeFee('');
+    setGenSpecialFee('');
+    setGenPaymentStatus('PENDING');
+    setGenInsurerName('');
+    setGenPolicyNumber('');
+    setGenCoverageType('');
+    setGenPremium('');
+    setGenDeductible('');
     setShowGenerateModal(true);
   };
 
@@ -235,7 +279,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
   useEffect(() => {
     if (genInsuredValueTouched) return;
     const s = shipments.find(sh => sh.trackingNumber === genShipmentTracking);
-    setGenInsuredValue(s?.declaredValue ? String(s.declaredValue) : '1000');
+    setGenInsuredValue(s?.declaredValue ? s.declaredValue : '');
   }, [genShipmentTracking, shipments, genInsuredValueTouched]);
 
   // Close the actions menu on scroll/resize so it never lingers at a stale, disconnected position
@@ -386,87 +430,63 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     const selectedShipment = shipments.find(s => s.trackingNumber === genShipmentTracking) || shipments[0];
     if (!selectedShipment) return;
 
-    // Randomize per-document BOL equipment details so every generated BOL doesn't
-    // show the identical trailer/seal number and handling notes regardless of cargo.
-    const trailerLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    const bolTrailerNumber = `TR-${Math.floor(1000 + Math.random() * 9000)}-${trailerLetter}`;
-    const bolSealNumber = generateReference('seal');
-    const specialInstructionsPool = [
-      'Handle with care. Protect from moisture and extreme temperature.',
-      'Fragile contents. Do not stack additional freight on top of this shipment.',
-      'Keep upright at all times. This side up.',
-      'Liftgate required at destination. Call recipient 30 minutes prior to arrival.',
-      'Standard ground handling. No special accessorial requirements.',
-      'Non-stackable freight. Secure load to prevent shifting in transit.'
-    ];
-    const bolSpecialInstructions = specialInstructionsPool[Math.floor(Math.random() * specialInstructionsPool.length)];
-
-    // Insured value is admin-editable (defaults to the shipment's declared cargo value);
-    // premium and deductible are derived from it so they stay internally consistent.
+    // Only real values go on a document: the shipment's own data and what the admin entered
+    // in this form. Nothing is invented when a field is empty (it prints as "—" or is left out).
     const insuredValue = genDocType === 'INSURANCE'
-      ? Math.max(0, parseFloat(genInsuredValue) || 0)
-      : (selectedShipment.declaredValue || 850);
-    const premiumAmount = Math.max(25, Math.round(insuredValue * 0.0065 * 100) / 100);
-    const deductible = Math.max(250, Math.round(insuredValue * 0.02));
-
-    let title = 'Official Shipping Document';
-    if (genDocType === 'SHIPPING_LABEL') title = 'Commercial Master Shipping Label';
-    else if (genDocType === 'RECEIPT') title = 'Customer Shipment Receipt & Manifest';
-    else if (genDocType === 'INVOICE') title = 'Commercial Logistics Invoice';
-    else if (genDocType === 'BOL') title = 'Uniform Straight Bill of Lading (BOL)';
-    else if (genDocType === 'INSURANCE') title = 'Certificate of Cargo Insurance';
+      ? (genInsuredValue === '' ? 0 : Math.max(0, genInsuredValue))
+      : (selectedShipment.declaredValue || 0);
+    const amount = (v: number | '') => (v === '' ? 0 : v);
+    const baseAmount = amount(genBaseCharge);
+    const oversizeFee = amount(genOversizeFee);
+    const specialHandlingFee = amount(genSpecialFee);
+    const d = selectedShipment.dimensions;
 
     const newDoc = generateDocument({
       docType: genDocType,
-      title,
+      title: `${documentTitle(genDocType, selectedShipment.transportMode)} (${selectedShipment.trackingNumber})`,
       shipmentTracking: selectedShipment.trackingNumber,
       senderName: selectedShipment.sender.name,
       senderCompany: selectedShipment.sender.company || '',
-      senderAddress: selectedShipment.sender.addressLine || '350 5th Avenue',
+      senderAddress: selectedShipment.sender.addressLine || '',
       senderCity: selectedShipment.origin.city,
       senderState: selectedShipment.origin.state,
-      senderZip: selectedShipment.sender.postalCode || '10001',
-      senderPhone: selectedShipment.sender.phone || '(212) 555-0148',
+      senderZip: selectedShipment.sender.postalCode || '',
+      senderPhone: selectedShipment.sender.phone || '',
       senderEmail: selectedShipment.sender.email || '',
       recipientName: selectedShipment.recipient.name,
       recipientCompany: selectedShipment.recipient.company || '',
-      recipientAddress: selectedShipment.recipient.addressLine || '742 Evergreen Terrace',
+      recipientAddress: selectedShipment.recipient.addressLine || '',
       recipientCity: selectedShipment.destination.city,
       recipientState: selectedShipment.destination.state,
-      recipientZip: selectedShipment.recipient.postalCode || '90021',
-      recipientPhone: selectedShipment.recipient.phone || '(310) 555-0892',
+      recipientZip: selectedShipment.recipient.postalCode || '',
+      recipientPhone: selectedShipment.recipient.phone || '',
       recipientEmail: selectedShipment.recipient.email || '',
-      cargoDescription: selectedShipment.cargoDescription || 'Commercial Freight Cargo',
+      cargoDescription: selectedShipment.cargoDescription || '',
       shipmentType: selectedShipment.shipmentType || 'Parcel',
-      service: selectedShipment.service || 'Standard',
-      weightLbs: selectedShipment.totalWeightLbs || 45,
+      service: selectedShipment.service || '',
+      weightLbs: selectedShipment.totalWeightLbs || 0,
       pieces: selectedShipment.totalPieces || 1,
-      dimensions: selectedShipment.dimensions ? `${selectedShipment.dimensions.length} × ${selectedShipment.dimensions.width} × ${selectedShipment.dimensions.height} in` : '72 × 24 × 18 in',
+      dimensions: d && (d.length || d.width || d.height) ? `${d.length || '—'} × ${d.width || '—'} × ${d.height || '—'} in` : '',
       declaredValue: insuredValue,
-      // Only attach a charges/payment record to document types that actually have a
-      // "payment status" concept and somewhere to show it — a Shipping Label never carries
-      // billing info in real life, and Insurance already has its own dedicated
-      // premium/deductible fields (a second, unrelated "$350 PAID" total on top of that was
-      // just confusing). Every type used to get one regardless, silently carrying data no
-      // part of the UI could ever display or toggle.
+      // Only document types with a payment status carry charges (entered in this form).
       charges: (genDocType === 'RECEIPT' || genDocType === 'INVOICE' || genDocType === 'BOL') ? {
-        baseAmount: 300,
-        oversizeFee: selectedShipment.totalWeightLbs > 30 ? 35 : 0,
-        specialHandlingFee: 15,
-        totalAmount: 350,
-        paymentStatus: 'PAID',
-        paidDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        paymentMethod: 'Corporate Freight Account'
+        baseAmount,
+        oversizeFee,
+        specialHandlingFee,
+        totalAmount: baseAmount + oversizeFee + specialHandlingFee,
+        paymentStatus: genPaymentStatus
       } : undefined,
       bolCarrier: LEGAL_NAME,
-      bolTrailerNumber,
-      bolSealNumber,
-      bolSpecialInstructions,
-      insurerName: 'Meridian Marine & Cargo Underwriters',
-      policyNumber: 'MCC-2026-778120',
-      coverageType: 'All-Risk Cargo Coverage — Institute Cargo Clauses (A)',
-      deductible,
-      premiumAmount
+      // The real tamper-evident seal recorded on a document shipment, if any.
+      bolSealNumber: selectedShipment.documentDetails?.sealNumber || undefined,
+      bolSpecialInstructions: selectedShipment.handlingRequirements?.otherInstructions || undefined,
+      ...(genDocType === 'INSURANCE' ? {
+        insurerName: genInsurerName.trim(),
+        policyNumber: genPolicyNumber.trim(),
+        coverageType: genCoverageType.trim() || undefined,
+        premiumAmount: genPremium === '' ? undefined : genPremium,
+        deductible: genDeductible === '' ? undefined : genDeductible
+      } : {})
     });
 
     setShowGenerateModal(false);
@@ -500,7 +520,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
             onClick={() => openGenerateModal()}
           >
             <Plus size={16} />
-            <span>+ Generate Document</span>
+            <span>Generate Document</span>
           </button>
         </div>
       </div>
@@ -1018,19 +1038,16 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                 <div className="shipping-label-paper" ref={paperRef}>
                   {/* Label Top Bar */}
                   <div className="lbl-top-row">
-                    <div className="lbl-brand-block">
-                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
-                      <span className="lbl-brand-sub font-mono">PRIORITY AIR & GROUND COURIER NETWORK</span>
-                    </div>
+                    <DocumentHeaderBrand className="lbl-brand-block" />
                     <div className="lbl-service-stamp font-mono">
-                      <span>SERVICE CLASS</span>
-                      <strong>{previewDoc.service.toUpperCase()}</strong>
+                      <span>{previewTitle}</span>
+                      <strong>{previewDoc.service || '—'}</strong>
                     </div>
                   </div>
 
                   {/* Shipment Tracking Box */}
                   <div className="lbl-tracking-masthead">
-                    <div className="lbl-tracking-label">SHIPMENT WAYBILL NUMBER</div>
+                    <div className="lbl-tracking-label">Tracking ID / Waybill No.</div>
                     <div className="lbl-tracking-code font-mono">{previewDoc.shipmentTracking}</div>
                   </div>
 
@@ -1042,7 +1059,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <strong className="lbl-party-name">{previewDoc.senderName}</strong>
                       {previewDoc.senderCompany && <div className="lbl-company">{previewDoc.senderCompany}</div>}
                       <div className="lbl-address">{previewDoc.senderAddress}</div>
-                      <div className="lbl-city-state font-bold">{previewDoc.senderCity}, {previewDoc.senderState} {previewDoc.senderZip}</div>
+                      <div className="lbl-city-state font-bold">{senderPlace(previewDoc)}</div>
                       <div className="lbl-phone font-mono">{previewDoc.senderPhone}</div>
                       {previewDoc.senderEmail && <div className="lbl-email font-mono">{previewDoc.senderEmail}</div>}
                     </div>
@@ -1051,12 +1068,11 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <div className="lbl-to-box">
                       <div className="lbl-to-head">
                         <span className="lbl-role-tag font-mono">SHIP TO / CONSIGNEE</span>
-                        <span className="lbl-hub-route-tag font-mono">{getZoneTag(previewDoc)}</span>
                       </div>
                       <strong className="lbl-to-name">{previewDoc.recipientName}</strong>
                       {previewDoc.recipientCompany && <div className="lbl-to-company">{previewDoc.recipientCompany}</div>}
                       <div className="lbl-to-address">{previewDoc.recipientAddress}</div>
-                      <div className="lbl-to-city-state">{previewDoc.recipientCity}, {previewDoc.recipientState} {previewDoc.recipientZip}</div>
+                      <div className="lbl-to-city-state">{recipientPlace(previewDoc)}</div>
                       <div className="lbl-to-phone font-mono">{previewDoc.recipientPhone}</div>
                       {previewDoc.recipientEmail && <div className="lbl-to-email font-mono">{previewDoc.recipientEmail}</div>}
                     </div>
@@ -1070,15 +1086,15 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     </div>
                     <div className="lbl-spec-col">
                       <span className="s-lbl">WEIGHT</span>
-                      <strong className="s-val font-mono">{previewDoc.weightLbs} LB</strong>
+                      <strong className="s-val font-mono">{formatWeightBoth(previewDoc.weightLbs) || '—'}</strong>
                     </div>
                     <div className="lbl-spec-col">
                       <span className="s-lbl">PIECES</span>
-                      <strong className="s-val font-mono">{previewDoc.pieces} / {previewDoc.pieces}</strong>
+                      <strong className="s-val font-mono">{previewDoc.pieces}</strong>
                     </div>
                     <div className="lbl-spec-col">
                       <span className="s-lbl">DIMENSIONS</span>
-                      <strong className="s-val font-mono">{previewDoc.dimensions || '72 × 24 × 18 in'}</strong>
+                      <strong className="s-val font-mono">{dims(previewDoc)}</strong>
                     </div>
                   </div>
 
@@ -1097,17 +1113,17 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                         fontSize={14}
                       />
                     </div>
-                    <div className="barcode-sub-text font-mono">
-                      TSA CARRIER VERIFIED · CODE 128 AIR-GROUND MANIFEST
-                    </div>
+                    <DocumentIdLine trackingId={previewDoc.shipmentTracking} />
                   </div>
+
+                  {realSeal(previewDoc) && <DocumentPouchLine sealNumber={realSeal(previewDoc)} />}
 
                   {/* Label Footer */}
                   <div className="lbl-footer-row font-mono">
                     <span>DOC ID: <strong className="lbl-footer-id">{previewDoc.id}</strong></span>
                     <span>ISSUED: {previewDoc.createdDate}</span>
-                    <span>PAGE 1 OF 1</span>
                   </div>
+                  <DocumentLegalFooter />
                 </div>
               )}
 
@@ -1119,8 +1135,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* Receipt Header */}
                   <div className="rec-header">
                     <div className="rec-brand">
-                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
-                      <p>Official Shipment Receipt & Intake Manifest</p>
+                      <DocumentHeaderBrand />
+                      <p>{previewTitle}</p>
                     </div>
                     <div className="rec-meta font-mono">
                       <div className="m-row"><span>Receipt No:</span> <strong className="rec-meta-id">{previewDoc.id}</strong></div>
@@ -1135,6 +1151,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   </div>
 
                   <div className="rec-divider" />
+                  <DocumentIdLine trackingId={previewDoc.shipmentTracking} />
 
                   {/* Shipment Information Card */}
                   <div className="rec-section-title">CONSIGNMENT & ROUTE SUMMARY</div>
@@ -1144,7 +1161,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <strong>{previewDoc.senderName}</strong>
                       {previewDoc.senderCompany && <div className="rec-card-company">{previewDoc.senderCompany}</div>}
                       <div>{previewDoc.senderAddress}</div>
-                      <div>{previewDoc.senderCity}, {previewDoc.senderState} {previewDoc.senderZip}</div>
+                      <div>{senderPlace(previewDoc)}</div>
                       {previewDoc.senderPhone && <div className="rec-card-contact font-mono">{previewDoc.senderPhone}</div>}
                       {previewDoc.senderEmail && <div className="rec-card-contact font-mono">{previewDoc.senderEmail}</div>}
                     </div>
@@ -1153,7 +1170,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <strong>{previewDoc.recipientName}</strong>
                       {previewDoc.recipientCompany && <div className="rec-card-company">{previewDoc.recipientCompany}</div>}
                       <div>{previewDoc.recipientAddress}</div>
-                      <div>{previewDoc.recipientCity}, {previewDoc.recipientState} {previewDoc.recipientZip}</div>
+                      <div>{recipientPlace(previewDoc)}</div>
                       {previewDoc.recipientPhone && <div className="rec-card-contact font-mono">{previewDoc.recipientPhone}</div>}
                       {previewDoc.recipientEmail && <div className="rec-card-contact font-mono">{previewDoc.recipientEmail}</div>}
                     </div>
@@ -1188,24 +1205,24 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   <div className="rec-section-title">TARIFF & CHARGES BREAKDOWN</div>
                   <div className="rec-charges-container">
                     <div className="charge-row">
-                      <span>Base Linehaul Transportation ({previewDoc.senderCity} → {previewDoc.recipientCity})</span>
-                      <strong className="font-mono">${(previewDoc.charges?.baseAmount || 300).toFixed(2)}</strong>
+                      <span>Transport ({previewDoc.senderCity} → {previewDoc.recipientCity})</span>
+                      <strong className="font-mono">{previewDoc.charges?.baseAmount ? money.format(previewDoc.charges.baseAmount) : '—'}</strong>
                     </div>
                     {previewDoc.charges?.oversizeFee ? (
                       <div className="charge-row">
-                        <span>Oversize Cargo Handling Surcharge</span>
-                        <strong className="font-mono">${previewDoc.charges.oversizeFee.toFixed(2)}</strong>
+                        <span>Oversize handling</span>
+                        <strong className="font-mono">{money.format(previewDoc.charges.oversizeFee)}</strong>
                       </div>
                     ) : null}
                     {previewDoc.charges?.specialHandlingFee ? (
                       <div className="charge-row">
-                        <span>Special Handling & Fragile Protocol</span>
-                        <strong className="font-mono">${previewDoc.charges.specialHandlingFee.toFixed(2)}</strong>
+                        <span>Special handling</span>
+                        <strong className="font-mono">{money.format(previewDoc.charges.specialHandlingFee)}</strong>
                       </div>
                     ) : null}
                     <div className={`charge-row total-row ${previewDoc.charges?.paymentStatus === 'PENDING' ? 'pending' : ''}`}>
-                      <span>TOTAL CHARGES {previewDoc.charges?.paymentStatus === 'PENDING' ? 'DUE' : 'PAID'} (USD)</span>
-                      <strong className={`font-mono ${previewDoc.charges?.paymentStatus === 'PENDING' ? 'text-amber-strong' : 'text-emerald'}`}>${(previewDoc.charges?.totalAmount || 350).toFixed(2)}</strong>
+                      <span>TOTAL {previewDoc.charges?.paymentStatus === 'PENDING' ? 'DUE' : 'PAID'} ({money.currency})</span>
+                      <strong className={`font-mono ${previewDoc.charges?.paymentStatus === 'PENDING' ? 'text-amber-strong' : 'text-emerald'}`}>{previewDoc.charges?.totalAmount ? money.format(previewDoc.charges.totalAmount) : '—'}</strong>
                     </div>
                   </div>
 
@@ -1217,10 +1234,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       height={50}
                       fontSize={12}
                     />
-                    <div className="rec-footer-note font-mono">
-                      TRACKING REF: {previewDoc.shipmentTracking} · THANK YOU FOR SHIPPING WITH {COMPANY.toUpperCase()}
-                    </div>
                   </div>
+                  <DocumentLegalFooter />
                 </div>
               )}
 
@@ -1231,18 +1246,15 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                 <div className="invoice-paper" ref={paperRef}>
                   {/* Invoice Header */}
                   <div className="inv-top-bar">
-                    <div className="inv-brand">
-                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
-                      <p>Freight & Logistics Financial Services</p>
-                      <small className="font-mono">100 Logistics Blvd, Suite 500, New York, NY 10001</small>
-                    </div>
+                    <DocumentHeaderBrand className="inv-brand" />
                     <div className="inv-masthead-title">
-                      <h1>INVOICE</h1>
+                      <h1>{previewTitle}</h1>
                       <div className="inv-id-badge font-mono">{previewDoc.id}</div>
                     </div>
                   </div>
 
                   <div className="inv-divider" />
+                  <DocumentIdLine trackingId={previewDoc.shipmentTracking} />
 
                   {/* Parties Info Grid */}
                   <div className="inv-parties-grid">
@@ -1252,7 +1264,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                         <strong className="inv-party-name">{previewDoc.senderName}</strong>
                         {previewDoc.senderCompany && <div className="inv-company">{previewDoc.senderCompany}</div>}
                         <div>{previewDoc.senderAddress}</div>
-                        <div>{previewDoc.senderCity}, {previewDoc.senderState} {previewDoc.senderZip}</div>
+                        <div>{senderPlace(previewDoc)}</div>
                         <div className="font-mono">{previewDoc.senderPhone}</div>
                         {previewDoc.senderEmail && <div className="font-mono">{previewDoc.senderEmail}</div>}
                       </div>
@@ -1262,7 +1274,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                         <strong className="inv-party-name">{previewDoc.recipientName}</strong>
                         {previewDoc.recipientCompany && <div className="inv-company">{previewDoc.recipientCompany}</div>}
                         <div>{previewDoc.recipientAddress}</div>
-                        <div>{previewDoc.recipientCity}, {previewDoc.recipientState} {previewDoc.recipientZip}</div>
+                        <div>{recipientPlace(previewDoc)}</div>
                         <div className="font-mono">{previewDoc.recipientPhone}</div>
                         {previewDoc.recipientEmail && <div className="font-mono">{previewDoc.recipientEmail}</div>}
                       </div>
@@ -1278,7 +1290,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                         <strong>{previewDoc.shipmentTracking}</strong>
                       </div>
                       <div className="inv-m-row">
-                        <span>Service Speed:</span>
+                        <span>Service:</span>
                         <strong>{previewDoc.service}</strong>
                       </div>
                       <div className="inv-m-row">
@@ -1299,41 +1311,41 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                           <th>Route Corridor</th>
                           <th>Weight</th>
                           <th>Pieces</th>
-                          <th style={{ textAlign: 'right' }}>Amount (USD)</th>
+                          <th style={{ textAlign: 'right' }}>Amount ({money.currency})</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
                           <td>
                             <strong>{previewDoc.cargoDescription}</strong>
-                            <div className="text-xs text-slate">{previewDoc.dimensions || '72 × 24 × 18 in'}</div>
+                            <div className="text-xs text-slate">{dims(previewDoc)}</div>
                           </td>
-                          <td>{previewDoc.senderCity}, {previewDoc.senderState} → {previewDoc.recipientCity}, {previewDoc.recipientState}</td>
+                          <td>{previewDoc.senderCity} → {previewDoc.recipientCity}</td>
                           <td className="font-mono">{formatWeightBoth(previewDoc.weightLbs)}</td>
                           <td className="font-mono">{previewDoc.pieces}</td>
                           <td className="font-mono" style={{ textAlign: 'right' }}>
-                            ${(previewDoc.charges?.baseAmount || 300).toFixed(2)}
+                            {previewDoc.charges?.baseAmount ? money.format(previewDoc.charges.baseAmount) : '—'}
                           </td>
                         </tr>
                         {previewDoc.charges?.oversizeFee ? (
                           <tr>
-                            <td>Oversize Handling Surcharge</td>
-                            <td>Dimension compliance surcharge</td>
+                            <td>Oversize handling</td>
+                            <td />
                             <td className="font-mono">-</td>
                             <td className="font-mono">-</td>
                             <td className="font-mono" style={{ textAlign: 'right' }}>
-                              ${previewDoc.charges.oversizeFee.toFixed(2)}
+                              {money.format(previewDoc.charges.oversizeFee)}
                             </td>
                           </tr>
                         ) : null}
                         {previewDoc.charges?.specialHandlingFee ? (
                           <tr>
-                            <td>Special Accessorial Handling Fee</td>
-                            <td>Non-stackable fragile care</td>
+                            <td>Special handling</td>
+                            <td />
                             <td className="font-mono">-</td>
                             <td className="font-mono">-</td>
                             <td className="font-mono" style={{ textAlign: 'right' }}>
-                              ${previewDoc.charges.specialHandlingFee.toFixed(2)}
+                              {money.format(previewDoc.charges.specialHandlingFee)}
                             </td>
                           </tr>
                         ) : null}
@@ -1341,20 +1353,12 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     </table>
                   </div>
 
-                  {/* Totals Summary */}
+                  {/* Totals Summary (taxes are not calculated here, so no tax line is printed) */}
                   <div className="inv-totals-wrap">
                     <div className="inv-totals-box">
-                      <div className="t-row">
-                        <span>Subtotal:</span>
-                        <strong className="font-mono">${(previewDoc.charges?.totalAmount || 350).toFixed(2)}</strong>
-                      </div>
-                      <div className="t-row">
-                        <span>Tax / Tariff (0%):</span>
-                        <strong className="font-mono">$0.00</strong>
-                      </div>
                       <div className="t-row grand-total">
-                        <span>{previewDoc.charges?.paymentStatus === 'PENDING' ? 'TOTAL DUE:' : 'TOTAL AMOUNT:'}</span>
-                        <strong className={`font-mono ${previewDoc.charges?.paymentStatus === 'PENDING' ? 'text-amber-strong' : 'text-emerald'}`}>${(previewDoc.charges?.totalAmount || 350).toFixed(2)} USD</strong>
+                        <span>{previewDoc.charges?.paymentStatus === 'PENDING' ? 'TOTAL DUE:' : 'TOTAL PAID:'}</span>
+                        <strong className={`font-mono ${previewDoc.charges?.paymentStatus === 'PENDING' ? 'text-amber-strong' : 'text-emerald'}`}>{previewDoc.charges?.totalAmount ? `${money.format(previewDoc.charges.totalAmount)} ${money.currency}` : '—'}</strong>
                       </div>
                     </div>
                   </div>
@@ -1368,9 +1372,10 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       fontSize={11}
                     />
                     <div className="font-mono text-xs text-slate mt-1">
-                      INVOICE REF: {previewDoc.id} · AUTH REF: {referenceFor('invoice', previewDoc.id)}
+                      INVOICE REF: {previewDoc.id} · {referenceFor('invoice', previewDoc.id)}
                     </div>
                   </div>
+                  <DocumentLegalFooter />
                 </div>
               )}
 
@@ -1382,15 +1387,15 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   {/* BOL Header Grid */}
                   <div className="bol-top-header">
                     <div className="bol-carrier-brand">
-                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
-                      <span className="font-mono font-bold text-xs">UNIFORM STRAIGHT BILL OF LADING · ORIGINAL - NOT NEGOTIABLE</span>
+                      <DocumentHeaderBrand />
+                      <span className="font-mono font-bold text-xs">{previewTitle.toUpperCase()}</span>
                     </div>
                     <div className="bol-id-box font-mono">
-                      <div className="b-row"><span>BOL NUMBER:</span> <strong className="bol-id-value">{previewDoc.id}</strong></div>
-                      <div className="b-row"><span>SHIPMENT NO:</span> <strong>{previewDoc.shipmentTracking}</strong></div>
+                      <div className="b-row"><span>DOCUMENT NO:</span> <strong className="bol-id-value">{previewDoc.id}</strong></div>
                       <div className="b-row"><span>DATE:</span> <strong>{previewDoc.createdDate}</strong></div>
                     </div>
                   </div>
+                  <DocumentIdLine trackingId={previewDoc.shipmentTracking} />
 
                   {/* BOL Parties Section */}
                   <div className="bol-parties-container">
@@ -1399,7 +1404,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <strong className="bol-name">{previewDoc.senderName}</strong>
                       {previewDoc.senderCompany && <div>{previewDoc.senderCompany}</div>}
                       <div>{previewDoc.senderAddress}</div>
-                      <div>{previewDoc.senderCity}, {previewDoc.senderState} {previewDoc.senderZip}</div>
+                      <div>{senderPlace(previewDoc)}</div>
                       <div className="font-mono text-xs">{previewDoc.senderPhone}</div>
                       {previewDoc.senderEmail && <div className="font-mono text-xs">{previewDoc.senderEmail}</div>}
                     </div>
@@ -1409,7 +1414,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <strong className="bol-name">{previewDoc.recipientName}</strong>
                       {previewDoc.recipientCompany && <div>{previewDoc.recipientCompany}</div>}
                       <div>{previewDoc.recipientAddress}</div>
-                      <div>{previewDoc.recipientCity}, {previewDoc.recipientState} {previewDoc.recipientZip}</div>
+                      <div>{recipientPlace(previewDoc)}</div>
                       <div className="font-mono text-xs">{previewDoc.recipientPhone}</div>
                       {previewDoc.recipientEmail && <div className="font-mono text-xs">{previewDoc.recipientEmail}</div>}
                     </div>
@@ -1417,10 +1422,10 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
 
                   {/* Carrier & Equipment Details */}
                   <div className="bol-carrier-strip font-mono">
-                    <div className="c-field"><span>CARRIER:</span> <strong>{previewDoc.bolCarrier || LEGAL_NAME}</strong></div>
-                    <div className="c-field"><span>TRAILER NO:</span> <strong>{previewDoc.bolTrailerNumber || 'TR-4091-E'}</strong></div>
-                    <div className="c-field"><span>SEAL NO:</span> <strong>{previewDoc.bolSealNumber || '—'}</strong></div>
+                    <div className="c-field"><span>CARRIER:</span> <strong>{LEGAL_NAME}</strong></div>
+                    <div className="c-field"><span>SERVICE:</span> <strong>{previewDoc.service || '—'}</strong></div>
                   </div>
+                  {realSeal(previewDoc) && <DocumentPouchLine sealNumber={realSeal(previewDoc)} />}
 
                   {/* Freight Commodity Grid */}
                   <div className="table-responsive-wrapper">
@@ -1430,7 +1435,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                           <th>HANDLING UNITS</th>
                           <th>PACKAGE TYPE</th>
                           <th>DESCRIPTION OF ARTICLES & SPECIAL MARKS</th>
-                          <th>WEIGHT (LBS)</th>
+                          <th>WEIGHT</th>
                           <th>DIMENSIONS</th>
                         </tr>
                       </thead>
@@ -1442,19 +1447,19 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                             <strong>{previewDoc.cargoDescription}</strong>
                           </td>
                           <td className="font-mono font-bold text-center">{formatWeightBoth(previewDoc.weightLbs)}</td>
-                          <td className="font-mono text-center">{previewDoc.dimensions || '72 × 24 × 18 in'}</td>
+                          <td className="font-mono text-center">{dims(previewDoc)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Special Handling Instructions */}
-                  <div className="bol-instructions-box">
-                    <span className="font-mono font-bold text-xs text-slate">SPECIAL HANDLING & ACCESSORIAL INSTRUCTIONS:</span>
-                    <p className="bol-instruct-text">
-                      {previewDoc.bolSpecialInstructions || 'Fragile automotive fiberglass. Do not double stack. Liftgate required at destination.'}
-                    </p>
-                  </div>
+                  {/* Special handling instructions: only what was recorded for the shipment */}
+                  {previewDoc.bolSpecialInstructions && (
+                    <div className="bol-instructions-box">
+                      <span className="font-mono font-bold text-xs text-slate">SPECIAL HANDLING INSTRUCTIONS:</span>
+                      <p className="bol-instruct-text">{previewDoc.bolSpecialInstructions}</p>
+                    </div>
+                  )}
 
                   {/* Freight Charges — a standard BOL field (Prepaid/Collect terms). Every
                       BOL already carries real charges data computed at generation time; this
@@ -1464,23 +1469,23 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <div className="rec-charges-container">
                       <div className="charge-row">
                         <span>FREIGHT CHARGES</span>
-                        <strong className="font-mono">${(previewDoc.charges.baseAmount || 0).toFixed(2)}</strong>
+                        <strong className="font-mono">{previewDoc.charges.baseAmount ? money.format(previewDoc.charges.baseAmount) : '—'}</strong>
                       </div>
                       {previewDoc.charges.oversizeFee ? (
                         <div className="charge-row">
-                          <span>Oversize / Accessorial Fee</span>
-                          <strong className="font-mono">${previewDoc.charges.oversizeFee.toFixed(2)}</strong>
+                          <span>Oversize handling</span>
+                          <strong className="font-mono">{money.format(previewDoc.charges.oversizeFee)}</strong>
                         </div>
                       ) : null}
                       {previewDoc.charges.specialHandlingFee ? (
                         <div className="charge-row">
-                          <span>Special Handling Fee</span>
-                          <strong className="font-mono">${previewDoc.charges.specialHandlingFee.toFixed(2)}</strong>
+                          <span>Special handling</span>
+                          <strong className="font-mono">{money.format(previewDoc.charges.specialHandlingFee)}</strong>
                         </div>
                       ) : null}
                       <div className={`charge-row total-row ${previewDoc.charges.paymentStatus === 'PENDING' ? 'pending' : ''}`}>
                         <span>FREIGHT TERMS: {previewDoc.charges.paymentStatus === 'PENDING' ? 'COLLECT' : 'PREPAID'}</span>
-                        <strong className={`font-mono ${previewDoc.charges.paymentStatus === 'PENDING' ? 'text-amber-strong' : 'text-emerald'}`}>${(previewDoc.charges.totalAmount || 0).toFixed(2)}</strong>
+                        <strong className={`font-mono ${previewDoc.charges.paymentStatus === 'PENDING' ? 'text-amber-strong' : 'text-emerald'}`}>{previewDoc.charges.totalAmount ? money.format(previewDoc.charges.totalAmount) : '—'}</strong>
                       </div>
                     </div>
                   )}
@@ -1490,7 +1495,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <div className="sig-box">
                       <span className="sig-label font-mono">SHIPPER CERTIFICATION & SIGNATURE</span>
                       <div className="sig-line">
-                        <span className="signed-name font-mono">{previewDoc.senderName} (Authorized Signatory)</span>
+                        <span className="signed-name font-mono">{previewDoc.senderName}</span>
                       </div>
                       <div className="sig-date font-mono">DATE: {previewDoc.createdDate}</div>
                     </div>
@@ -1520,6 +1525,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       fontSize={12}
                     />
                   </div>
+                  <DocumentLegalFooter />
                 </div>
               )}
 
@@ -1530,25 +1536,23 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                 <div className="ins-paper" ref={paperRef}>
                   {/* Certificate Header */}
                   <div className="ins-top-header">
-                    <div className="ins-brand">
-                      <img src={LOGO} alt={LOGO_ALT} className="doc-preview-logo-img" />
-                      <p>Cargo Insurance Arranged Through {LEGAL_NAME}</p>
-                    </div>
+                    <DocumentHeaderBrand className="ins-brand" />
                     <div className="ins-id-box font-mono">
                       <div className="b-row"><span>CERTIFICATE NO:</span> <strong className="ins-id-value">{previewDoc.id}</strong></div>
-                      <div className="b-row"><span>MASTER POLICY NO:</span> <strong>{previewDoc.policyNumber || 'MCC-2026-778120'}</strong></div>
+                      <div className="b-row"><span>POLICY NO:</span> <strong>{real(previewDoc.policyNumber) || '—'}</strong></div>
                       <div className="b-row"><span>DATE ISSUED:</span> <strong>{previewDoc.createdDate}</strong></div>
                     </div>
                   </div>
 
                   <div className="ins-title-band">
                     <ShieldCheck size={18} className="text-purple" />
-                    <span>CERTIFICATE OF CARGO INSURANCE</span>
+                    <span>{previewTitle.toUpperCase()}</span>
                   </div>
+                  <DocumentIdLine trackingId={previewDoc.shipmentTracking} />
 
-                  {/* Certifying Statement */}
+                  {/* Only the insurer and policy the admin entered are named; nothing is shown in their place. */}
                   <p className="ins-certify-text">
-                    This is to certify that insurance is effected under Master Policy No. <strong>{previewDoc.policyNumber || 'MCC-2026-778120'}</strong>, issued by <strong>{previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'}</strong>, on the cargo described below, and that this Certificate represents and takes the place of the Policy and conveys all the rights of the original policyholder for the purpose of collecting any loss or claim thereunder, subject to the terms, conditions, and exclusions of the original policy. Signed for and on behalf of {previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'} by an authorized agent of {LEGAL_NAME} under binding open cover authority.
+                    The cargo described below is insured{real(previewDoc.insurerName) ? <> by <strong>{real(previewDoc.insurerName)}</strong></> : null}{real(previewDoc.policyNumber) ? <> under policy <strong>{real(previewDoc.policyNumber)}</strong></> : null}, subject to that policy's terms, conditions and exclusions.
                   </p>
 
                   {/* Parties Section */}
@@ -1558,22 +1562,21 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       <strong className="ins-name">{previewDoc.senderName}</strong>
                       {previewDoc.senderCompany && <div>{previewDoc.senderCompany}</div>}
                       <div>{previewDoc.senderAddress}</div>
-                      <div>{previewDoc.senderCity}, {previewDoc.senderState} {previewDoc.senderZip}</div>
+                      <div>{senderPlace(previewDoc)}</div>
                     </div>
                     <div className="ins-party-cell">
                       <span className="ins-cell-label">CONSIGNEE</span>
                       <strong className="ins-name">{previewDoc.recipientName}</strong>
                       {previewDoc.recipientCompany && <div>{previewDoc.recipientCompany}</div>}
                       <div>{previewDoc.recipientAddress}</div>
-                      <div>{previewDoc.recipientCity}, {previewDoc.recipientState} {previewDoc.recipientZip}</div>
+                      <div>{recipientPlace(previewDoc)}</div>
                     </div>
                   </div>
 
                   {/* Conveyance & Transit Details */}
                   <div className="ins-transit-strip font-mono">
-                    <div className="c-field"><span>WAYBILL / TRACKING NO:</span> <strong>{previewDoc.shipmentTracking}</strong></div>
-                    <div className="c-field"><span>CONVEYANCE:</span> <strong>{previewDoc.bolCarrier || LEGAL_NAME}</strong></div>
-                    <div className="c-field"><span>ROUTE:</span> <strong>{previewDoc.senderCity}, {previewDoc.senderState} → {previewDoc.recipientCity}, {previewDoc.recipientState}</strong></div>
+                    <div className="c-field"><span>CARRIER:</span> <strong>{LEGAL_NAME}</strong></div>
+                    <div className="c-field"><span>ROUTE:</span> <strong>{previewDoc.senderCity} → {previewDoc.recipientCity}</strong></div>
                   </div>
 
                   {/* Cargo Description Table */}
@@ -1602,60 +1605,49 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   <div className="ins-coverage-panel">
                     <div className="ins-sum-insured-block">
                       <span className="ins-sum-label">TOTAL SUM INSURED</span>
-                      <strong className="ins-sum-value font-mono">${(previewDoc.declaredValue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                      <span className="ins-sum-sub">USD · Agreed Value Basis</span>
+                      <strong className="ins-sum-value font-mono">{money.format(previewDoc.declaredValue || 0)}</strong>
+                      <span className="ins-sum-sub">{money.currency}</span>
                     </div>
                     <div className="ins-coverage-details">
                       <div className="ins-cov-row">
-                        <span>Coverage Type:</span>
-                        <strong>{previewDoc.coverageType || 'All-Risk Cargo Coverage — Institute Cargo Clauses (A)'}</strong>
+                        <span>Coverage type:</span>
+                        <strong>{real(previewDoc.coverageType) || '—'}</strong>
                       </div>
                       <div className="ins-cov-row">
-                        <span>Deductible (Excess):</span>
-                        <strong className="font-mono">${(previewDoc.deductible || 250).toLocaleString('en-US')}</strong>
+                        <span>Deductible (excess):</span>
+                        <strong className="font-mono">{previewDoc.deductible !== undefined ? money.format(previewDoc.deductible) : '—'}</strong>
                       </div>
                       <div className="ins-cov-row">
-                        <span>Premium Paid:</span>
-                        <strong className="font-mono text-emerald">${(previewDoc.premiumAmount || 25).toFixed(2)}</strong>
-                      </div>
-                      <div className="ins-cov-row">
-                        <span>Transit Coverage:</span>
-                        <strong>Warehouse-to-Warehouse</strong>
+                        <span>Premium:</span>
+                        <strong className="font-mono">{previewDoc.premiumAmount !== undefined ? money.format(previewDoc.premiumAmount) : '—'}</strong>
                       </div>
                     </div>
                   </div>
 
-                  {/* Claims Notice */}
+                  {/* Claims Notice (same window as Shipping Terms 9) */}
                   <div className="ins-claims-box">
-                    <span className="font-mono font-bold text-xs text-slate">CLAIMS NOTICE:</span>
+                    <span className="font-mono font-bold text-xs text-slate">CLAIMS:</span>
                     <p className="ins-claims-text">
-                      In the event of loss or damage which may give rise to a claim under this insurance, immediate notice must be given to the {COMPANY_SHORT} Claims Department. Any claim must be supported by this Certificate in original form. Failure to comply with these conditions may prejudice the claim.
+                      Tell {COMPANY_SHORT} about any loss or damage within 7 days of delivery, quoting the tracking ID above, with photos and proof of value.
                     </p>
                   </div>
 
-                  {/* Signature & Certification Seal */}
+                  {/* Signature (and the company stamp only when one is uploaded in Settings) */}
                   <div className="ins-signature-row">
                     <div className="ins-sig-block">
-                      <span className="sig-label font-mono">AUTHORIZED REPRESENTATIVE</span>
+                      <span className="sig-label font-mono">AUTHORISED REPRESENTATIVE</span>
                       <div className="sig-line">
-                        <span className="signed-name font-mono">{settings.signatoryName || previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'}</span>
+                        <span className="signed-name font-mono">{settings.signatoryName || ''}</span>
                       </div>
                       {settings.signatoryTitle && <div className="ins-signatory-title font-mono">{settings.signatoryTitle}</div>}
-                      <div className="ins-signatory-onbehalf font-mono">for and on behalf of {previewDoc.insurerName || 'Meridian Marine & Cargo Underwriters'}</div>
+                      <div className="ins-signatory-onbehalf font-mono">for {LEGAL_NAME}</div>
                       <div className="sig-date font-mono">DATE: {previewDoc.createdDate}</div>
-                      <p className="ins-void-note">This certificate is not valid unless countersigned by an authorized representative and is void if altered.</p>
                     </div>
-                    <div className="ins-seal">
-                      {settings.signatureStampUrl ? (
+                    {settings.signatureStampUrl && (
+                      <div className="ins-seal">
                         <img src={settings.signatureStampUrl} alt="Company stamp" className="ins-stamp-img" />
-                      ) : (
-                        <div className="ins-seal-ring">
-                          <ShieldCheck size={22} />
-                          <span>CERTIFIED</span>
-                          <span className="ins-seal-sub">COVERAGE VERIFIED</span>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Barcode Footer */}
@@ -1666,10 +1658,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                       height={50}
                       fontSize={12}
                     />
-                    <div className="ins-footer-note font-mono">
-                      CERTIFICATE REF: {previewDoc.id} · UNDERWRITTEN BY {(previewDoc.insurerName || 'MERIDIAN MARINE & CARGO UNDERWRITERS').toUpperCase()}
-                    </div>
                   </div>
+                  <DocumentLegalFooter />
                 </div>
               )}
             </div>
@@ -1686,7 +1676,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
             <div className="modal-top-bar">
               <div>
                 <h3>Generate New Shipment Document</h3>
-                <p>Create an official document from existing shipment telemetry.</p>
+                <p>Create a document from a shipment's saved details.</p>
               </div>
               <button className="modal-close-btn" onClick={() => setShowGenerateModal(false)}>
                 <X size={18} />
@@ -1709,7 +1699,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <Tag size={18} className="text-blue" />
                     <div>
                       <strong>Shipping Label</strong>
-                      <span>Official 4x6 barcode label</span>
+                      <span>Barcode label with the tracking ID</span>
                     </div>
                   </label>
 
@@ -1724,7 +1714,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <Receipt size={18} className="text-emerald" />
                     <div>
                       <strong>Shipment Receipt</strong>
-                      <span>Intake manifest & charges</span>
+                      <span>Receipt with charges</span>
                     </div>
                   </label>
 
@@ -1738,8 +1728,8 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     />
                     <FileText size={18} className="text-indigo" />
                     <div>
-                      <strong>Invoice</strong>
-                      <span>Corporate billing declaration</span>
+                      <strong>Commercial Invoice</strong>
+                      <span>Charges for the shipment</span>
                     </div>
                   </label>
 
@@ -1754,7 +1744,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <FileSpreadsheet size={18} className="text-amber" />
                     <div>
                       <strong>Bill of Lading</strong>
-                      <span>Freight & carrier manifest</span>
+                      <span>Air waybill for air shipments</span>
                     </div>
                   </label>
 
@@ -1769,7 +1759,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                     <ShieldCheck size={18} className="text-purple" />
                     <div>
                       <strong>Insurance Certificate</strong>
-                      <span>Cargo coverage & policy proof</span>
+                      <span>Insurer and policy you enter</span>
                     </div>
                   </label>
                 </div>
@@ -1792,29 +1782,76 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                 </select>
               </div>
 
-              {/* Step 3: Set Insured Value (Insurance Certificate only) */}
+              {/* Step 3: Charges (Receipt, Invoice, Bill of Lading / Air Waybill) */}
+              {(genDocType === 'RECEIPT' || genDocType === 'INVOICE' || genDocType === 'BOL') && (
+                <div className="form-field-unit">
+                  <label className="form-field-label">3. Charges ({money.currency})</label>
+                  <div className="gen-fields-grid">
+                    <label className="gen-field">
+                      <span>Transport</span>
+                      <MoneyInput min="0" value={genBaseCharge} onChange={setGenBaseCharge} className="modal-shipment-select font-mono" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Oversize handling</span>
+                      <MoneyInput min="0" value={genOversizeFee} onChange={setGenOversizeFee} className="modal-shipment-select font-mono" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Special handling</span>
+                      <MoneyInput min="0" value={genSpecialFee} onChange={setGenSpecialFee} className="modal-shipment-select font-mono" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Payment</span>
+                      <select value={genPaymentStatus} onChange={e => setGenPaymentStatus(e.target.value as 'PENDING' | 'PAID')} className="modal-shipment-select">
+                        <option value="PENDING">Due</option>
+                        <option value="PAID">Paid</option>
+                      </select>
+                    </label>
+                  </div>
+                  <p className="insured-value-hint">Left empty, a charge is not printed (the total shows "—").</p>
+                </div>
+              )}
+
+              {/* Step 3: Insurance details (Insurance Certificate only) */}
               {genDocType === 'INSURANCE' && (
                 <div className="form-field-unit">
-                  <label className="form-field-label">3. Set Insured Value (Sum Insured)</label>
-                  <div className="insured-value-input-wrap">
-                    <span className="insured-value-prefix">$</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      className="insured-value-input font-mono"
-                      value={genInsuredValue}
-                      onChange={e => {
-                        setGenInsuredValue(e.target.value);
-                        setGenInsuredValueTouched(true);
-                      }}
-                      placeholder="1000"
-                      required
-                    />
-                    <span className="insured-value-suffix">USD</span>
+                  <label className="form-field-label">3. Insurance details</label>
+                  <div className="gen-fields-grid">
+                    <label className="gen-field">
+                      <span>Insurer *</span>
+                      <input type="text" required value={genInsurerName} onChange={e => setGenInsurerName(e.target.value)} className="modal-shipment-select" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Policy number *</span>
+                      <input type="text" required value={genPolicyNumber} onChange={e => setGenPolicyNumber(e.target.value)} className="modal-shipment-select font-mono" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Sum insured ({money.currency}) *</span>
+                      <MoneyInput
+                        min="0"
+                        required
+                        value={genInsuredValue}
+                        onChange={(v) => {
+                          setGenInsuredValue(v);
+                          setGenInsuredValueTouched(true);
+                        }}
+                        className="modal-shipment-select font-mono"
+                      />
+                    </label>
+                    <label className="gen-field">
+                      <span>Coverage type</span>
+                      <input type="text" value={genCoverageType} onChange={e => setGenCoverageType(e.target.value)} className="modal-shipment-select" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Premium ({money.currency})</span>
+                      <MoneyInput min="0" value={genPremium} onChange={setGenPremium} className="modal-shipment-select font-mono" />
+                    </label>
+                    <label className="gen-field">
+                      <span>Deductible ({money.currency})</span>
+                      <MoneyInput min="0" value={genDeductible} onChange={setGenDeductible} className="modal-shipment-select font-mono" />
+                    </label>
                   </div>
                   <p className="insured-value-hint">
-                    Defaults to the shipment's declared cargo value. Adjust to set the actual sum insured — premium is calculated automatically at 0.65% of this amount ($25 minimum).
+                    The sum insured starts from the shipment's declared value. Enter the insurer and policy exactly as issued: nothing is filled in for you.
                   </p>
                 </div>
               )}
@@ -1826,7 +1863,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
                   <div className="auto-populated-preview-card">
                     <div className="preview-card-header">
                       <Sparkles size={14} className="text-blue" />
-                      <span>Auto-Populated Telemetry Data (No Manual Typing)</span>
+                      <span>Filled in from the shipment</span>
                     </div>
                     <div className="preview-data-grid font-mono">
                       <div><span>Shipper:</span> <strong>{targetShipment.sender.name} ({targetShipment.origin.city}, {targetShipment.origin.state})</strong></div>

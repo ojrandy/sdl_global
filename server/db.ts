@@ -373,6 +373,7 @@ export function initDatabase() {
       dispatchEmail: EMAIL,
       headquartersAddress: '',
       dotNumber: '',
+      displayCurrency: 'USD',
       piiMaskingEnabled: true,
       mapVisibility: 'CITY',
       cloakInternalNotes: true,

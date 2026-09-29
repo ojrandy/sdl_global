@@ -36,6 +36,7 @@ import { useCurrency } from '../../utils/useCurrency';
 import { useUnitSystem } from '../../utils/useUnitSystem';
 import { formatDimensions, formatWeight } from '../../shared/units';
 import { TRANSPORT_MODE_LABELS } from '../../shared/transportMode';
+import { SERVICE_OPTIONS } from '../../data/serviceOptions';
 
 export const QuoteRequestsView: React.FC = () => {
   const { quoteRequests, publishQuote, updateQuoteStatus, convertQuoteToShipment, settings } = useAdminData();
@@ -592,10 +593,9 @@ export const QuoteRequestsView: React.FC = () => {
                   className="filter-select"
                 >
                   <option value="ALL">All Services</option>
-                  <option value="Standard">Standard</option>
-                  <option value="Express">Express</option>
-                  <option value="Priority">Priority</option>
-                  <option value="Freight LTL">Freight LTL</option>
+                  {SERVICE_OPTIONS.map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
                 </select>
               </div>
             </div>

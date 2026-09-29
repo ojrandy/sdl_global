@@ -63,6 +63,8 @@ import { Shipment, ShipmentStatus, TrackingEvent } from '../../types/shipment';
 import { ADMIN_ROLE_LABEL, COMPANY, COMPANY_SHORT, INTAKE_DESK, LEGAL_NAME, TRACKING_PREFIX } from '../../config/brand';
 import { generateReference } from '../../shared/references';
 import './CreateShipmentView.css';
+import { Barcode as TrackingBarcode } from '../../components/Barcode';
+import { documentTitle } from '../../components/DocumentBrand';
 
 interface CreateShipmentViewProps {
   onSelectView: (view: AdminViewType) => void;
@@ -1147,27 +1149,16 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
     const trackingNumber = created.trackingNumber;
     setGeneratedTrackingNumber(trackingNumber);
 
-    // 2. Automatically generate official Bill of Lading (BOL) in Document Center.
-    // Trailer/seal/instructions are randomized the same way DocumentCenterView's manual
-    // "Generate Document" flow does, so a wizard-created BOL doesn't look identical to every
-    // other one regardless of cargo.
-    const trailerLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    const bolTrailerNumber = `TR-${Math.floor(1000 + Math.random() * 9000)}-${trailerLetter}`;
-    const bolSealNumber = generateReference('seal');
-    const bolSpecialInstructionsPool = [
-      'Handle with care. Protect from moisture and extreme temperature.',
-      'Fragile contents. Do not stack additional freight on top of this shipment.',
-      'Time-sensitive delivery. Notify consignee 30 minutes prior to arrival.',
-      'Liftgate required at destination. Confirm dock access before dispatch.',
-      'Standard ground handling. No special accessorial requirements.',
-      'Non-stackable freight. Secure load to prevent shifting in transit.'
-    ];
-    const bolSpecialInstructions = bolSpecialInstructionsPool[Math.floor(Math.random() * bolSpecialInstructionsPool.length)];
+    // 2. Automatically generate the transport document (Bill of Lading, or Air Waybill for air)
+    // in the Document Center, from what was entered in the wizard only: the seal is the real
+    // document-pouch seal (document shipments), instructions are the admin's own handling notes.
+    const bolSealNumber = shipmentType === 'Document' ? docSealNumber : undefined;
+    const bolSpecialInstructions = newShipmentRecord.handlingRequirements?.otherInstructions || undefined;
 
     try {
       generateDocument({
         docType: 'BOL',
-        title: `Uniform Straight Bill of Lading (${trackingNumber})`,
+        title: `${documentTitle('BOL', created.transportMode || newShipmentRecord.transportMode)} (${trackingNumber})`,
         shipmentTracking: trackingNumber,
         senderName: senderName || 'Origin Consignor',
         senderCompany: senderCompany || INTAKE_DESK,
@@ -1189,21 +1180,17 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
         weightLbs: totalWeight,
         pieces: totalPieces,
         dimensions: `${newShipmentRecord.dimensions.length}x${newShipmentRecord.dimensions.width}x${newShipmentRecord.dimensions.height} in`,
-        declaredValue: shipmentType === 'Vehicle' ? 45000 : 500,
+        declaredValue: newShipmentRecord.declaredValue || 0,
         charges: {
           baseAmount: baseRate,
           oversizeFee: additionalCharges,
           specialHandlingFee: surcharges,
-          fuelSurcharge: surcharges * 0.5,
-          tax: (baseRate + additionalCharges + surcharges) * 0.08,
-          // Include the discount/manual adjustment the admin set in Step 5 — previously
-          // dropped here, so the BOL total silently didn't match the "Final Price" the
-          // admin had just approved.
+          // Include the discount/manual adjustment the admin set in Step 5 so the total
+          // matches the "Final Price" the admin approved. No tax or fuel line is invented.
           totalAmount: Math.max(0, baseRate + additionalCharges + surcharges + manualAdjustment - discount),
           paymentStatus: 'PAID'
         },
         bolCarrier: LEGAL_NAME,
-        bolTrailerNumber,
         bolSealNumber,
         bolSpecialInstructions,
         fileSize: '148 KB'
@@ -1252,49 +1239,9 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
               </button>
             </div>
 
-            {/* Traditional Code 128 Barcode Simulation */}
+            {/* Real Code 128 barcode of the new tracking ID */}
             <div className="traditional-barcode-card">
-              <svg className="code128-svg" viewBox="0 0 320 60">
-                <rect x="10" y="4" width="4" height="42" fill="#000000" />
-                <rect x="17" y="4" width="2" height="42" fill="#000000" />
-                <rect x="23" y="4" width="5" height="42" fill="#000000" />
-                <rect x="32" y="4" width="2" height="42" fill="#000000" />
-                <rect x="38" y="4" width="6" height="42" fill="#000000" />
-                <rect x="48" y="4" width="3" height="42" fill="#000000" />
-                <rect x="55" y="4" width="5" height="42" fill="#000000" />
-                <rect x="64" y="4" width="2" height="42" fill="#000000" />
-                <rect x="70" y="4" width="7" height="42" fill="#000000" />
-                <rect x="81" y="4" width="3" height="42" fill="#000000" />
-                <rect x="88" y="4" width="4" height="42" fill="#000000" />
-                <rect x="96" y="4" width="5" height="42" fill="#000000" />
-                <rect x="105" y="4" width="3" height="42" fill="#000000" />
-                <rect x="112" y="4" width="6" height="42" fill="#000000" />
-                <rect x="122" y="4" width="2" height="42" fill="#000000" />
-                <rect x="128" y="4" width="5" height="42" fill="#000000" />
-                <rect x="137" y="4" width="4" height="42" fill="#000000" />
-                <rect x="145" y="4" width="2" height="42" fill="#000000" />
-                <rect x="151" y="4" width="6" height="42" fill="#000000" />
-                <rect x="161" y="4" width="3" height="42" fill="#000000" />
-                <rect x="168" y="4" width="5" height="42" fill="#000000" />
-                <rect x="177" y="4" width="2" height="42" fill="#000000" />
-                <rect x="183" y="4" width="7" height="42" fill="#000000" />
-                <rect x="194" y="4" width="3" height="42" fill="#000000" />
-                <rect x="201" y="4" width="5" height="42" fill="#000000" />
-                <rect x="210" y="4" width="2" height="42" fill="#000000" />
-                <rect x="216" y="4" width="6" height="42" fill="#000000" />
-                <rect x="226" y="4" width="4" height="42" fill="#000000" />
-                <rect x="234" y="4" width="3" height="42" fill="#000000" />
-                <rect x="241" y="4" width="5" height="42" fill="#000000" />
-                <rect x="250" y="4" width="2" height="42" fill="#000000" />
-                <rect x="256" y="4" width="6" height="42" fill="#000000" />
-                <rect x="266" y="4" width="4" height="42" fill="#000000" />
-                <rect x="274" y="4" width="3" height="42" fill="#000000" />
-                <rect x="281" y="4" width="5" height="42" fill="#000000" />
-                <rect x="290" y="4" width="2" height="42" fill="#000000" />
-                <rect x="296" y="4" width="6" height="42" fill="#000000" />
-                <rect x="306" y="4" width="4" height="42" fill="#000000" />
-              </svg>
-              <span className="barcode-code-txt font-mono">{generatedTrackingNumber}</span>
+              <TrackingBarcode value={generatedTrackingNumber} height={48} width={1.6} fontSize={12} />
             </div>
           </div>
 

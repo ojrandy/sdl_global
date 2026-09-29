@@ -25,11 +25,12 @@ const SOCIAL_LINKS: { key: SocialNetwork; label: string; Icon: typeof Facebook }
   { key: 'youtube', label: 'YouTube', Icon: Youtube },
 ];
 
-// LegalPage sections (CONTENT §1.3). Cookie Policy joins once its tab is written (3.11).
+// LegalPage sections (CONTENT §1.3 / §13).
 const LEGAL_LINKS = [
   { section: 'privacy', label: 'Privacy Policy' },
   { section: 'terms', label: 'Terms of Service' },
   { section: 'shipping-terms', label: 'Shipping Terms' },
+  { section: 'cookies', label: 'Cookie Policy' },
   { section: 'accessibility', label: 'Accessibility' },
 ];
 
@@ -235,7 +236,7 @@ export const Footer: React.FC<FooterProps> = ({
               </ul>
             </div>
 
-            {/* Column 5: Legal (Cookie Policy hidden until its page exists, tracker 3.11) */}
+            {/* Column 5: Legal */}
             <nav className="sdl-pro-links-col" aria-label="Legal">
               <h4 className="sdl-pro-col-title">
                 Legal

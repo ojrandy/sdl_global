@@ -212,6 +212,23 @@
   margin: 0;
 }
 
+.legal-section p + p,
+.legal-section p + .legal-list,
+.legal-section .legal-list + p {
+  margin-top: 0.75rem;
+}
+
+.legal-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.9375rem;
+  color: var(--sdl-slate-600);
+  line-height: 1.65;
+}
+
 /* ============================================================
    RESPONSIVE DESIGN & MOBILE BREAKPOINTS
    ============================================================ */

@@ -143,6 +143,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 (e.target as HTMLElement).style.display = 'none';
               }}
             />
+            <span className="admin-brand-console">Operations Console</span>
           </div>
           <button className="mobile-close-btn" onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu">
             <X size={20} />
@@ -283,7 +284,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             </div>
             <div className="operator-info">
               <strong>{ADMIN_ROLE_LABEL}</strong>
-              <small>Terminal Dispatcher #01</small>
+              <small>Operations Console</small>
             </div>
           </div>
 
@@ -403,7 +404,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 <div className="avatar-chip">AD</div>
                 <div className="profile-text">
                   <span className="profile-name">{ADMIN_ROLE_LABEL}</span>
-                  <span className="profile-role">Root Dispatch</span>
+                  <span className="profile-role">Operations Console</span>
                 </div>
                 <ChevronDown size={14} className="chevron-icon" />
               </button>
@@ -411,17 +412,17 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
               {showUserMenu && (
                 <div className="user-menu-popover animate-scale-in">
                   <div className="menu-popover-header">
-                    <strong>{ADMIN_ROLE_LABEL} (Console)</strong>
+                    <strong>{ADMIN_ROLE_LABEL}</strong>
                     <small>{EMAIL}</small>
                   </div>
                   <div className="menu-popover-links">
                     <button onClick={() => { onSelectView('settings'); setShowUserMenu(false); }}>
                       <Settings size={15} />
-                      <span>Carrier Settings</span>
+                      <span>Settings</span>
                     </button>
                     <button onClick={() => { onSelectView('document-center'); setShowUserMenu(false); }}>
                       <FileText size={15} />
-                      <span>Document Archive</span>
+                      <span>Document Center</span>
                     </button>
                     <div className="menu-divider" />
                     <button className="menu-exit-link" onClick={() => onNavigatePublic('home')}>

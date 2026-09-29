@@ -27,6 +27,7 @@ import { pieceLabel } from '../shared/trackingId';
 import { shipmentStatusLabel } from '../shared/shipmentStatus';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
 import { SERVICE_OPTIONS, type ServiceOptionId } from '../data/serviceOptions';
+import { documentTitle } from '../components/DocumentBrand';
 import { CountrySelect } from '../components/forms/CountrySelect';
 import { PhoneInput } from '../components/forms/PhoneInput';
 import { MeasureInput, MoneyInput, UnitToggle, useUnitLabels } from '../components/forms/UnitControls';
@@ -373,7 +374,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     // Auto-generate Master Record in Document Center
     generateDocument({
       docType: 'BOL',
-      title: `Agency Bill of Lading Manifest (${newTrackingId})`,
+      title: `${documentTitle('BOL', transportMode || undefined)} (${newTrackingId})`,
       shipmentTracking: newTrackingId,
       senderName: senderContact,
       senderCompany: senderCompany,
@@ -397,14 +398,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       // Documents keep the canonical unit (inches)
       dimensions: formatDimensions(piecesList[0], 'imperial'),
       declaredValue: declaredValue === '' ? 0 : declaredValue,
-      charges: {
-        baseAmount: 185,
-        oversizeFee: totalWeight > 50 ? 45 : 0,
-        specialHandlingFee: requireSignature ? 15 : 0,
-        totalAmount: 200,
-        paymentStatus: 'PENDING',
-        paymentMethod: 'Agency Central Invoicing'
-      }
+      // No price yet: the coordinator confirms the rate (charges are added in the Document Center).
+      bolSpecialInstructions: [saturdayDelivery ? 'Weekend Delivery requested' : '', deliveryInstructions.trim()].filter(Boolean).join('. ') || undefined
     });
 
     setTimeout(() => {

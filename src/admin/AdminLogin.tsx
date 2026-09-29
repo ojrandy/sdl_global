@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
+import { ADMIN_CONSOLE_NAME } from '../config/brand';
 import './AdminLogin.css';
 
 interface AdminLoginProps {
@@ -27,7 +28,9 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigatePublic }) => {
       // through the provider just for this one-time transition.
       window.location.reload();
     } catch (err: any) {
-      setError(err?.message || 'Login failed. Please try again.');
+      // CONTENT §10 wording for a wrong password; other failures (e.g. too many attempts) keep the server's message.
+      const message: string = err?.message || '';
+      setError(/incorrect password/i.test(message) || !message ? 'Incorrect password. Please try again.' : message);
       setSubmitting(false);
     }
   };
@@ -38,8 +41,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigatePublic }) => {
         <div className="admin-login-badge">
           <ShieldCheck size={22} />
         </div>
-        <h1 className="admin-login-title">Dispatch Command Access</h1>
-        <p className="admin-login-sub">Enter the operations password to reach the admin console.</p>
+        <h1 className="admin-login-title">{ADMIN_CONSOLE_NAME}</h1>
+        <p className="admin-login-sub">Sign in to manage shipments, tracking and documents.</p>
 
         <form onSubmit={handleSubmit} className="admin-login-form">
           <div className="admin-login-field">
@@ -48,7 +51,8 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigatePublic }) => {
               type="password"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(null); }}
-              placeholder="Admin password"
+              placeholder="Password"
+              aria-label="Password"
               autoFocus
               autoComplete="current-password"
             />
@@ -62,7 +66,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigatePublic }) => {
           )}
 
           <button type="submit" className="admin-login-submit" disabled={submitting || !password}>
-            {submitting ? 'Verifying…' : 'Enter Command Center'}
+            {submitting ? 'Signing in…' : 'Sign in'}
             {!submitting && <ArrowRight size={15} />}
           </button>
         </form>

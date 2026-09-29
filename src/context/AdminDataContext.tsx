@@ -714,7 +714,7 @@ const normalizeShipment = (s: any): Shipment => {
     const bolDoc: AdminDocument = {
       id: `BOL-2026-${Math.floor(10000 + Math.random() * 90000)}`,
       shipmentTracking: trackingNumber,
-      title: `Bill of Lading - ${trackingNumber}`,
+      title: `Bill of Lading (${trackingNumber})`,
       docType: 'BOL',
       status: 'GENERATED',
       version: 1,
@@ -729,13 +729,14 @@ const normalizeShipment = (s: any): Shipment => {
       cargoDescription: tq.cargoDescription || 'Commercial Freight Cargo',
       shipmentType: tq.cargoType || 'Parcel',
       service: tq.requestedService || 'Priority Express',
-      weightLbs: tq.totalWeightLbs || 45,
+      weightLbs: tq.totalWeightLbs || 0,
       pieces: typeof tq.pieces === 'number' ? tq.pieces : 1,
-      charges: {
-        baseAmount: tq.pricing?.finalPrice || 350,
-        totalAmount: tq.pricing?.finalPrice || 350,
+      // The accepted quote price, if one was published; no invented amount otherwise.
+      charges: tq.pricing?.finalPrice ? {
+        baseAmount: tq.pricing.finalPrice,
+        totalAmount: tq.pricing.finalPrice,
         paymentStatus: 'PENDING'
-      },
+      } : undefined,
       fileSize: '124 KB',
       versionHistory: [
         {
@@ -764,7 +765,7 @@ const normalizeShipment = (s: any): Shipment => {
       cargoDescription: tq.cargoDescription || 'Commercial Freight Cargo',
       shipmentType: tq.cargoType || 'Parcel',
       service: tq.requestedService || 'Priority Express',
-      weightLbs: tq.totalWeightLbs || 45,
+      weightLbs: tq.totalWeightLbs || 0,
       pieces: typeof tq.pieces === 'number' ? tq.pieces : 1,
       fileSize: '95 KB',
       versionHistory: [
