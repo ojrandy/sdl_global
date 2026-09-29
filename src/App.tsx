@@ -133,6 +133,8 @@ function MainAppContent() {
   const [notFoundQuery, setNotFoundQuery] = useState<string | null>(null);
   const [preselectedService, setPreselectedService] = useState<string>('Priority');
   const [legalSection, setLegalSection] = useState<string>('privacy');
+  // `n` bumps on every request so repeating the same footer link re-opens that tier.
+  const [serviceTier, setServiceTier] = useState<{ id: string; n: number }>({ id: '', n: 0 });
   const [contactGateway, setContactGateway] = useState<string>('');
   const [adminAuthChecked, setAdminAuthChecked] = useState(false);
   const [isAdminAuthed, setIsAdminAuthed] = useState(false);
@@ -237,8 +239,13 @@ function MainAppContent() {
           setCurrentPage('admin');
         }
       } else if (target.startsWith('/')) {
-        const page = target.replace('/', '').split('/')[0];
+        const [page, sub] = target.replace('/', '').split('/');
         if (KNOWN_PAGES.includes(page)) {
+          // Deep links from the footer: #/services/<tier-id>, #/legal/<section>
+          if (page === 'services') {
+            setServiceTier(prev => (prev.id === (sub || '') ? prev : { id: sub || '', n: prev.n + 1 }));
+          }
+          if (page === 'legal' && sub) setLegalSection(sub);
           setCurrentPage(page);
         } else if (page === 'track-result') {
           // If navigated directly to track-result without an active shipment, redirect to track search
@@ -265,12 +272,20 @@ function MainAppContent() {
       // Gateway code from "Contact this gateway"; plain Contact links clear it.
       setContactGateway(param || '');
     }
+    if (page === 'services') {
+      // A tier ID opens that tier; ServicesPage scrolls to it, so skip the scroll to top.
+      setServiceTier(prev => ({ id: param || '', n: prev.n + 1 }));
+    }
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!(page === 'services' && param)) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     if (page === 'track-result' && param) {
       window.location.hash = `/track/${param}`;
     } else if (page === 'quote-result' && param) {
       window.location.hash = `/quote/${param}`;
+    } else if ((page === 'services' || page === 'legal') && param) {
+      window.location.hash = `/${page}/${param}`;
     } else if (page === 'home') {
       window.location.hash = '';
     } else {
@@ -443,7 +458,7 @@ function MainAppContent() {
         )}
 
         {currentPage === 'services' && (
-          <ServicesPage onNavigate={handleNavigate} />
+          <ServicesPage onNavigate={handleNavigate} initialServiceId={serviceTier.id} serviceRequest={serviceTier.n} />
         )}
 
         {currentPage === 'quote' && (

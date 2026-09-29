@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Globe,
   Truck,
@@ -19,6 +19,10 @@ import './ServicesPage.css';
 
 interface ServicesPageProps {
   onNavigate: (page: string) => void;
+  // Tier to open on arrival (#/services/<tier-id>, e.g. from the footer).
+  initialServiceId?: string;
+  // Changes on every navigation request, so the same tier link works twice in a row.
+  serviceRequest?: number;
 }
 
 // Copy: docs/CONTENT.md §3. Values marked [confirm] there are shown as written, pending the owner.
@@ -171,9 +175,19 @@ const PROCESS: { title: string; body: string }[] = [
   { title: 'Signed Proof of Delivery', body: 'Final-mile delivery to the door, with a signed digital proof of delivery sent to you the moment it lands.' }
 ];
 
-export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
-  const [selectedServiceId, setSelectedServiceId] = useState<string>(SERVICE_TIERS[0].id);
+export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate, initialServiceId = '', serviceRequest = 0 }) => {
+  const isTier = (id: string) => SERVICE_TIERS.some((s) => s.id === id);
+  const [selectedServiceId, setSelectedServiceId] = useState<string>(
+    isTier(initialServiceId) ? initialServiceId : SERVICE_TIERS[0].id
+  );
   const [activeIndustryTab, setActiveIndustryTab] = useState<string>(INDUSTRIES[0].id);
+
+  useEffect(() => {
+    if (!isTier(initialServiceId)) return;
+    setSelectedServiceId(initialServiceId);
+    document.getElementById('service-tiers')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialServiceId, serviceRequest]);
 
   const activeService = SERVICE_TIERS.find((s) => s.id === selectedServiceId) || SERVICE_TIERS[0];
   const activeIndustry = INDUSTRIES.find((ind) => ind.id === activeIndustryTab) || INDUSTRIES[0];
@@ -230,7 +244,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
       {/* =========================================================================
           2. SERVICE TIERS (CONTENT.md §3.1)
           ========================================================================= */}
-      <section className="services-explorer-section">
+      <section id="service-tiers" className="services-explorer-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
             <span className="section-eyebrow">SERVICE TIERS</span>

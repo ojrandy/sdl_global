@@ -25,14 +25,60 @@ const SOCIAL_LINKS: { key: SocialNetwork; label: string; Icon: typeof Facebook }
   { key: 'youtube', label: 'YouTube', Icon: Youtube },
 ];
 
-// LegalPage sections (CONTENT §1.3 / §13).
-const LEGAL_LINKS = [
-  { section: 'privacy', label: 'Privacy Policy' },
-  { section: 'terms', label: 'Terms of Service' },
-  { section: 'shipping-terms', label: 'Shipping Terms' },
-  { section: 'cookies', label: 'Cookie Policy' },
-  { section: 'accessibility', label: 'Accessibility' },
+// Every link points at a real page (and, where there is one, the exact section on it):
+// page = App.tsx KNOWN_PAGES entry, param = service tier ID or legal section ID.
+interface FooterLinkDef {
+  label: string;
+  page: string;
+  param?: string;
+}
+
+const FOOTER_COLUMNS: { title: string; links: FooterLinkDef[] }[] = [
+  {
+    title: 'Services',
+    links: [
+      { label: 'Priority Express', page: 'services', param: 'priority-courier' },
+      { label: 'Freight & Linehaul', page: 'services', param: 'scheduled-freight' },
+      { label: 'Vehicle Shipping', page: 'services', param: 'vehicle-shipping' },
+      { label: 'Secure Vault', page: 'services', param: 'secure-vault' },
+    ],
+  },
+  {
+    // Careers hidden until the page exists
+    title: 'Company',
+    links: [
+      { label: `About ${COMPANY_SHORT}`, page: 'about' },
+      { label: 'Our Services', page: 'services' },
+      { label: 'Global Network', page: 'locations' },
+      { label: 'Contact', page: 'contact' },
+    ],
+  },
+  {
+    title: 'Support',
+    links: [
+      { label: 'Track a Shipment', page: 'track' },
+      { label: 'Book a Shipment', page: 'ship' },
+      { label: 'Get a Quote', page: 'quote' },
+      { label: 'Help Centre', page: 'help' },
+    ],
+  },
+  {
+    // LegalPage sections (CONTENT §1.3 / §13).
+    title: 'Legal',
+    links: [
+      { label: 'Privacy Policy', page: 'legal', param: 'privacy' },
+      { label: 'Terms of Service', page: 'legal', param: 'terms' },
+      { label: 'Shipping Terms', page: 'legal', param: 'shipping-terms' },
+      { label: 'Cookie Policy', page: 'legal', param: 'cookies' },
+    ],
+  },
 ];
+
+// Keep every column at exactly four links so the rows line up across the footer.
+// Accessibility lives in the bottom bar instead of a fifth Legal row.
+
+const hrefFor = (page: string, param?: string) =>
+  page === 'home' ? '#/' : `#/${page}${param ? `/${param}` : ''}`;
 
 interface FooterProps {
   onNavigate?: (page: string, param?: string) => void;
@@ -44,6 +90,14 @@ export const Footer: React.FC<FooterProps> = ({
   showTrustStrip = true,
 }) => {
   const { address } = useCompanyContact();
+
+  // Plain clicks route in-app; Ctrl/Cmd/Shift/middle-click keep the browser's
+  // open-in-new-tab behaviour, since each link carries its real URL.
+  const go = (page: string, param?: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    onNavigate(page, param);
+  };
 
   return (
     <footer className="sdl-pro-footer-wrapper">
@@ -106,13 +160,13 @@ export const Footer: React.FC<FooterProps> = ({
           <div className="sdl-pro-footer-grid">
             {/* Column 1: Brand & Tagline */}
             <div className="sdl-pro-brand-col">
-              <div className="sdl-pro-footer-logo" onClick={() => onNavigate('home')}>
+              <a className="sdl-pro-footer-logo" href={hrefFor('home')} onClick={go('home')}>
                 <img
                   src={LOGO_WHITE}
                   alt={LOGO_ALT}
                   className="sdl-pro-footer-logo-img"
                 />
-              </div>
+              </a>
 
               <p className="sdl-pro-brand-desc">
                 Express, freight and secure cargo across borders, with one tracking ID and one accountable team from pickup to proof of delivery.
@@ -134,125 +188,25 @@ export const Footer: React.FC<FooterProps> = ({
               </div>
             </div>
 
-            {/* Column 2: Services */}
-            <div className="sdl-pro-links-col">
-              <h4 className="sdl-pro-col-title">
-                Services
-                <span className="title-accent-dash" />
-              </h4>
-              <ul className="sdl-pro-links-list">
-                <li>
-                  <button type="button" onClick={() => onNavigate('services')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Priority Express</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('services')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Freight & Linehaul</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('services')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Vehicle Shipping</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('services')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Secure Vault</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('quote')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Get a Quote</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: Company (Careers hidden until the page exists) */}
-            <div className="sdl-pro-links-col">
-              <h4 className="sdl-pro-col-title">
-                Company
-                <span className="title-accent-dash" />
-              </h4>
-              <ul className="sdl-pro-links-list">
-                <li>
-                  <button type="button" onClick={() => onNavigate('about')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>About {COMPANY_SHORT}</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('locations')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Global Network</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('contact')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Contact</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4: Support */}
-            <div className="sdl-pro-links-col">
-              <h4 className="sdl-pro-col-title">
-                Support
-                <span className="title-accent-dash" />
-              </h4>
-              <ul className="sdl-pro-links-list">
-                <li>
-                  <button type="button" onClick={() => onNavigate('track')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Track a Shipment</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('help')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Help Centre</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('ship')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Book a Shipment</span>
-                  </button>
-                </li>
-                <li>
-                  <button type="button" onClick={() => onNavigate('contact')}>
-                    <ChevronRight size={14} className="link-chevron" />
-                    <span>Report an Issue</span>
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 5: Legal */}
-            <nav className="sdl-pro-links-col" aria-label="Legal">
-              <h4 className="sdl-pro-col-title">
-                Legal
-                <span className="title-accent-dash" />
-              </h4>
-              <ul className="sdl-pro-links-list">
-                {LEGAL_LINKS.map(({ section, label }) => (
-                  <li key={section}>
-                    <button type="button" onClick={() => onNavigate('legal', section)}>
-                      <ChevronRight size={14} className="link-chevron" />
-                      <span>{label}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            {/* Columns 2–5: Services · Company · Support · Legal */}
+            {FOOTER_COLUMNS.map(({ title, links }) => (
+              <nav key={title} className="sdl-pro-links-col" aria-label={title}>
+                <h4 className="sdl-pro-col-title">
+                  {title}
+                  <span className="title-accent-dash" />
+                </h4>
+                <ul className="sdl-pro-links-list">
+                  {links.map(({ label, page, param }) => (
+                    <li key={label}>
+                      <a href={hrefFor(page, param)} onClick={go(page, param)}>
+                        <ChevronRight size={14} className="link-chevron" aria-hidden="true" />
+                        <span>{label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
           </div>
 
           {/* 3. BOTTOM BAR */}
@@ -261,6 +215,13 @@ export const Footer: React.FC<FooterProps> = ({
               © {new Date().getFullYear()} {LEGAL_NAME}. All rights reserved.
               {address && <> · {address}</>}
             </div>
+            <a
+              className="pro-bottom-link"
+              href={hrefFor('legal', 'accessibility')}
+              onClick={go('legal', 'accessibility')}
+            >
+              Accessibility
+            </a>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import './LegalPage.css';
 
 interface LegalPageProps {
   initialSection?: string;
-  onNavigate?: (page: string) => void;
+  onNavigate?: (page: string, param?: string) => void;
 }
 
 const DOC_ICONS: Record<LegalDocId, React.ElementType> = {
@@ -18,7 +18,7 @@ const DOC_ICONS: Record<LegalDocId, React.ElementType> = {
 };
 
 // CONTENT §13: Privacy Policy · Terms of Service · Shipping Terms · Cookie Policy · Accessibility
-export const LegalPage: React.FC<LegalPageProps> = ({ initialSection = 'privacy' }) => {
+export const LegalPage: React.FC<LegalPageProps> = ({ initialSection = 'privacy', onNavigate }) => {
   // Contact values from Settings/brand.ts; an empty address leaves its sentence out.
   const { email, address } = useCompanyContact();
   const docs = legalDocs({ email, address });
@@ -55,7 +55,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialSection = 'privacy'
                     type="button"
                     aria-current={d.id === doc.id ? 'page' : undefined}
                     className={`legal-nav-btn ${d.id === doc.id ? 'active' : ''}`}
-                    onClick={() => setActiveDoc(d.id)}
+                    onClick={() => {
+                      setActiveDoc(d.id);
+                      // Keep the URL (#/legal/<id>) in step, so each policy has its own link.
+                      onNavigate?.('legal', d.id);
+                    }}
                   >
                     <Icon size={16} />
                     <span>{d.label}</span>
