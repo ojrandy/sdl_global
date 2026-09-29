@@ -343,6 +343,14 @@ Rotating lines: `Locating your shipment…` · `Checking the latest scans…` ·
 - **H3:** `How can we help with this shipment?`
 - Fields: Tracking ID (pre-filled) · Issue type (Delay · Address change · Damage · Customs question · Other) · Message · Email
 - **Success:** `Ticket SDL-TKT-###### opened for {tracking ID}. We'll reply to {email} shortly.`
+- Also a **Name** field (the Messages inbox needs a name to reply to; owner approved 2026-09-29). Submit button: `Open ticket`.
+
+### 6.5 Interface labels (owner approved 2026-09-29)
+- Track page tabs: `One ID` · `Track several shipments` · recent searches: `Recently tracked`
+- Several-shipments results: `Open tracking` (button) · `Last seen` · `{n} of {m} found`
+- Track Result: `Back to tracking` · `Last scan` · `Show scan history` / `Hide scan history`
+- Admin quick action (records a scan at a hub; shown publicly as In transit): `Hub scan`
+- Older status codes are shown as: Exception → On hold · Delivery attempted → Delayed · At facility (intermediate hub) → In transit · Created / Awaiting pickup → Booked · Cancelled → `Cancelled`
 
 ---
 

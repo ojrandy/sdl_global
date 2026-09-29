@@ -382,7 +382,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                 onClick={() => setTargetAction('AT_FACILITY')}
               >
                 <MapPin size={14} />
-                <span>Checkpoint scan</span>
+                <span>Hub scan</span>
               </button>
 
               <button

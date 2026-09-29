@@ -591,7 +591,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               onClick={() => onNavigate('track')}
             >
               <ArrowLeft size={16} />
-              <span>Track another shipment</span>
+              <span>Back to tracking</span>
             </button>
           </div>
 
@@ -752,7 +752,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
               )}
 
               <div className="last-recorded-checkpoint-box">
-                <span className="chk-label">LAST RECORDED CHECKPOINT</span>
+                <span className="chk-label">LAST SCAN</span>
                 <span className="chk-val">{currentLocationText}{currentLocationText ? ' · ' : ''}{lastUpdated}</span>
               </div>
             </div>
@@ -940,7 +940,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
                 className="view-full-timeline-action-btn"
                 onClick={() => setShowEarlierEvents(!showEarlierEvents)}
               >
-                <span>{showEarlierEvents ? 'Hide all scans' : 'Show all scans'}</span>
+                <span>{showEarlierEvents ? 'Hide scan history' : 'Show scan history'}</span>
                 <ChevronDown size={15} style={{ transform: showEarlierEvents ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
               </button>
 

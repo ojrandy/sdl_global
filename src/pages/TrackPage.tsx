@@ -201,7 +201,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                 onClick={() => setActiveTab('single')}
               >
                 <Search size={16} />
-                <span>Track a shipment</span>
+                <span>One ID</span>
               </button>
 
               <button
@@ -274,7 +274,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
             {recentSearches.length > 0 && (
               <div className="terminal-footer">
                 <div className="recent-searches-group">
-                  <span className="quick-samples-label">Recent lookups:</span>
+                  <span className="quick-samples-label">Recently tracked:</span>
                   <div className="quick-chips-row">
                     {recentSearches.map((num, i) => (
                       <button
@@ -484,7 +484,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
 
                       <div className="batch-metrics-row">
                         <div className="batch-metric-box">
-                          <small>Current location</small>
+                          <small>Last seen</small>
                           <strong>{current || '—'}</strong>
                         </div>
                         <div className="batch-metric-box">
@@ -501,7 +501,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
                           handleQuickTrack(shipment.trackingNumber);
                         }}
                       >
-                        <span>View details</span>
+                        <span>Open tracking</span>
                         <ArrowRight size={14} />
                       </button>
                     </div>
@@ -512,7 +512,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
 
             <div className="batch-modal-footer">
               <span className="batch-footer-count">
-                Found <strong>{found.length}</strong> of {batchResults.length}
+                <strong>{found.length}</strong> of {batchResults.length} found
               </span>
               <button
                 type="button"

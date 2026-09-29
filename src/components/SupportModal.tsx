@@ -177,7 +177,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({
                 Cancel
               </button>
               <button type="submit" className="sdl-btn-primary" disabled={submitting}>
-                <Send size={15} /> {submitting ? 'Sending…' : 'Send'}
+                <Send size={15} /> {submitting ? 'Opening…' : 'Open ticket'}
               </button>
             </div>
           </form>
