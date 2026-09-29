@@ -73,7 +73,7 @@
   color: var(--sdl-white);
   line-height: 1.15;
   letter-spacing: -0.02em;
-  margin-bottom: 1rem;
+  margin-bottom: 1.75rem;
 }
 
 .help-highlight-accent {
@@ -226,6 +226,10 @@
 }
 
 .help-pillar-card {
+  /* <button> reset: the quick links are buttons for keyboard access */
+  font: inherit;
+  text-align: left;
+  width: 100%;
   background: var(--sdl-white);
   border: 1.5px solid var(--sdl-slate-200);
   border-radius: var(--sdl-radius-xl);
@@ -235,6 +239,11 @@
   transition: var(--sdl-transition);
   display: flex;
   flex-direction: column;
+}
+
+.help-pillar-card:focus-visible {
+  outline: 3px solid var(--sdl-accent-400);
+  outline-offset: 2px;
 }
 
 .help-pillar-card:hover {
@@ -281,7 +290,8 @@
   font-size: 1.1875rem;
   font-weight: 800;
   color: var(--sdl-ink-900);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex: 1;
 }
 
 .help-pillar-card p {
@@ -587,5 +597,24 @@
   }
   .network-nodes-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* The ghost button is styled for dark heroes; on this white card it needs a dark outline. */
+.help-empty-search .btn-corp-ghost {
+  color: var(--sdl-ink-900);
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-300);
+}
+
+.help-empty-search .btn-corp-ghost:hover {
+  border-color: var(--sdl-ink-900);
+  background: var(--sdl-slate-50);
+}
+
+/* Narrow screens: the text spans the whole hero, so the overlay stays dark edge to edge. */
+@media (max-width: 768px) {
+  .help-hero-bg-overlay {
+    background: rgba(var(--sdl-ink-rgb), 0.85);
   }
 }

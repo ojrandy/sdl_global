@@ -135,58 +135,6 @@
   line-height: 1.4;
 }
 
-/* Priority Selector */
-.priority-select-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.375rem;
-  flex-shrink: 0;
-}
-
-.prio-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--sdl-slate-500);
-  text-transform: uppercase;
-}
-
-.prio-btn-group {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  background: #f1f5f9;
-  padding: 0.25rem;
-  border-radius: var(--sdl-radius-md);
-}
-
-.prio-btn {
-  background: transparent;
-  border: none;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--sdl-slate-600);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--sdl-radius-sm);
-  cursor: pointer;
-  transition: var(--sdl-transition);
-}
-
-.prio-btn.active {
-  background: var(--sdl-ink-900);
-  color: var(--sdl-white);
-}
-
-.prio-btn.active.urgent {
-  background: #d97706;
-  color: var(--sdl-white);
-}
-
-.prio-btn.active.critical {
-  background: #dc2626;
-  color: var(--sdl-white);
-}
-
 /* Form Error Banner */
 .contact-form-error {
   background: #fef2f2;
@@ -299,47 +247,6 @@
   margin-bottom: 1rem;
 }
 
-.tkt-details-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--sdl-slate-200);
-  font-size: 0.8125rem;
-}
-
-.prio-tag {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--sdl-radius-sm);
-}
-
-.prio-tag.routine { background: #e0f2fe; color: #0369a1; }
-.prio-tag.urgent { background: #fef3c7; color: #b45309; }
-.prio-tag.critical { background: #fee2e2; color: #b91c1c; }
-
-.ticket-notice-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  background: rgba(var(--sdl-accent-rgb), 0.08);
-  border: 1px solid rgba(var(--sdl-accent-rgb), 0.2);
-  border-radius: var(--sdl-radius-md);
-  padding: 0.75rem 1rem;
-  font-size: 0.8125rem;
-  color: var(--sdl-accent-600);
-  max-width: 480px;
-  width: 100%;
-  margin-bottom: 1.75rem;
-  text-align: left;
-}
-
-.ticket-notice-banner p {
-  margin: 0;
-  line-height: 1.4;
-}
-
 .success-action-row {
   display: flex;
   align-items: center;
@@ -423,6 +330,18 @@
   font-size: 1rem;
   color: var(--sdl-ink-900);
   display: block;
+  overflow-wrap: anywhere;
+}
+
+.contact-channel-item strong a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.contact-channel-item strong a:hover,
+.contact-channel-item strong a:focus-visible {
+  color: var(--sdl-accent-600);
+  text-decoration: underline;
 }
 
 .contact-channel-item p {
@@ -567,19 +486,6 @@
     align-items: flex-start;
     gap: 1rem;
   }
-  .priority-select-wrap {
-    align-items: flex-start;
-    width: 100%;
-  }
-  .prio-btn-group {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .prio-btn {
-    text-align: center;
-    padding: 0.5rem 0.25rem;
-  }
   .form-row-2 {
     grid-template-columns: 1fr;
     gap: 0;
@@ -620,5 +526,24 @@
   .faq-question-btn {
     font-size: 0.9375rem;
     padding: 1rem;
+  }
+}
+
+/* The ghost button is styled for dark heroes; on this white card it needs a dark outline. */
+.success-action-row .btn-corp-ghost {
+  color: var(--sdl-ink-900);
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-300);
+}
+
+.success-action-row .btn-corp-ghost:hover {
+  border-color: var(--sdl-ink-900);
+  background: var(--sdl-slate-50);
+}
+
+/* Narrow screens: the text spans the whole hero, so the overlay stays dark edge to edge. */
+@media (max-width: 768px) {
+  .contact-hero-bg-overlay {
+    background: rgba(var(--sdl-ink-rgb), 0.85);
   }
 }

@@ -906,3 +906,56 @@
     padding-top: 6px;
   }
 }
+
+/* CONTENT §7.2 additions: next steps while in review, promise text, "Ask a question", footer line */
+.quote-res-next-steps {
+  text-align: left;
+  max-width: 440px;
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.guarantee-text {
+  font-size: 0.8125rem;
+  color: #166534;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.desk-phone {
+  overflow-wrap: anywhere;
+}
+
+.btn-ask-question {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-ask-question:hover,
+.btn-ask-question:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.quote-res-footer-line {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 2rem 0 0;
+}

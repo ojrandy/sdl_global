@@ -1,33 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Calculator,
-  ArrowRight,
   CheckCircle2,
-  ShieldCheck,
-  Clock,
   MapPin,
-  Truck,
   Send,
   FileText,
-  Lock,
-  Building,
-  Phone,
-  Mail,
+  Truck,
   User,
-  DollarSign,
   Package,
   RotateCcw,
-  Sparkles,
-  AlertCircle
+  AlertCircle,
+  ListChecks
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAdminData } from '../context/AdminDataContext';
-import { useCompanyContact } from '../utils/useCompanyContact';
 import { COMPANY } from '../config/brand';
 import { CountrySelect } from '../components/forms/CountrySelect';
 import { PhoneInput } from '../components/forms/PhoneInput';
 import { MeasureInput, MoneyInput, UnitToggle, useUnitLabels } from '../components/forms/UnitControls';
 import { getCountry, postcodeLabel, regionLabel, shortRegion } from '../data/countries';
+import { SERVICE_OPTIONS, findServiceOption } from '../data/serviceOptions';
+import { QUOTE_NEXT_STEPS } from '../data/quoteNextSteps';
 import { formatWeight } from '../shared/units';
 import { TRANSPORT_MODE_LABELS, type TransportMode } from '../shared/transportMode';
 import { useCurrency } from '../utils/useCurrency';
@@ -58,17 +50,15 @@ interface QuotePageProps {
 }
 
 export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService }) => {
-  const { createQuoteRequest, settings } = useAdminData();
-  // Empty phone/regulatory values hide their element (no placeholders).
-  const { phone: supportPhone, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
+  const { createQuoteRequest } = useAdminData();
 
-  // Contact Info (Starts clean and blank)
+  // Your details
   const [customerName, setCustomerName] = useState('');
   const [company, setCompany] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
 
-  // Routing: country first, then the fields that fit it (region and postcode optional)
+  // Route: country first, then the fields that fit it (region and postcode optional)
   const [originCountry, setOriginCountry] = useState('');
   const [originCity, setOriginCity] = useState('');
   const [originState, setOriginState] = useState('');
@@ -84,14 +74,13 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
   const units = useUnitLabels();
   const money = useCurrency();
 
-  // Cargo Specs (Strict 4 Allowed Core Services, Zero Freight/Train/Ship)
+  // Service: one of the four §7.1 services (stored by name)
   const [cargoDescription, setCargoDescription] = useState('');
-  const [cargoType, setCargoType] = useState('Commercial Parcel');
-  const [service, setService] = useState(initialService || 'Priority Express Courier');
+  const [service, setService] = useState(findServiceOption(initialService).name);
 
   useEffect(() => {
     if (initialService) {
-      setService(initialService);
+      setService(findServiceOption(initialService).name);
     }
   }, [initialService]);
 
@@ -110,42 +99,13 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
   const [createdQuoteId, setCreatedQuoteId] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Dynamic Real-Time Tariff Estimator
-  const estimatedRate = useMemo(() => {
-    const w = weight === '' ? 0 : weight;
-    const p = parseInt(pieces, 10) || 1;
-    if (w <= 0) return null;
-
-    let baseRate = 65; // Base courier dispatch fee
-    let ratePerLb = 1.45;
-
-    if (service === 'Priority Express Courier') {
-      baseRate = 95;
-      ratePerLb = 2.15;
-    } else if (service === 'Scheduled Commercial Linehaul') {
-      baseRate = 120;
-      ratePerLb = 1.25;
-    } else if (service === 'Auto & Vehicle Transport') {
-      baseRate = 650;
-      ratePerLb = 0.45;
-    } else if (service === 'Time-Critical Secure Vault') {
-      baseRate = 350;
-      ratePerLb = 3.50;
-    }
-
-    const calculated = baseRate + (w * ratePerLb) + (p > 1 ? (p - 1) * 12 : 0);
-    const lowRange = Math.round(calculated * 0.92);
-    const highRange = Math.round(calculated * 1.15);
-
-    return { low: lowRange, high: highRange, base: Math.round(calculated) };
-  }, [weight, pieces, service]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setFormError(null);
 
-    if (!customerName.trim() || !customerEmail.trim() || !originCountry || !originCity.trim() || !destCountry || !destCity.trim() || weight === '') {
-      setFormError('Please complete all required fields (Name, Email, origin and destination country and city, and Weight).');
+    if (!customerName.trim() || !customerEmail.trim() || !originCountry || !originCity.trim() || !destCountry || !destCity.trim() || weight === '' || !cargoDescription.trim()) {
+      setFormError('Please complete all required fields (origin and destination country and city, weight, contents, name and email).');
       return;
     }
 
@@ -160,8 +120,8 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
         origin: addressPayload(originCountry, originCity, originState, originZip),
         destination: addressPayload(destCountry, destCity, destState, destZip),
         transportMode: transportMode || undefined,
-        cargoDescription: cargoDescription.trim() || 'Commercial Express Consignment',
-        shipmentType: (cargoType === 'Vehicle / Automobile' ? 'Vehicle' : 'Parcel') as any,
+        cargoDescription: cargoDescription.trim(),
+        shipmentType: (findServiceOption(service).id === 'vehicle' ? 'Vehicle' : 'Parcel') as any,
         service: service as any,
         weightLbs: weight,
         pieces: parseInt(pieces, 10) || 1,
@@ -175,37 +135,16 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
         specialInstructions: specialInstructions.trim() || undefined
       };
 
-      // Send to persistent backend SQLite API
+      // Saved in the database; the server assigns the quote reference.
       const result = await api.submitPublicQuote(quotePayload as any);
-      const generatedId = result.id || `QR-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-
-      // Update state in context
       createQuoteRequest(result);
 
-      setCreatedQuoteId(generatedId);
+      setCreatedQuoteId(result.id);
       setSubmitted(true);
       window.scrollTo({ top: 200, behavior: 'smooth' });
     } catch (err: any) {
-      console.warn('API quote submission warning, utilizing client synchronization:', err);
-      // Fallback local creation
-      const localQuote = createQuoteRequest({
-        customerName: customerName.trim(),
-        company: company.trim() || undefined,
-        customerEmail: customerEmail.trim(),
-        customerPhone: customerPhone.trim(),
-        origin: addressPayload(originCountry, originCity, originState, originZip),
-        destination: addressPayload(destCountry, destCity, destState, destZip),
-        transportMode: transportMode || undefined,
-        cargoDescription: cargoDescription || 'Commercial Express Consignment',
-        service,
-        weightLbs: weight,
-        pieces: parseInt(pieces, 10) || 1,
-        declaredValue: declaredValue === '' ? 0 : declaredValue,
-        specialInstructions
-      } as any);
-      setCreatedQuoteId(localQuote.id);
-      setSubmitted(true);
-      window.scrollTo({ top: 200, behavior: 'smooth' });
+      // Nothing was saved: say so rather than showing a reference that doesn't exist.
+      setFormError(`We couldn't send your quote request: ${err?.message || 'the server did not respond'}. Nothing was saved; please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -240,22 +179,15 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
   return (
     <div className="sdl-page-quote">
       {/* =========================================================================
-          1. CINEMATIC HERO SECTION
+          1. HERO (CONTENT §7.1)
           ========================================================================= */}
       <section className="sdl-quote-hero">
         <div className="quote-hero-bg-overlay" />
         <div className="sdl-container-wide quote-hero-inner">
-          <div className="quote-hero-pill animate-fade-in">
-            <span className="quote-pulse-dot" />
-            <span>{dotNumber ? `${dotNumber} · ` : ''}CENTRAL TARIFF & RATING DESK</span>
-          </div>
-
-          <h1 className="quote-hero-title animate-fade-in">
-            Calculate & Request <span className="quote-highlight-accent">Custom Consignment Rates.</span>
-          </h1>
+          <h1 className="quote-hero-title animate-fade-in">Get a rate quote</h1>
 
           <p className="quote-hero-lead animate-fade-in">
-            Submit your consignment routing and weight specifications directly to our Central Tariff Desk. Certified rates are published by our operational coordinators.
+            Tell us what you're moving and where. A coordinator will confirm your rate, usually the same business day.
           </p>
         </div>
       </section>
@@ -268,60 +200,42 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
           /* =========================================================================
              CONFIRMATION STATE
              ========================================================================= */
-          <div className="quote-confirmation-card animate-fade-in">
-            <div className="confirm-top-pill">
-              <span className="pulse-accent-dot" />
-              <span>APPLICATION SUBMITTED · PENDING DISPATCH DESK CERTIFICATION</span>
-            </div>
-
+          <div className="quote-confirmation-card animate-fade-in" role="status">
             <div className="confirm-header">
               <div className="check-badge-icon"><CheckCircle2 size={48} className="text-emerald" /></div>
-              <h2>Rate Request Successfully Submitted</h2>
+              <h2>Quote request received</h2>
               <p>
-                Your consignment tariff application <strong className="font-mono text-accent">{createdQuoteId}</strong> has been logged in the {COMPANY} dispatch ledger.
+                Quote reference <strong className="font-mono text-accent">{createdQuoteId}</strong>
               </p>
             </div>
 
             <div className="admin-review-info-box">
               <div className="info-box-head">
-                <Lock size={18} className="text-accent flex-shrink-0" />
-                <h4>How Rate Publishing & Certification Works:</h4>
+                <ListChecks size={18} className="text-accent flex-shrink-0" />
+                <h4>What happens next</h4>
               </div>
-              <p>
-                {COMPANY} maintains verified tariff transparency without surge markups. Our central dispatch desk reviews corridor linehaul availability, certified scale weight, and required transit speed. Once certified, your official rate is published to your account and sent directly to <strong>{customerEmail || 'your email'}</strong>.
-              </p>
+              <ol className="quote-next-steps">
+                {QUOTE_NEXT_STEPS.map((step) => <li key={step}>{step}</li>)}
+              </ol>
             </div>
 
             <div className="quote-receipt-card">
-              <span className="receipt-tag font-mono">APPLICATION SPECIFICATION SUMMARY</span>
               <div className="receipt-grid">
                 <div className="rec-item">
-                  <small>Request ID Reference:</small>
+                  <small>Quote reference</small>
                   <strong className="font-mono text-accent">{createdQuoteId}</strong>
                 </div>
                 <div className="rec-item">
-                  <small>Applicant Contact:</small>
-                  <strong>{customerName} {company ? `(${company})` : ''}</strong>
-                </div>
-                <div className="rec-item">
-                  <small>Route:</small>
-                  <strong>{placeLabel(originCity, originState, originCountry)} → {placeLabel(destCity, destState, destCountry)}</strong>
-                </div>
-                <div className="rec-item">
-                  <small>Cargo Consignment:</small>
-                  <strong>{cargoDescription || 'Commercial Parcel'}</strong>
-                </div>
-                <div className="rec-item">
-                  <small>Certified Weight & Pieces:</small>
-                  <strong>{formatWeight(weight, units.system)} ({pieces || '1'} pc{parseInt(pieces, 10) > 1 ? 's' : ''})</strong>
-                </div>
-                <div className="rec-item">
-                  <small>Requested Service Tier:</small>
+                  <small>Service</small>
                   <strong>{service}{transportMode ? ` · ${TRANSPORT_MODE_LABELS[transportMode]}` : ''}</strong>
                 </div>
                 <div className="rec-item span-full">
-                  <small>Tariff Certification Status:</small>
-                  <strong className="text-accent font-mono">● PENDING DISPATCH DESK CERTIFICATION</strong>
+                  <small>Route</small>
+                  <strong>{placeLabel(originCity, originState, originCountry)} → {placeLabel(destCity, destState, destCountry)}</strong>
+                </div>
+                <div className="rec-item span-full">
+                  <small>Cargo</small>
+                  <strong>{cargoDescription} · {formatWeight(weight, units.system)} · {pieces || '1'} {parseInt(pieces, 10) > 1 ? 'pieces' : 'piece'}</strong>
                 </div>
               </div>
             </div>
@@ -333,16 +247,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 onClick={() => onNavigate('quote-result', createdQuoteId)}
               >
                 <FileText size={16} />
-                <span>View Official Quote Ledger</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn-corp-ghost"
-                onClick={() => onNavigate('track')}
-              >
-                <span>Track Active Consignment</span>
-                <ArrowRight size={16} />
+                <span>View your quote</span>
               </button>
 
               <button
@@ -351,94 +256,33 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 onClick={handleReset}
               >
                 <RotateCcw size={16} />
-                <span>Submit Another Rate Application</span>
+                <span>Request another quote</span>
               </button>
             </div>
           </div>
         ) : (
           /* =========================================================================
-             INTERACTIVE RATE REQUEST FORM + LIVE PREVIEW SIDEBAR
+             QUOTE FORM + SIDE CARD
              ========================================================================= */
           <div className="sdl-quote-grid">
             <div className="quote-form-card">
-              <div className="form-head-title">
-                <h3>Consignment Rate Parameters</h3>
-                <p>Provide your shipment details to receive an official published rate from our administration desk.</p>
-              </div>
-
               {formError && (
-                <div className="quote-form-error animate-fade-in">
+                <div className="quote-form-error animate-fade-in" role="alert">
                   <AlertCircle size={18} className="flex-shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="quote-calc-form">
-                {/* 1. CONTACT INFORMATION */}
-                <div className="form-section-divider">
-                  <User size={16} className="text-accent" />
-                  <span>1. Shipper & Contact Information</span>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Your Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="e.g. John Anderson"
-                      className="sdl-input"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Company / Organization (Optional)</label>
-                    <input
-                      type="text"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                      placeholder="e.g. Apex Distribution LLC"
-                      className="sdl-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Email Address *</label>
-                    <input
-                      type="email"
-                      required
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="e.g. j.anderson@example.com"
-                      className="sdl-input"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="quote-phone">Phone Number <span className="sdl-field-optional">(optional)</span></label>
-                    <PhoneInput
-                      id="quote-phone"
-                      value={customerPhone}
-                      onChange={setCustomerPhone}
-                      defaultCountry={originCountry || 'US'}
-                      className="sdl-input font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* 2. ROUTE LOCATIONS */}
+                {/* 1. ROUTE */}
                 <div className="form-section-divider">
                   <MapPin size={16} className="text-accent" />
-                  <span>2. Origin & Destination Corridor</span>
+                  <span>1. Route</span>
                 </div>
 
                 {([
-                  { key: 'origin', title: 'Origin', country: originCountry, setCountry: setOriginCountry, city: originCity, setCity: setOriginCity, region: originState, setRegion: setOriginState, postcode: originZip, setPostcode: setOriginZip },
-                  { key: 'dest', title: 'Destination', country: destCountry, setCountry: setDestCountry, city: destCity, setCity: setDestCity, region: destState, setRegion: setDestState, postcode: destZip, setPostcode: setDestZip }
+                  { key: 'origin', title: 'From', country: originCountry, setCountry: setOriginCountry, city: originCity, setCity: setOriginCity, region: originState, setRegion: setOriginState, postcode: originZip, setPostcode: setOriginZip },
+                  { key: 'dest', title: 'To', country: destCountry, setCountry: setDestCountry, city: destCity, setCity: setDestCity, region: destState, setRegion: setDestState, postcode: destZip, setPostcode: setDestZip }
                 ]).map((side) => (
                   <fieldset key={side.key} className="quote-address-fieldset">
                     <legend>{side.title}</legend>
@@ -491,69 +335,10 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   </fieldset>
                 ))}
 
-                {/* 3. CARGO SPECIFICATIONS */}
+                {/* 2. CARGO */}
                 <div className="form-section-divider">
                   <Package size={16} className="text-accent" />
-                  <span>3. Cargo Specifications & Service Tier</span>
-                </div>
-
-                <div className="form-group">
-                  <label>Consignment Description *</label>
-                  <input
-                    type="text"
-                    required
-                    value={cargoDescription}
-                    onChange={(e) => setCargoDescription(e.target.value)}
-                    placeholder="e.g. Precision diagnostic electronic assemblies"
-                    className="sdl-input"
-                  />
-                </div>
-
-                <div className="form-row-2">
-                  <div className="form-group">
-                    <label>Consignment Category *</label>
-                    <select
-                      value={cargoType}
-                      onChange={(e) => setCargoType(e.target.value)}
-                      className="sdl-input"
-                    >
-                      <option value="Commercial Parcel">Commercial & Corporate Parcel</option>
-                      <option value="Vehicle / Automobile">Vehicle / Automobile Transport</option>
-                      <option value="Automotive Parts">Automotive Parts & Components</option>
-                      <option value="High-Tech Electronics">High-Tech & Sensitive Electronics</option>
-                      <option value="Medical Equipment">Medical / Laboratory Specimen</option>
-                      <option value="Secure Vault Asset">Secure Vault & High-Value Asset</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Requested Courier Service Tier *</label>
-                    <select
-                      value={service}
-                      onChange={(e) => setService(e.target.value)}
-                      className="sdl-input"
-                    >
-                      <option value="Priority Express Courier">Priority Express Courier (Time-Definite)</option>
-                      <option value="Scheduled Commercial Linehaul">Scheduled Commercial Linehaul (Interstate)</option>
-                      <option value="Auto & Vehicle Transport">Auto & Vehicle Transport (Open/Enclosed)</option>
-                      <option value="Time-Critical Secure Vault">Time-Critical Secure Vault (Armed Custody)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="quote-mode">Transport Mode</label>
-                  <select
-                    id="quote-mode"
-                    value={transportMode}
-                    onChange={(e) => setTransportMode(e.target.value as TransportMode | '')}
-                    className="sdl-input"
-                  >
-                    <option value="">Let {COMPANY} recommend</option>
-                    <option value="Air">{TRANSPORT_MODE_LABELS.Air}</option>
-                    <option value="Sea">{TRANSPORT_MODE_LABELS.Sea}</option>
-                    <option value="Road">{TRANSPORT_MODE_LABELS.Road}</option>
-                  </select>
+                  <span>2. Cargo</span>
                 </div>
 
                 <div className="sdl-heading-with-units quote-units-row">
@@ -563,7 +348,21 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
 
                 <div className="form-row-3">
                   <div className="form-group">
-                    <label htmlFor="quote-weight">Scale Weight ({units.weight}) *</label>
+                    <label htmlFor="quote-pieces">Pieces *</label>
+                    <input
+                      id="quote-pieces"
+                      type="number"
+                      min="1"
+                      required
+                      value={pieces}
+                      onChange={(e) => setPieces(e.target.value)}
+                      placeholder="1"
+                      className="sdl-input font-mono"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="quote-weight">Weight ({units.weight}) *</label>
                     <MeasureInput
                       id="quote-weight"
                       kind="weight"
@@ -578,20 +377,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                   </div>
 
                   <div className="form-group">
-                    <label>Total Pieces *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      value={pieces}
-                      onChange={(e) => setPieces(e.target.value)}
-                      placeholder="1"
-                      className="sdl-input font-mono"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="quote-value">Declared Value ({money.currency})</label>
+                    <label htmlFor="quote-value">Declared value ({money.currency}) <span className="sdl-field-optional">(optional)</span></label>
                     <MoneyInput
                       id="quote-value"
                       min="0"
@@ -604,7 +390,7 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 </div>
 
                 <div className="form-group">
-                  <label>Carton Dimensions (L × W × H, {units.length}) <span className="sdl-field-optional">(optional)</span></label>
+                  <label>Dimensions (L × W × H, {units.length}) <span className="sdl-field-optional">(optional)</span></label>
                   <div className="dimensions-row">
                     <MeasureInput kind="length" min="0" aria-label={`Length (${units.length})`} value={length} onChange={setLength} placeholder={`Length (${units.length})`} className="sdl-input font-mono" />
                     <MeasureInput kind="length" min="0" aria-label={`Width (${units.length})`} value={width} onChange={setWidth} placeholder={`Width (${units.length})`} className="sdl-input font-mono" />
@@ -613,76 +399,145 @@ export const QuotePage: React.FC<QuotePageProps> = ({ onNavigate, initialService
                 </div>
 
                 <div className="form-group">
-                  <label>Special Instructions / Delivery Directives</label>
+                  <label htmlFor="quote-contents">Contents *</label>
+                  <input
+                    id="quote-contents"
+                    type="text"
+                    required
+                    value={cargoDescription}
+                    onChange={(e) => setCargoDescription(e.target.value)}
+                    placeholder="e.g. Machine spare parts"
+                    className="sdl-input"
+                  />
+                </div>
+
+                {/* 3. SERVICE */}
+                <div className="form-section-divider">
+                  <Truck size={16} className="text-accent" />
+                  <span>3. Service</span>
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label htmlFor="quote-service">Service *</label>
+                    <select
+                      id="quote-service"
+                      value={service}
+                      onChange={(e) => setService(e.target.value)}
+                      className="sdl-input"
+                    >
+                      {SERVICE_OPTIONS.map((s) => (
+                        <option key={s.id} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="quote-mode">Transport mode</label>
+                    <select
+                      id="quote-mode"
+                      value={transportMode}
+                      onChange={(e) => setTransportMode(e.target.value as TransportMode | '')}
+                      className="sdl-input"
+                    >
+                      <option value="">Let {COMPANY} recommend</option>
+                      <option value="Air">{TRANSPORT_MODE_LABELS.Air}</option>
+                      <option value="Sea">{TRANSPORT_MODE_LABELS.Sea}</option>
+                      <option value="Road">{TRANSPORT_MODE_LABELS.Road}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="quote-notes">Special instructions <span className="sdl-field-optional">(optional)</span></label>
                   <textarea
+                    id="quote-notes"
                     rows={3}
                     value={specialInstructions}
                     onChange={(e) => setSpecialInstructions(e.target.value)}
-                    placeholder="Provide facility access details, signature requirements, or handling notes..."
                     className="sdl-input"
                   />
+                </div>
+
+                {/* 4. YOUR DETAILS */}
+                <div className="form-section-divider">
+                  <User size={16} className="text-accent" />
+                  <span>4. Your details</span>
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label htmlFor="quote-name">Name *</label>
+                    <input
+                      id="quote-name"
+                      type="text"
+                      required
+                      autoComplete="name"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="sdl-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="quote-company">Company <span className="sdl-field-optional">(optional)</span></label>
+                    <input
+                      id="quote-company"
+                      type="text"
+                      autoComplete="organization"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      className="sdl-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label htmlFor="quote-email">Email *</label>
+                    <input
+                      id="quote-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      placeholder="name@company.com"
+                      className="sdl-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="quote-phone">Phone <span className="sdl-field-optional">(optional)</span></label>
+                    <PhoneInput
+                      id="quote-phone"
+                      value={customerPhone}
+                      onChange={setCustomerPhone}
+                      defaultCountry={originCountry || 'US'}
+                      className="sdl-input font-mono"
+                    />
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
+                  aria-busy={isSubmitting}
                   className="btn-corp-primary submit-quote-btn"
                 >
                   <Send size={18} />
-                  <span>{isSubmitting ? 'Submitting Application...' : 'Submit Official Rate Application'}</span>
+                  <span>{isSubmitting ? 'Sending…' : 'Request a Quote'}</span>
                 </button>
               </form>
             </div>
 
-            {/* Sidebar info & Dynamic Preview */}
+            {/* Side card (CONTENT §7.1) */}
             <div className="quote-sidebar-col">
-              {/* Dynamic Instant Tariff Estimate Box */}
-              {estimatedRate && (
-                <div className="dynamic-estimate-box animate-fade-in">
-                  <div className="est-head">
-                    <Sparkles size={18} className="text-accent" />
-                    <strong>Preliminary Tariff Corridor</strong>
-                  </div>
-                  <div className="est-amount font-mono">
-                    {money.format(estimatedRate.low, 0)} – {money.format(estimatedRate.high, 0)}
-                  </div>
-                  <p className="est-note">
-                    Preliminary automated estimate for {formatWeight(weight, units.system)} via {service}. Final custom tariff is certified by our dispatch desk upon scale and corridor intake review.
-                  </p>
-                </div>
-              )}
-
               <div className="quote-policy-card">
-                <span className="policy-tag font-mono">OUR TARIFF ASSURANCE</span>
-                <h3>Direct Carrier Integrity</h3>
+                <h3>Straight answers, no surprises.</h3>
                 <p>
-                  To eliminate unexpected broker markups and maintain carrier rate integrity, all consignment tariffs are calculated and officially published by our central administrative desk.
+                  Your quote includes the service, estimated transit time and every known charge, so the price you accept is the price you pay (duties and taxes as applicable).
                 </p>
-                
-                <div className="policy-points">
-                  <div className="p-point">
-                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
-                    <span>Exact scale weight & dimensional cubic rating</span>
-                  </div>
-                  <div className="p-point">
-                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
-                    <span>Verified route and schedule planning</span>
-                  </div>
-                  <div className="p-point">
-                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
-                    <span>Published directly to your official tracking ledger</span>
-                  </div>
-                  <div className="p-point">
-                    <CheckCircle2 size={16} className="text-accent flex-shrink-0" />
-                    <span>Direct agency documentation issuance</span>
-                  </div>
-                </div>
-
-                <div className="contact-hotline-box">
-                  <small>Need Immediate Tariff Assistance?</small>
-                  <strong>{supportPhone || dispatchEmail}</strong>
-                  <p>24/7 Central Operations Desk Connection</p>
-                </div>
               </div>
             </div>
           </div>

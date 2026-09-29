@@ -9,18 +9,25 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
-  ShieldCheck,
   AlertTriangle,
   ArrowRight,
   RotateCcw,
-  Check
+  MessageCircle
 } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
 import { LEGAL_NAME } from '../config/brand';
 import { api } from '../services/api';
 import { GATEWAYS, getGateway } from '../data/gateways';
+import { HELP_ARTICLES, CONTACT_QUICK_ANSWER_IDS } from '../data/helpArticles';
 import './ContactPage.css';
+
+// CONTENT §8.3 form topics (stored as the message subject in the admin inbox).
+const TOPICS = ['Quote', 'Active shipment', 'Billing', 'Partnership', 'Other'] as const;
+
+const QUICK_ANSWERS = CONTACT_QUICK_ANSWER_IDS
+  .map((id) => HELP_ARTICLES.find((a) => a.id === id))
+  .filter((a): a is NonNullable<typeof a> => Boolean(a));
 
 interface ContactPageProps {
   onNavigate?: (page: string) => void;
@@ -30,23 +37,21 @@ interface ContactPageProps {
 
 export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGateway = '' }) => {
   const { settings } = useAdminData();
-  // Empty phone/address/regulatory values hide their element (no placeholders).
-  const { phone: supportPhone, email: dispatchEmail, address: headquartersAddress, regulatoryLine: dotNumber } = useCompanyContact();
+  // Empty phone/WhatsApp/address/regulatory values hide their element (no placeholders).
+  const { phone: supportPhone, phoneHref, whatsapp, email: dispatchEmail, address: headquartersAddress, regulatoryLine } = useCompanyContact();
   const companyName = settings.companyName || LEGAL_NAME;
+  const whatsappHref = whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : '';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [subject, setSubject] = useState('General Operations');
-  const [priority, setPriority] = useState<'routine' | 'urgent' | 'critical'>('routine');
+  const [topic, setTopic] = useState('');
   const [tracking, setTracking] = useState('');
   const [gatewayCode, setGatewayCode] = useState(getGateway(initialGateway) ? initialGateway : '');
   const [message, setMessage] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [ticketId, setTicketId] = useState('');
+  // The server's reference (SDL-TKT-######) and the email it was sent with.
+  const [ticket, setTicket] = useState<{ id: string; email: string } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const selectedGateway = getGateway(gatewayCode);
 
   // Accordion open states
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -56,8 +61,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
     if (submitting) return;
     setFormError(null);
 
-    if (!name.trim() || !email.trim() || !message.trim()) {
-      setFormError('Please complete all required fields (Name, Email, and Message) before submitting.');
+    if (!name.trim() || !email.trim() || !topic || !message.trim()) {
+      setFormError('Please complete all required fields (Name, Email, Topic and Message) before sending.');
       return;
     }
 
@@ -68,14 +73,14 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
-        subject,
-        priority,
+        subject: topic,
+        // No priority picker on the form (§8.3); active shipments are flagged for the inbox.
+        priority: topic === 'Active shipment' ? 'urgent' : 'routine',
         trackingNumber: tracking.trim() || undefined,
         gatewayCode: gatewayCode || undefined,
         message: message.trim()
       });
-      setTicketId(saved.id);
-      setSubmitted(true);
+      setTicket({ id: saved.id, email: email.trim() });
       window.scrollTo({ top: 300, behavior: 'smooth' });
     } catch (err: any) {
       setFormError(`We couldn't send your message: ${err?.message || 'please try again'}. You can also email us at ${dispatchEmail}.`);
@@ -88,12 +93,11 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
     setName('');
     setEmail('');
     setPhone('');
-    setSubject('General Operations');
-    setPriority('routine');
+    setTopic('');
     setTracking('');
     setGatewayCode('');
     setMessage('');
-    setSubmitted(false);
+    setTicket(null);
     setFormError(null);
   };
 
@@ -101,86 +105,46 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const faqs = [
-    {
-      q: "How do I track an active consignment across your sortation network?",
-      a: "Enter your 8-character tracking ID (e.g. DLS7K2M9) in the search bar on our Track page. You'll see verified checkpoint scans, live milestones and your estimated delivery."
-    },
-    {
-      q: "What courier delivery options exist for commercial and residential tenders?",
-      a: "We provide time-definite deliveries with options for Direct Adult Signature Confirmation, Saturday Expedited Delivery, Scheduled Dock Intake, or Monitored Gateway Facility Hold."
-    },
-    {
-      q: "How is recipient proof of delivery (POD) captured and archived?",
-      a: "Upon delivery handover, the courier captures an authorized physical signature and verified timestamp. These records are archived into our permanent digital ledger and transmitted directly to the consignor."
-    },
-    {
-      q: "Can I request an urgent re-route or address hold for a shipment in transit?",
-      a: `Yes. Authorized shippers or consignees can contact our 24/7 central dispatch desk at ${supportPhone || dispatchEmail} with their master tracking reference to request a gateway terminal hold or address update prior to final delivery dispatch.`
-    },
-    {
-      q: "What services do you provide for high-value tenders and vehicle transport?",
-      a: "We offer specialized Auto & Vehicle Transport (enclosed and open-deck carrier relocation) as well as Time-Critical Secure Vault courier services with dual-custody armored transport and dedicated dispatch oversight."
-    },
-    {
-      q: "What happens if an unexpected weather or highway corridor delay occurs?",
-      a: "If an operational delay occurs, our automated telemetry system recalculates transit windows and logs an updated ETA in your live tracking ledger. You can also submit an urgent ticket here or contact our desk directly."
-    }
-  ];
-
   return (
     <div className="sdl-page-contact">
       {/* =========================================================================
-          1. CINEMATIC HERO SECTION
+          1. HERO (CONTENT §8.3)
           ========================================================================= */}
       <section className="sdl-contact-hero">
         <div className="contact-hero-bg-overlay" />
         <div className="sdl-container-wide contact-hero-inner">
-          <div className="contact-hero-pill animate-fade-in">
-            <span className="contact-pulse-dot" />
-            <span>{dotNumber ? `${dotNumber} · ` : ''}24/7 CENTRAL DISPATCH DESK</span>
-          </div>
+          {/* Regulatory line from admin Settings, only when set (tracker Blocked #20). */}
+          {regulatoryLine && (
+            <div className="contact-hero-pill animate-fade-in">
+              <span>{regulatoryLine}</span>
+            </div>
+          )}
 
-          <h1 className="contact-hero-title animate-fade-in">
-            Connect with Our <span className="contact-highlight-accent">Logistics Operations Team.</span>
-          </h1>
+          <h1 className="contact-hero-title animate-fade-in">Talk to SDL</h1>
 
           <p className="contact-hero-lead animate-fade-in">
-            Speak directly with experienced U.S. linehaul dispatchers, courier routing specialists, and vehicle transport coordinators around the clock.
+            Questions, quotes or a shipment that needs attention: a real coordinator will get back to you.
           </p>
         </div>
       </section>
 
       {/* =========================================================================
-          2. MAIN BODY: FORM & DIRECT CHANNELS
+          2. FORM & CHANNELS
           ========================================================================= */}
       <div className="sdl-container-wide sdl-contact-body">
         <div className="contact-grid">
           {/* Left Column: Form & Confirmation */}
           <div className="contact-form-card">
-            {submitted ? (
-              <div className="contact-success-wrap animate-fade-in">
+            {ticket ? (
+              <div className="contact-success-wrap animate-fade-in" role="status">
                 <div className="success-icon-badge">
                   <CheckCircle2 size={48} className="text-emerald" />
                 </div>
-                <h3>Dispatch Ticket Logged Successfully</h3>
-                
-                <div className="ticket-summary-box">
-                  <span className="tkt-label">OFFICIAL INQUIRY REFERENCE</span>
-                  <span className="tkt-id font-mono">{ticketId}</span>
-                  <p>
-                    Thank you, <strong>{name}</strong>. Your inquiry regarding <strong>{subject}</strong>{selectedGateway && <> for the <strong>{selectedGateway.city} ({selectedGateway.code})</strong> gateway</>} has been logged into our central dispatch queue.
-                  </p>
-                  <div className="tkt-details-row">
-                    <span>Priority Status: <strong className={`prio-tag ${priority}`}>{priority.toUpperCase()}</strong></span>
-                    <span>Target Response: <strong>&lt; 30 Mins</strong></span>
-                  </div>
-                </div>
+                <h3>Message received.</h3>
 
-                <div className="ticket-notice-banner">
-                  <ShieldCheck size={18} className="text-accent flex-shrink-0" />
+                <div className="ticket-summary-box">
                   <p>
-                    A regional dispatch coordinator will review your request and reach out directly to <strong>{email}</strong>.
+                    Your reference is <strong className="font-mono">{ticket.id}</strong>. We'll reply to <strong>{ticket.email}</strong> as soon as possible.
                   </p>
                 </div>
 
@@ -191,7 +155,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
                     onClick={handleReset}
                   >
                     <RotateCcw size={16} />
-                    <span>Submit Another Inquiry</span>
+                    <span>Send another message</span>
                   </button>
 
                   {onNavigate && (
@@ -200,7 +164,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
                       className="btn-corp-ghost"
                       onClick={() => onNavigate('track')}
                     >
-                      <span>Track Active Consignment</span>
+                      <span>Track a Shipment</span>
                       <ArrowRight size={16} />
                     </button>
                   )}
@@ -209,66 +173,40 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
             ) : (
               <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-header-row">
-                  <div>
-                    <h3>Submit an Operations Ticket</h3>
-                    <p>Provide your inquiry parameters below for immediate routing to the appropriate dispatch desk.</p>
-                  </div>
-                  <div className="priority-select-wrap">
-                    <span className="prio-label">Priority Level</span>
-                    <div className="prio-btn-group">
-                      <button
-                        type="button"
-                        className={`prio-btn ${priority === 'routine' ? 'active' : ''}`}
-                        onClick={() => setPriority('routine')}
-                      >
-                        Routine
-                      </button>
-                      <button
-                        type="button"
-                        className={`prio-btn ${priority === 'urgent' ? 'active urgent' : ''}`}
-                        onClick={() => setPriority('urgent')}
-                      >
-                        Urgent
-                      </button>
-                      <button
-                        type="button"
-                        className={`prio-btn ${priority === 'critical' ? 'active critical' : ''}`}
-                        onClick={() => setPriority('critical')}
-                      >
-                        Critical
-                      </button>
-                    </div>
-                  </div>
+                  <h3>Send us a message</h3>
                 </div>
 
                 {formError && (
-                  <div className="contact-form-error animate-fade-in">
+                  <div className="contact-form-error animate-fade-in" role="alert">
                     <AlertTriangle size={18} className="flex-shrink-0" />
                     <span>{formError}</span>
                   </div>
                 )}
-                
+
                 <div className="form-row-2">
                   <div className="form-group">
-                    <label>Full Name *</label>
+                    <label htmlFor="contact-name">Name *</label>
                     <input
+                      id="contact-name"
                       type="text"
                       required
+                      autoComplete="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. John Anderson"
                       className="sdl-input"
                     />
                   </div>
 
                   <div className="form-group">
-                    <label>Email Address *</label>
+                    <label htmlFor="contact-email">Email *</label>
                     <input
+                      id="contact-email"
                       type="email"
                       required
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. j.anderson@example.com"
+                      placeholder="name@company.com"
                       className="sdl-input"
                     />
                   </div>
@@ -276,19 +214,40 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
 
                 <div className="form-row-2">
                   <div className="form-group">
-                    <label>Direct Phone Number (Optional)</label>
+                    <label htmlFor="contact-phone">Phone <span className="sdl-field-optional">(optional)</span></label>
                     <input
+                      id="contact-phone"
                       type="tel"
+                      autoComplete="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. (555) 014-8822"
+                      placeholder="With country code, e.g. +44"
                       className="sdl-input"
                     />
                   </div>
 
                   <div className="form-group">
-                    <label>Tracking Number / BOL Reference (Optional)</label>
+                    <label htmlFor="contact-topic">Topic *</label>
+                    <select
+                      id="contact-topic"
+                      required
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      className="sdl-input"
+                    >
+                      <option value="" disabled>Choose a topic</option>
+                      {TOPICS.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label htmlFor="contact-tracking">Tracking ID <span className="sdl-field-optional">(optional)</span></label>
                     <input
+                      id="contact-tracking"
                       type="text"
                       value={tracking}
                       onChange={(e) => setTracking(e.target.value)}
@@ -296,91 +255,79 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
                       className="sdl-input font-mono"
                     />
                   </div>
+
+                  <div className="form-group">
+                    <label htmlFor="contact-gateway">Gateway <span className="sdl-field-optional">(optional)</span></label>
+                    <select
+                      id="contact-gateway"
+                      value={gatewayCode}
+                      onChange={(e) => setGatewayCode(e.target.value)}
+                      className="sdl-input"
+                    >
+                      <option value="">No specific gateway</option>
+                      {GATEWAYS.map((gw) => (
+                        <option key={gw.code} value={gw.code}>{gw.city}, {gw.country} ({gw.code})</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label>Inquiry Category</label>
-                  <select
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="sdl-input"
-                  >
-                    <option value="General Operations">General Operations & Courier Services</option>
-                    <option value="Tracking Assistance">Active Consignment Tracking & Movement</option>
-                    <option value="Delivery Exception">Delivery Exception or Gateway Terminal Hold</option>
-                    <option value="Scheduled Linehaul">Scheduled Commercial Linehaul Routing</option>
-                    <option value="Vehicle Transport">Auto & Vehicle Transport Dispatch</option>
-                    <option value="Secure Vault">Time-Critical Secure Vault Inquiries</option>
-                    <option value="Billing & Claims">Billing Invoicing & Proof of Delivery</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="contact-gateway">Gateway (Optional)</label>
-                  <select
-                    id="contact-gateway"
-                    value={gatewayCode}
-                    onChange={(e) => setGatewayCode(e.target.value)}
-                    className="sdl-input"
-                  >
-                    <option value="">No specific gateway</option>
-                    {GATEWAYS.map((gw) => (
-                      <option key={gw.code} value={gw.code}>{gw.city}, {gw.country} ({gw.code})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Message / Consignment Specifications *</label>
+                  <label htmlFor="contact-message">Message *</label>
                   <textarea
+                    id="contact-message"
                     required
-                    rows={4}
+                    rows={5}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Describe your inquiry, delivery update request, or specialized courier requirements..."
                     className="sdl-input"
                   />
                 </div>
 
                 <button type="submit" className="btn-corp-primary form-submit-btn" disabled={submitting} aria-busy={submitting}>
                   <Send size={16} />
-                  <span>{submitting ? 'Sending…' : 'Dispatch Ticket to Operations Desk'}</span>
+                  <span>{submitting ? 'Sending…' : 'Send message'}</span>
                 </button>
               </form>
             )}
           </div>
 
-          {/* Right Column: Direct Channels & Hotline */}
+          {/* Right Column: Channels & 24/7 card */}
           <div className="contact-info-col">
             <div className="contact-info-card">
-              <span className="card-top-tag font-mono">DIRECT DISPATCH CHANNELS</span>
-              <h3>24/7 Operations Desk</h3>
+              <div className="contact-channel-item">
+                <div className="channel-icon icon-emerald"><Mail size={22} /></div>
+                <div>
+                  <small>Email</small>
+                  <strong><a href={`mailto:${dispatchEmail}`}>{dispatchEmail}</a></strong>
+                </div>
+              </div>
 
               {supportPhone && (
                 <div className="contact-channel-item">
                   <div className="channel-icon icon-accent"><Phone size={22} /></div>
                   <div>
-                    <small>Toll-Free 24/7 Operations Hotline</small>
-                    <strong>{supportPhone}</strong>
-                    <p>Direct Connection to Regional Dispatch Supervisors</p>
+                    <small>Phone</small>
+                    <strong><a href={phoneHref}>{supportPhone}</a></strong>
                   </div>
                 </div>
               )}
 
-              <div className="contact-channel-item">
-                <div className="channel-icon icon-emerald"><Mail size={22} /></div>
-                <div>
-                  <small>Central Email Desk</small>
-                  <strong>{dispatchEmail}</strong>
-                  <p>Average response time under 30 minutes</p>
+              {whatsappHref && (
+                <div className="contact-channel-item">
+                  <div className="channel-icon icon-emerald"><MessageCircle size={22} /></div>
+                  <div>
+                    <small>WhatsApp</small>
+                    <strong><a href={whatsappHref} target="_blank" rel="noopener noreferrer">{whatsapp}</a></strong>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {headquartersAddress && (
                 <div className="contact-channel-item">
                   <div className="channel-icon icon-sky"><MapPin size={22} /></div>
                   <div>
-                    <small>National Corporate Headquarters</small>
+                    <small>Head office</small>
                     <strong>{companyName}</strong>
                     <p>{headquartersAddress}</p>
                   </div>
@@ -389,40 +336,39 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
 
               <div className="emergency-box">
                 <div className="em-head">
-                  <AlertTriangle size={18} className="text-amber" />
-                  <strong>Active Interstate Linehaul Emergency?</strong>
+                  <Clock size={18} className="text-amber" />
+                  <strong>24/7 Operations Desk.</strong>
                 </div>
-                <p>For urgent in-transit delivery holds or urgent vehicle transports, contact our dedicated supervisor {supportPhone ? <>priority line at <strong>{supportPhone} (Ext 1)</strong></> : <>desk at <strong>{dispatchEmail}</strong></>}.</p>
+                <p>For active shipments, include your tracking ID for the fastest help.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* =========================================================================
-            3. INTERACTIVE FAQ ACCORDION SECTION
+            3. QUICK ANSWERS (CONTENT §8.3, items from §8.2)
             ========================================================================= */}
         <section className="sdl-contact-faq-section">
           <div className="section-center-header">
-            <span className="section-eyebrow">FREQUENTLY ASKED QUESTIONS</span>
-            <h2>Operations & Support Knowledge Base</h2>
-            <p className="section-desc-sub">Quick answers to common questions regarding linehaul transit, piece-level tracking, and proof of delivery.</p>
+            <h2>Quick answers</h2>
             <div className="section-header-line" />
           </div>
 
           <div className="contact-faq-accordion">
-            {faqs.map((faq, index) => (
+            {QUICK_ANSWERS.map((faq, index) => (
               <div
-                key={index}
+                key={faq.id}
                 className={`contact-faq-item ${openFaq === index ? 'active' : ''}`}
               >
                 <button
                   type="button"
                   className="faq-question-btn"
+                  aria-expanded={openFaq === index}
                   onClick={() => toggleFaq(index)}
                 >
                   <div className="q-left">
                     <HelpCircle size={18} className="text-accent flex-shrink-0" />
-                    <span>{faq.q}</span>
+                    <span>{faq.question}</span>
                   </div>
                   {openFaq === index ? (
                     <ChevronUp size={18} className="text-accent flex-shrink-0" />
@@ -433,7 +379,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate, initialGat
 
                 {openFaq === index && (
                   <div className="faq-answer-body animate-fade-in">
-                    <p>{faq.a}</p>
+                    <p>{faq.answer}</p>
                   </div>
                 )}
               </div>

@@ -376,6 +376,14 @@ Rotating lines: `Locating your shipment…` · `Checking the latest scans…` ·
 - **Next steps:** Print and attach a label to each piece · Have the shipment ready at the collection time · Track progress any time with your ID
 - **How booking works:** Booking → Gateway scan → Linehaul & border crossing → Proof of delivery
 
+### 7.4 Interface labels (added 2026-09-29 with 3.6/3.7, **owner to confirm**)
+Reused where possible: service names and summaries (§3.1), add-ons (§3.4), stage bodies (§2.3, as on Services §3.5), the §7.1 side card as the quote's terms.
+- **Quote form:** sections `1. Route` (`From` / `To`) · `2. Cargo` · `3. Service` · `4. Your details`; fields `Pieces` · `Weight` · `Declared value` · `Dimensions` · `Contents` · `Service` · `Transport mode` · `Special instructions` · `Name` · `Company` · `Email` · `Phone`; submit `Request a Quote` (§8.1 quick link).
+- **Quote success:** `Quote reference {ref}` · `What happens next` · buttons `View your quote` · `Request another quote`.
+- **Quote Result:** status names `In review` · `Ready` · `Accepted` · `Booked` · `Declined` · `Expired`; while in review: `Quote request received` + the §7.1 next steps; charge lines `Transport ({route})` · `Oversize handling` · `Special handling` (only lines the coordinator filled in); after accepting: `Quote accepted` · `We'll book your collection.` (from §7.1 step 3) or `Tracking ID {ID}` once booked; `Copy reference`; side cards `Your details` · `24/7 Operations Desk`. "Download PDF" opens the browser's print dialog (Save as PDF).
+- **Ship page:** collection choice `Book a Collection` (§8.1) · `Drop-off at an SDL gateway` · `Collection time`; field labels `Sender name` · `Recipient name` · `Phone` · `Street address` · `Company` · `Delivery instructions` · `Contents`; buttons `Continue` · `Back` · `Add a piece` · `Book shipment` · `Print labels` · `Copy tracking ID` · `Book another shipment`.
+- **Ship summary note:** `Your coordinator confirms the rate before collection.`
+
 ---
 
 ## 8. Help Centre and Contact
@@ -414,6 +422,10 @@ Rotating lines: `Locating your shipment…` · `Checking the latest scans…` ·
 - **Success:** **Message received.** `Your reference is SDL-TKT-######. We'll reply to {email} as soon as possible.`
 - **24/7 card:** **24/7 Operations Desk.** `For active shipments, include your tracking ID for the fastest help.` (Say "Average response under 30 minutes" only if confirmed.)
 - **FAQ block heading:** `Quick answers` (reuse 3–4 items from §8.2)
+
+### 8.4 Interface labels (added 2026-09-29 with 3.9/3.10, **owner to confirm**)
+- **Help:** category filter `All topics ({n})` + the four §8.2 group names; empty-search button `Clear search`; `Call {{PHONE}}` next to `Contact Support` (only when a phone is set).
+- **Contact:** Topic placeholder `Choose a topic`; the existing optional **Gateway** field (pre-filled by "Contact this gateway" on Locations) is kept; submit `Send message`; success buttons `Send another message` · `Track a Shipment`. Quick answers shown: where to find the tracking ID, changing the delivery address, duties and taxes, damaged shipments.
 
 ---
 

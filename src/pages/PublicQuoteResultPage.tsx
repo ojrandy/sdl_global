@@ -1,33 +1,28 @@
 import React, { useState } from 'react';
 import {
   FileText,
-  DollarSign,
   CheckCircle2,
   Clock,
-  MapPin,
   Truck,
   ArrowRight,
   ShieldCheck,
-  Printer,
+  Download,
   Phone,
-  Building,
   User,
-  Calendar,
-  AlertCircle,
   Check,
   Copy,
   ExternalLink,
-  Package,
-  Award
+  MessageCircle
 } from 'lucide-react';
 import { QuoteRequest } from '../types/admin';
 import { useAdminData } from '../context/AdminDataContext';
 import { useCompanyContact } from '../utils/useCompanyContact';
-import { COMPANY, DOMAIN, LEGAL_NAME, LOGO, LOGO_ALT } from '../config/brand';
+import { COMPANY_SHORT, DOMAIN, LEGAL_NAME, LOGO, LOGO_ALT } from '../config/brand';
 import { useCurrency } from '../utils/useCurrency';
 import { useUnitSystem } from '../utils/useUnitSystem';
 import { formatDimensions as formatDims, formatWeight } from '../shared/units';
 import { TRANSPORT_MODE_LABELS } from '../shared/transportMode';
+import { QUOTE_NEXT_STEPS } from '../data/quoteNextSteps';
 import './PublicQuoteResultPage.css';
 
 interface PublicQuoteResultPageProps {
@@ -35,6 +30,21 @@ interface PublicQuoteResultPageProps {
   onTrackShipment: (trackingNumber: string) => void;
   onNavigate: (page: string) => void;
 }
+
+// Status names shown to the customer for the stored quote status codes.
+const QUOTE_STATUS_LABELS: Record<string, string> = {
+  NEW: 'In review',
+  UNDER_REVIEW: 'In review',
+  QUOTE_PUBLISHED: 'Ready',
+  RATE_PUBLISHED: 'Ready',
+  ACCEPTED: 'Accepted',
+  CONVERTED: 'Booked',
+  DECLINED: 'Declined',
+  EXPIRED: 'Expired'
+};
+
+// CONTENT §7.1 side card, reused as the quote's terms.
+const QUOTE_PROMISE = 'Your quote includes the service, estimated transit time and every known charge, so the price you accept is the price you pay (duties and taxes as applicable).';
 
 export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   quote,
@@ -49,10 +59,20 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   const [accepted, setAccepted] = useState(quote.status === 'ACCEPTED' || quote.status === 'CONVERTED');
   const money = useCurrency();
   const [units] = useUnitSystem();
-  // Weight is stored in pounds; shown in the viewer's units. No invented fallback weight.
-  const weightText = formatWeight(quote.totalWeightLbs || (quote as any).weightLbs, units) || '—';
-  const routeText = [quote.originCity, quote.destCity].every(Boolean) ? `${quote.originCity} → ${quote.destCity}` : '';
-  const modeText = quote.transportMode ? TRANSPORT_MODE_LABELS[quote.transportMode] : 'Line-haul';
+  const q = quote as any;
+
+  // Only stored values are shown; anything missing is left out rather than invented.
+  const weightText = formatWeight(quote.totalWeightLbs || q.weightLbs, units) || '—';
+  const place = (city?: string, state?: string, country?: string, countryCode?: string) =>
+    [city, countryCode === 'US' ? state : '', country].filter(Boolean).join(', ');
+  const originText = place(quote.originCity, quote.originState, quote.originCountry, quote.originCountryCode);
+  const destText = place(quote.destCity, quote.destState, quote.destCountry, quote.destCountryCode);
+  const routeText = originText && destText ? `${originText} → ${destText}` : '';
+  const serviceText = [quote.requestedService || q.service, quote.transportMode ? TRANSPORT_MODE_LABELS[quote.transportMode] : '']
+    .filter(Boolean).join(' · ');
+  const pieceCount = typeof q.pieces === 'number' ? q.pieces : quote.quantity || 1;
+  const companyText = quote.requesterCompany || q.company || '';
+  const validUntil = quote.pricing?.validUntil || '';
 
   const handleCopyId = () => {
     navigator.clipboard.writeText(quote.id);
@@ -61,7 +81,9 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
   };
 
   const isPublished = quote.status === 'QUOTE_PUBLISHED' || quote.status === 'ACCEPTED' || quote.status === 'CONVERTED' || (quote.pricing && quote.pricing.finalPrice > 0);
-  const isPending = quote.status === 'NEW' || quote.status === 'UNDER_REVIEW';
+  // Accept only a quote that is on offer (not declined or expired).
+  const canAccept = quote.status === 'QUOTE_PUBLISHED' || quote.status === 'RATE_PUBLISHED';
+  const statusLabel = QUOTE_STATUS_LABELS[quote.status] || quote.status.replace(/_/g, ' ').toLowerCase();
 
   // Structured inches when the quote has them (converted to the viewer's units), otherwise the
   // stored display string of older quotes; '—' when nothing was given.
@@ -72,39 +94,41 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
     return '—';
   };
 
-  const finalPrice = quote.pricing?.finalPrice || 350;
-  const baseShipping = quote.pricing?.baseShipping || finalPrice * 0.75;
-  const oversizeHandling = quote.pricing?.oversizeHandling || 45;
-  const specialHandling = quote.pricing?.specialHandling || (finalPrice - baseShipping - oversizeHandling > 0 ? finalPrice - baseShipping - oversizeHandling : 42.5);
+  // Charges exactly as published by the coordinator: zero lines are left out.
+  const finalPrice = quote.pricing?.finalPrice || 0;
+  const charges = [
+    { label: `Transport${routeText ? ` (${routeText})` : ''}`, amount: quote.pricing?.baseShipping || 0 },
+    { label: 'Oversize handling', amount: quote.pricing?.oversizeHandling || 0 },
+    { label: 'Special handling', amount: quote.pricing?.specialHandling || 0 }
+  ].filter((c) => c.amount > 0);
+
+  const askQuestion = () => onNavigate('contact');
 
   return (
     <div className="sdl-quote-result-page animate-fade-in">
       {/* =========================================================================
-          SCREEN-ONLY VIEW
+          SCREEN-ONLY VIEW (CONTENT §7.2)
           ========================================================================= */}
       <div className="screen-only-quotation-view">
         {/* Top Banner */}
         <div className="quote-res-hero">
           <div className="sdl-container-wide hero-content-flex">
             <div>
-              <div className="quote-badge-pill">
-                <FileText size={14} />
-                <span>OFFICIAL TARIFF QUOTATION</span>
-              </div>
-              <h1>Shipping Rate Reference: <span className="font-mono text-blue">{quote.id}</span></h1>
+              <h1>Your {COMPANY_SHORT} quote</h1>
               <p className="hero-subtext">
-                Direct linehaul rate quotation issued by the {COMPANY} Central Tariff Desk.
+                Quote reference <span className="font-mono text-blue">{quote.id}</span>
               </p>
             </div>
 
             <div className="hero-actions-box">
               <button className="btn-copy-quote-id" onClick={handleCopyId}>
                 {copiedId ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
-                <span>{copiedId ? 'Copied Reference' : 'Copy Quote ID'}</span>
+                <span>{copiedId ? 'Copied' : 'Copy reference'}</span>
               </button>
+              {/* Opens the browser's print dialog, where the quote can be saved as a PDF. */}
               <button className="btn-print-quote" onClick={() => window.print()}>
-                <Printer size={14} />
-                <span>Print Official Quotation</span>
+                <Download size={14} />
+                <span>Download PDF</span>
               </button>
             </div>
           </div>
@@ -118,38 +142,33 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
               {isPublished ? (
                 <CheckCircle2 size={24} className="text-emerald" />
               ) : (
-                <Clock size={24} className="text-amber animate-spin-slow" />
+                <Clock size={24} className="text-amber" />
               )}
               <div>
-                <h3>
-                  {isPublished
-                    ? 'Official Tariff Rate Published & Guaranteed'
-                    : 'Tariff Calculation in Progress (Admin Review)'}
-                </h3>
+                <h3>{isPublished ? `Total ${money.format(finalPrice)}` : 'Quote request received'}</h3>
                 <p>
                   {isPublished
-                    ? `Your custom rate of ${money.format(finalPrice)} has been approved. Guaranteed valid until ${quote.pricing?.validUntil || '14 days from issue'}.`
-                    : 'Our Central Tariff Desk is verifying weight-scale parameters and linehaul routing availability. Check back shortly using this Quote ID.'}
+                    ? (validUntil ? `Valid until ${validUntil}` : QUOTE_PROMISE)
+                    : QUOTE_NEXT_STEPS[0]}
                 </p>
               </div>
             </div>
 
             <div className="alert-right-badge">
               <span className={`tariff-status-chip ${quote.status.toLowerCase()}`}>
-                {quote.status.replace(/_/g, ' ')}
+                {statusLabel}
               </span>
             </div>
           </div>
 
           <div className="quote-two-column-layout">
-            {/* LEFT COLUMN: PRICING & TARIFF DETAILS */}
+            {/* LEFT COLUMN: CHARGES & DETAILS */}
             <div className="quote-main-col">
-              {/* 1. RATE LOCK CARD */}
               {isPublished ? (
                 <div className="published-rate-highlight-card">
                   <div className="rate-card-header">
                     <div>
-                      <span className="rate-card-label">APPROVED ALL-INCLUSIVE PRICE</span>
+                      <span className="rate-card-label">Total</span>
                       <div className="rate-big-figure">
                         <strong className="amount font-mono">
                           {money.format(finalPrice)}
@@ -158,32 +177,28 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                       </div>
                     </div>
 
-                    <div className="validity-lock-box">
-                      <ShieldCheck size={20} className="text-emerald" />
-                      <div>
-                        <small>Rate Guaranteed Until</small>
-                        <strong>{quote.pricing?.validUntil || '14 Days from Issue'}</strong>
+                    {validUntil && (
+                      <div className="validity-lock-box">
+                        <ShieldCheck size={20} className="text-emerald" />
+                        <div>
+                          <small>Valid until</small>
+                          <strong>{validUntil}</strong>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="tariff-breakdown-subdeck">
-                    <span className="deck-title">OFFICIAL CHARGES BREAKDOWN</span>
+                    <span className="deck-title">Charges breakdown</span>
                     <div className="charges-table">
-                      <div className="charge-row">
-                        <span>{modeText} Transport{routeText ? ` (${routeText})` : ''}</span>
-                        <strong className="font-mono">{money.format(baseShipping)}</strong>
-                      </div>
-                      <div className="charge-row">
-                        <span>Oversize / Dimensional Handling</span>
-                        <strong className="font-mono">{money.format(oversizeHandling)}</strong>
-                      </div>
-                      <div className="charge-row">
-                        <span>Terminal Sorting & Security Screening</span>
-                        <strong className="font-mono">{money.format(specialHandling)}</strong>
-                      </div>
+                      {charges.map((c) => (
+                        <div key={c.label} className="charge-row">
+                          <span>{c.label}</span>
+                          <strong className="font-mono">{money.format(c.amount)}</strong>
+                        </div>
+                      ))}
                       <div className="charge-row total">
-                        <strong>Total Guaranteed Tariff</strong>
+                        <strong>Total</strong>
                         <strong className="total-amount font-mono text-emerald">
                           {money.format(finalPrice)} {money.currency}
                         </strong>
@@ -191,17 +206,19 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                     </div>
                   </div>
 
-                  {/* Accept & Book Action */}
+                  {/* Accept & Book */}
                   <div className="rate-booking-cta">
                     {accepted || quote.convertedShipmentId ? (
                       <div className="quote-converted-notice">
                         <CheckCircle2 size={20} className="text-emerald" />
                         <div>
-                          <strong>Quote Accepted & Booked</strong>
-                          {quote.convertedShipmentId && (
+                          <strong>Quote accepted</strong>
+                          {quote.convertedShipmentId ? (
                             <p>
-                              Assigned Master Tracking: <strong className="font-mono text-blue">{quote.convertedShipmentId}</strong>
+                              Tracking ID <strong className="font-mono text-blue">{quote.convertedShipmentId}</strong>
                             </p>
+                          ) : (
+                            <p>We'll book your collection.</p>
                           )}
                         </div>
                         {quote.convertedShipmentId && (
@@ -209,15 +226,15 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                             className="btn-track-converted"
                             onClick={() => onTrackShipment(quote.convertedShipmentId!)}
                           >
-                            Track Waybill <ExternalLink size={14} />
+                            Track a Shipment <ExternalLink size={14} />
                           </button>
                         )}
                       </div>
-                    ) : (
+                    ) : canAccept ? (
                       <div className="booking-cta-flex">
                         <div>
-                          <strong>Ready to dispatch this cargo?</strong>
-                          <p>Lock in this rate and schedule linehaul origin tender.</p>
+                          <strong>{routeText || serviceText}</strong>
+                          <p>{QUOTE_NEXT_STEPS[2]}</p>
                         </div>
                         <button
                           className="btn-accept-rate"
@@ -226,40 +243,35 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                             updateQuoteStatus(quote.id, 'ACCEPTED');
                           }}
                         >
-                          <Check size={16} /> Accept Rate & Book Shipment
+                          <Check size={16} /> Accept &amp; Book
                         </button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               ) : (
                 <div className="pending-rate-waiting-card">
                   <div className="waiting-spinner-box">
-                    <Clock size={40} className="text-amber animate-pulse" />
+                    <Clock size={40} className="text-amber" />
                   </div>
-                  <h3>Central Tariff Desk Review in Progress</h3>
-                  <p>
-                    Our rating team is actively calculating the interstate transit cost based on verified carrier linehaul schedules. Once published, your price will automatically appear on this page.
-                  </p>
-                  <div className="hotline-banner">
-                    <Phone size={16} className="text-blue" />
-                    <span>Need urgent priority quotation? {supportPhone ? 'Call' : 'Email'} <strong>{supportPhone || dispatchEmail}</strong> with reference <strong className="font-mono text-blue">{quote.id}</strong>.</span>
-                  </div>
+                  <h3>What happens next</h3>
+                  <ol className="quote-res-next-steps">
+                    {QUOTE_NEXT_STEPS.map((step) => <li key={step}>{step}</li>)}
+                  </ol>
                 </div>
               )}
 
-              {/* 2. ROUTE & CARGO SPECIFICATIONS */}
+              {/* ROUTE, SERVICE & CARGO */}
               <div className="quote-specs-card">
                 <h3 className="section-head-title">
-                  <Truck size={17} className="text-blue" /> Consignment Parameters
+                  <Truck size={17} className="text-blue" /> Route
                 </h3>
 
-                {/* Route banner */}
                 <div className="route-banner-grid">
                   <div className="route-loc origin">
-                    <span className="loc-tag">ORIGIN</span>
-                    <strong>{quote.originCity || (quote as any).origin?.city || 'New York'}, {quote.originState || (quote as any).origin?.state || 'NY'}</strong>
-                    <small className="font-mono">ZIP {quote.originZip || (quote as any).origin?.postalCode || '10118'}</small>
+                    <span className="loc-tag">From</span>
+                    <strong>{originText || '—'}</strong>
+                    {quote.originZip && <small className="font-mono">{quote.originZip}</small>}
                   </div>
                   <div className="route-center-line">
                     <div className="line" />
@@ -267,270 +279,218 @@ export const PublicQuoteResultPage: React.FC<PublicQuoteResultPageProps> = ({
                     <div className="line" />
                   </div>
                   <div className="route-loc dest">
-                    <span className="loc-tag">DESTINATION</span>
-                    <strong>{quote.destCity || (quote as any).destination?.city || 'Los Angeles'}, {quote.destState || (quote as any).destination?.state || 'CA'}</strong>
-                    <small className="font-mono">ZIP {quote.destZip || (quote as any).destination?.postalCode || '90021'}</small>
+                    <span className="loc-tag">To</span>
+                    <strong>{destText || '—'}</strong>
+                    {quote.destZip && <small className="font-mono">{quote.destZip}</small>}
                   </div>
                 </div>
 
-                {/* Specifications grid */}
                 <div className="specs-detail-grid">
                   <div className="spec-box">
-                    <small>Cargo Description</small>
-                    <strong>{quote.cargoDescription || 'Commercial Consignment Cargo'}</strong>
+                    <small>Service</small>
+                    <strong className="text-blue">{serviceText || '—'}</strong>
                   </div>
                   <div className="spec-box">
-                    <small>Cargo Category</small>
-                    <strong className="font-mono">{quote.cargoType || (quote as any).shipmentType || 'Vehicle Part'}</strong>
+                    <small>Contents</small>
+                    <strong>{quote.cargoDescription || '—'}</strong>
                   </div>
                   <div className="spec-box">
-                    <small>Requested Service</small>
-                    <strong className="text-blue">{quote.requestedService || (quote as any).service || 'Standard Ground'}</strong>
-                  </div>
-                  <div className="spec-box">
-                    <small>Gross Scale Weight</small>
+                    <small>Weight</small>
                     <strong>{weightText}</strong>
                   </div>
                   <div className="spec-box">
-                    <small>Declared Pieces</small>
-                    <strong>{typeof (quote as any).pieces === 'number' ? (quote as any).pieces : quote.quantity || 1} Unit(s)</strong>
+                    <small>Pieces</small>
+                    <strong>{pieceCount}</strong>
                   </div>
                   <div className="spec-box">
                     <small>Dimensions (L × W × H)</small>
                     <strong className="font-mono">{formatDimensions(quote.dimensions)}</strong>
                   </div>
+                  {q.declaredValue > 0 && (
+                    <div className="spec-box">
+                      <small>Declared value</small>
+                      <strong className="font-mono">{money.format(q.declaredValue)}</strong>
+                    </div>
+                  )}
                 </div>
 
-                {quote.specialRequirements || (quote as any).specialInstructions ? (
+                {quote.specialRequirements || q.specialInstructions ? (
                   <div className="special-inst-box">
-                    <small>Special Instructions / Requirements</small>
-                    <p>{quote.specialRequirements || (quote as any).specialInstructions}</p>
+                    <small>Special instructions</small>
+                    <p>{quote.specialRequirements || q.specialInstructions}</p>
                   </div>
                 ) : null}
               </div>
             </div>
 
-            {/* RIGHT COLUMN: SHIPPER INFO & POLICIES */}
+            {/* RIGHT COLUMN: DETAILS, PROMISE, QUESTIONS */}
             <div className="quote-side-col">
-              {/* Shipper Details */}
               <div className="side-detail-card">
                 <div className="card-head">
                   <User size={15} className="text-blue" />
-                  <h4>Applicant Details</h4>
+                  <h4>Your details</h4>
                 </div>
                 <div className="card-body">
                   <div className="info-row">
-                    <small>Applicant Name:</small>
-                    <strong>{quote.requesterName || (quote as any).customerName || 'Shipper'}</strong>
+                    <small>Name</small>
+                    <strong>{quote.requesterName || q.customerName || '—'}</strong>
                   </div>
-                  {((quote as any).requesterCompany || (quote as any).company) && (
+                  {companyText && (
                     <div className="info-row">
-                      <small>Company:</small>
-                      <strong>{(quote as any).requesterCompany || (quote as any).company}</strong>
+                      <small>Company</small>
+                      <strong>{companyText}</strong>
                     </div>
                   )}
                   <div className="info-row">
-                    <small>Contact Email:</small>
-                    <strong className="text-blue">{quote.requesterEmail || (quote as any).customerEmail || 'client@example.com'}</strong>
+                    <small>Email</small>
+                    <strong className="text-blue">{quote.requesterEmail || q.customerEmail || '—'}</strong>
                   </div>
-                  {(quote.requesterPhone || (quote as any).customerPhone) && (
+                  {(quote.requesterPhone || q.customerPhone) && (
                     <div className="info-row">
-                      <small>Contact Phone:</small>
-                      <strong className="font-mono">{quote.requesterPhone || (quote as any).customerPhone}</strong>
+                      <small>Phone</small>
+                      <strong className="font-mono">{quote.requesterPhone || q.customerPhone}</strong>
                     </div>
                   )}
-                  <div className="info-row">
-                    <small>Submission Date:</small>
-                    <span>{quote.submittedDate || (quote as any).createdAt || 'Recent'}</span>
-                  </div>
                 </div>
               </div>
 
-              {/* Carrier Tariff Guarantee */}
               <div className="side-detail-card guarantee-card">
                 <div className="card-head">
                   <ShieldCheck size={16} className="text-emerald" />
-                  <h4>{COMPANY} Tariff Integrity</h4>
+                  <h4>Straight answers, no surprises.</h4>
                 </div>
                 <div className="card-body">
-                  <div className="guarantee-point">
-                    <CheckCircle2 size={14} className="text-emerald" />
-                    <span>No hidden fuel or accessorial surcharges</span>
-                  </div>
-                  <div className="guarantee-point">
-                    <CheckCircle2 size={14} className="text-emerald" />
-                    <span>Direct door-to-door linehaul transport</span>
-                  </div>
-                  <div className="guarantee-point">
-                    <CheckCircle2 size={14} className="text-emerald" />
-                    <span>Code 128 piece-level barcode visibility upon dispatch</span>
-                  </div>
+                  <p className="guarantee-text">{QUOTE_PROMISE}</p>
                 </div>
               </div>
 
-              {/* Support Desk */}
               <div className="side-detail-card contact-desk-card">
                 <div className="desk-head">
                   <Phone size={18} className="text-blue" />
                   <div>
-                    <h4>Central Dispatch Desk</h4>
-                    <small>24/7 Operations Line</small>
+                    <h4>24/7 Operations Desk</h4>
                   </div>
                 </div>
                 <strong className="desk-phone">{supportPhone || dispatchEmail}</strong>
-                <p className="desk-sub">Reference quote #{quote.id} when connecting with our tariff team.</p>
+                <button type="button" className="btn-ask-question" onClick={askQuestion}>
+                  <MessageCircle size={15} />
+                  <span>Ask a question</span>
+                </button>
               </div>
             </div>
           </div>
+
+          <p className="quote-res-footer-line">{DOMAIN} · Secure quote link</p>
         </div>
       </div>
 
       {/* =========================================================================
-          PRINT-ONLY OFFICIAL QUOTATION DOCUMENT (Standard Letter/A4)
+          PRINT-ONLY QUOTE (Letter/A4): what "Download PDF" saves
           ========================================================================= */}
       <div className="printable-official-quotation">
-        {/* Document Top Bar */}
         <div className="print-doc-header">
           <div className="print-header-left">
             <img src={LOGO} alt={LOGO_ALT} className="print-doc-logo" />
             <div className="print-company-info">
               <strong>{companyName}</strong>
               {headquartersAddress && <span>{headquartersAddress}</span>}
-              <span>Operations Desk: {[supportPhone, dispatchEmail].filter(Boolean).join(' · ')}</span>
+              <span>{[supportPhone, dispatchEmail].filter(Boolean).join(' · ')}</span>
             </div>
           </div>
 
           <div className="print-header-right">
-            <div className="print-doc-type-badge">OFFICIAL RATE QUOTATION</div>
+            <div className="print-doc-type-badge">Your {COMPANY_SHORT} quote</div>
             <div className="print-doc-meta-row">
-              <span>REFERENCE #:</span>
+              <span>Quote reference</span>
               <strong className="font-mono text-blue">{quote.id}</strong>
             </div>
-            <div className="print-doc-meta-row">
-              <span>ISSUE DATE:</span>
-              <strong>{quote.submittedDate || (quote as any).createdAt || new Date().toLocaleDateString()}</strong>
-            </div>
-            <div className="print-doc-meta-row">
-              <span>VALID UNTIL:</span>
-              <strong className="text-emerald">{quote.pricing?.validUntil || '14 Days from Issue'}</strong>
-            </div>
+            {validUntil && (
+              <div className="print-doc-meta-row">
+                <span>Valid until</span>
+                <strong className="text-emerald">{validUntil}</strong>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="print-divider" />
 
-        {/* Section 1: Route & Contact Parties */}
         <div className="print-parties-grid">
           <div className="print-party-box">
-            <span className="box-title">ORIGIN & SHIPPER</span>
-            <strong>{quote.requesterName || (quote as any).customerName || 'Shipper'}</strong>
-            {(quote as any).requesterCompany || (quote as any).company ? <span>{(quote as any).requesterCompany || (quote as any).company}</span> : null}
-            <span>{quote.originCity || (quote as any).origin?.city || 'New York'}, {quote.originState || (quote as any).origin?.state || 'NY'} {quote.originZip || (quote as any).origin?.postalCode || '10118'}</span>
-            <span>Tel: {quote.requesterPhone || (quote as any).customerPhone || '—'}</span>
-            <span>Email: {quote.requesterEmail || (quote as any).customerEmail || '—'}</span>
+            <span className="box-title">From</span>
+            <strong>{quote.requesterName || q.customerName || '—'}</strong>
+            {companyText && <span>{companyText}</span>}
+            <span>{[originText, quote.originZip].filter(Boolean).join(' ') || '—'}</span>
+            {(quote.requesterPhone || q.customerPhone) && <span>{quote.requesterPhone || q.customerPhone}</span>}
+            <span>{quote.requesterEmail || q.customerEmail || '—'}</span>
           </div>
 
           <div className="print-party-box">
-            <span className="box-title">DESTINATION CONSIGNEE</span>
-            <strong>{quote.recipientName || 'Designated Receiving Party'}</strong>
-            <span>{quote.destCity || (quote as any).destination?.city || 'Los Angeles'}, {quote.destState || (quote as any).destination?.state || 'CA'} {quote.destZip || (quote as any).destination?.postalCode || '90021'}</span>
-            <span>Requested Service: <strong>{quote.requestedService || (quote as any).service || 'Standard Ground'}</strong></span>
-            <span>Linehaul Transit: <strong>Interstate Direct Corridor</strong></span>
+            <span className="box-title">To</span>
+            <span>{[destText, quote.destZip].filter(Boolean).join(' ') || '—'}</span>
+            <span>Service: <strong>{serviceText || '—'}</strong></span>
           </div>
         </div>
 
-        {/* Section 2: Consignment Specifications */}
-        <div className="print-section-title">CONSIGNMENT CARGO SPECIFICATIONS</div>
         <table className="print-table">
           <thead>
             <tr>
-              <th>CARGO DESCRIPTION</th>
-              <th>CATEGORY</th>
-              <th>PIECES</th>
-              <th>WEIGHT</th>
-              <th>DIMENSIONS</th>
-              <th className="text-right">DECLARED VALUE</th>
+              <th>Contents</th>
+              <th>Pieces</th>
+              <th>Weight</th>
+              <th>Dimensions</th>
+              <th className="text-right">Declared value</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>{quote.cargoDescription || 'Commercial Consignment'}</strong></td>
-              <td>{quote.cargoType || (quote as any).shipmentType || 'Vehicle Part'}</td>
-              <td>{typeof (quote as any).pieces === 'number' ? (quote as any).pieces : quote.quantity || 1} Unit(s)</td>
+              <td><strong>{quote.cargoDescription || '—'}</strong></td>
+              <td>{pieceCount}</td>
               <td>{weightText}</td>
               <td className="font-mono">{formatDimensions(quote.dimensions)}</td>
-              <td className="text-right font-mono">{(quote as any).declaredValue ? money.format((quote as any).declaredValue) : '—'}</td>
+              <td className="text-right font-mono">{q.declaredValue ? money.format(q.declaredValue) : '—'}</td>
             </tr>
           </tbody>
         </table>
 
-        {/* Section 3: Official Tariff Rating Schedule */}
-        <div className="print-section-title">APPROVED TARIFF RATE SCHEDULE</div>
-        <table className="print-table pricing-table">
-          <thead>
-            <tr>
-              <th>TARIFF CHARGE COMPONENT</th>
-              <th>RATE BASIS</th>
-              <th className="text-right">AMOUNT ({money.currency})</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{modeText} Transport{routeText ? ` (${routeText})` : ''}</td>
-              <td>Contract Tariff Rate</td>
-              <td className="text-right font-mono">{money.format(baseShipping)}</td>
-            </tr>
-            <tr>
-              <td>Oversize / Dimensional Handling Surcharge</td>
-              <td>Scale & Cube Verified</td>
-              <td className="text-right font-mono">{money.format(oversizeHandling)}</td>
-            </tr>
-            <tr>
-              <td>Terminal Sorting, Screening & Origin Dispatch Processing</td>
-              <td>Facility Protocol</td>
-              <td className="text-right font-mono">{money.format(specialHandling)}</td>
-            </tr>
-            <tr className="print-total-row">
-              <td colSpan={2}>
-                <strong>TOTAL GUARANTEED TARIFF (ALL INCLUSIVE)</strong>
-              </td>
-              <td className="text-right font-mono print-grand-total">
-                {money.format(finalPrice)} {money.currency}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {isPublished && (
+          <>
+            <div className="print-section-title">Charges breakdown</div>
+            <table className="print-table pricing-table">
+              <thead>
+                <tr>
+                  <th>Charge</th>
+                  <th className="text-right">Amount ({money.currency})</th>
+                </tr>
+              </thead>
+              <tbody>
+                {charges.map((c) => (
+                  <tr key={c.label}>
+                    <td>{c.label}</td>
+                    <td className="text-right font-mono">{money.format(c.amount)}</td>
+                  </tr>
+                ))}
+                <tr className="print-total-row">
+                  <td><strong>Total</strong></td>
+                  <td className="text-right font-mono print-grand-total">
+                    {money.format(finalPrice)} {money.currency}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </>
+        )}
 
-        {/* Section 4: Terms & Signatures */}
         <div className="print-terms-footer">
           <div className="terms-left">
-            <span className="terms-header">QUOTATION TERMS & CARRIER STIPULATIONS</span>
-            <p>
-              1. This rate quotation is guaranteed and locked until <strong>{quote.pricing?.validUntil || '14 days from issue'}</strong>.<br />
-              2. Final charges are subject to physical dimensional scale verification upon origin intake tender.<br />
-              3. Door-to-door transit includes piece-level Code 128 barcode chain-of-custody tracking.<br />
-              4. To confirm and execute this shipment, present reference #{quote.id} to any {COMPANY} terminal.
-            </p>
-          </div>
-
-          <div className="terms-right-auth">
-            <div className="auth-stamp-box">
-              <Award size={28} className="stamp-icon" />
-              <span>{COMPANY.toUpperCase()}</span>
-              <small>CENTRAL TARIFF DESK</small>
-              <strong>OFFICIAL SEAL</strong>
-            </div>
-            <div className="auth-signature-line">
-              <div className="sig-line" />
-              <span>Authorized Tariff Officer</span>
-            </div>
+            <span className="terms-header">Straight answers, no surprises.</span>
+            <p>{QUOTE_PROMISE}</p>
           </div>
         </div>
 
-        {/* Footer info */}
         <div className="print-bottom-watermark">
-          <span>Official {COMPANY} Document · Quotation #{quote.id} · Generated on {new Date().toLocaleDateString()}</span>
-          <span>{DOMAIN}</span>
+          <span>Quote reference {quote.id}</span>
+          <span>{DOMAIN} · Secure quote link</span>
         </div>
       </div>
     </div>

@@ -231,43 +231,7 @@
   gap: 1.5rem;
 }
 
-/* Dynamic Estimate Box */
-.dynamic-estimate-box {
-  background: var(--sdl-accent-50);
-  border: 1.5px solid var(--sdl-accent-200);
-  border-radius: var(--sdl-radius-xl);
-  padding: 1.5rem;
-  box-shadow: 0 4px 15px rgba(var(--sdl-accent-rgb), 0.08);
-}
-
-.est-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--sdl-accent-500);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.5rem;
-}
-
-.est-amount {
-  font-size: 2.25rem;
-  font-weight: 800;
-  color: var(--sdl-ink-900);
-  line-height: 1.1;
-  margin-bottom: 0.5rem;
-}
-
-.est-note {
-  font-size: 0.8125rem;
-  color: var(--sdl-accent-700);
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* Policy Card */
+/* Side Card */
 .quote-policy-card {
   background: var(--sdl-white);
   border: 1.5px solid var(--sdl-slate-200);
@@ -299,51 +263,8 @@
   margin-bottom: 1.5rem;
 }
 
-.policy-points {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-  margin-bottom: 1.75rem;
-}
-
-.p-point {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  font-size: 0.84375rem;
-  font-weight: 600;
-  color: var(--sdl-ink-900);
-  line-height: 1.4;
-}
-
-.contact-hotline-box {
-  background: #f8fafc;
-  border: 1.5px solid var(--sdl-slate-200);
-  border-radius: var(--sdl-radius-xl);
-  padding: 1.25rem;
-  text-align: center;
-}
-
-.contact-hotline-box small {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--sdl-slate-500);
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.contact-hotline-box strong {
-  font-size: 1.125rem;
-  color: var(--sdl-ink-900);
-  display: block;
-  margin-bottom: 0.125rem;
-}
-
-.contact-hotline-box p {
-  font-size: 0.8125rem;
-  color: var(--sdl-slate-500);
-  margin: 0;
+.quote-policy-card p:last-child {
+  margin-bottom: 0;
 }
 
 /* ============================================================
@@ -602,4 +523,35 @@
   font-size: 0.8125rem;
   font-weight: 700;
   color: var(--sdl-ink-900);
+}
+
+/* "What happens next" (CONTENT §7.1) */
+.quote-next-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--sdl-slate-600);
+  line-height: 1.6;
+}
+
+/* The ghost button is styled for dark heroes; on this white card it needs a dark outline. */
+.quote-confirm-actions .btn-corp-ghost {
+  color: var(--sdl-ink-900);
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-300);
+}
+
+.quote-confirm-actions .btn-corp-ghost:hover {
+  border-color: var(--sdl-ink-900);
+  background: var(--sdl-slate-50);
+}
+
+/* Narrow screens: the text spans the whole hero, so the overlay stays dark edge to edge. */
+@media (max-width: 768px) {
+  .quote-hero-bg-overlay {
+    background: rgba(var(--sdl-ink-rgb), 0.85);
+  }
 }

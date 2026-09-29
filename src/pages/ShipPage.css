@@ -1428,3 +1428,79 @@
   margin: 1.25rem 0;
   max-width: 360px;
 }
+
+/* Collection and service choices are buttons (keyboard access): reset button defaults */
+.tender-card,
+.service-option-card {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.tender-card:focus-visible,
+.service-option-card:focus-visible {
+  outline: 3px solid var(--sdl-accent-400);
+  outline-offset: 2px;
+}
+
+.tender-card {
+  align-items: center;
+}
+
+/* Next steps after booking (CONTENT §7.3) */
+.ship-next-steps {
+  margin: 0.25rem 0 0;
+  padding-left: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--sdl-slate-600);
+  line-height: 1.5;
+}
+
+/* "Print labels": only the tracking ID block and the piece labels are printed */
+@media print {
+  body:has(.ship-print-labels) .sdl-header-wrapper,
+  body:has(.ship-print-labels) .sdl-pro-footer-wrapper,
+  .sdl-page-ship .sdl-ship-hero,
+  .sdl-page-ship .sdl-ship-process-section,
+  .sdl-booking-confirmed-card > :not(.ship-print-labels) {
+    display: none !important;
+  }
+
+  .sdl-page-ship,
+  .sdl-ship-workspace,
+  .sdl-booking-confirmed-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .ship-print-labels .confirm-barcode-block,
+  .ship-print-labels .confirm-piece-card {
+    break-inside: avoid;
+  }
+}
+
+/* The ghost button is styled for dark heroes; on this white card it needs a dark outline. */
+.confirm-action-row .btn-corp-ghost {
+  color: var(--sdl-ink-900);
+  background: var(--sdl-white);
+  border: 1px solid var(--sdl-slate-300);
+}
+
+.confirm-action-row .btn-corp-ghost:hover {
+  border-color: var(--sdl-ink-900);
+  background: var(--sdl-slate-50);
+}
+
+/* Narrow screens: the text spans the whole hero, so the overlay stays dark edge to edge. */
+@media (max-width: 768px) {
+  .sdl-ship-hero-bg {
+    background: rgba(var(--sdl-ink-rgb), 0.85);
+  }
+}

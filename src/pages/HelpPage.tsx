@@ -5,141 +5,50 @@ import {
   ChevronDown,
   ChevronUp,
   MapPin,
-  Clock,
-  ShieldCheck,
   Phone,
-  Mail,
   FileText,
   Truck,
   AlertTriangle,
-  CheckCircle2,
   ArrowRight,
-  ExternalLink,
-  LifeBuoy,
-  Layers,
-  Send,
-  Sparkles
+  Send
 } from 'lucide-react';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { HELP_ARTICLES, HELP_CATEGORIES, type HelpCategory } from '../data/helpArticles';
 import './HelpPage.css';
 
 interface HelpPageProps {
   onNavigate: (page: string) => void;
 }
 
-interface FaqItem {
-  id: string;
-  category: 'tracking' | 'tenders' | 'delivery' | 'exceptions';
-  question: string;
-  answer: string;
-  badge?: string;
-}
+// CONTENT §8.1 quick links
+const QUICK_LINKS = [
+  { page: 'track', title: 'Track a Shipment', icon: MapPin, tone: 'icon-accent' },
+  { page: 'ship', title: 'Book a Collection', icon: Truck, tone: 'icon-emerald' },
+  { page: 'quote', title: 'Request a Quote', icon: FileText, tone: 'icon-sky' },
+  { page: 'contact', title: '24/7 Operations Desk', icon: Phone, tone: 'icon-amber' }
+];
+
+const categoryLabel = (id: HelpCategory) => HELP_CATEGORIES.find((c) => c.id === id)?.label || '';
 
 export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
-  // Empty phone/regulatory values hide their element (no placeholders).
-  const { phone: supportPhone, phoneHref, email: dispatchEmail, regulatoryLine: dotNumber } = useCompanyContact();
+  // An empty phone value hides its button (no placeholders).
+  const { phone: supportPhone, phoneHref } = useCompanyContact();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [openFaqId, setOpenFaqId] = useState<string | null>('trk-1');
+  const [activeCategory, setActiveCategory] = useState<HelpCategory | 'all'>('all');
+  const [openFaqId, setOpenFaqId] = useState<string | null>(HELP_ARTICLES[0].id);
 
-  const faqs: FaqItem[] = [
-    {
-      id: 'trk-1',
-      category: 'tracking',
-      question: 'How do I locate and track an active consignment?',
-      answer: "Enter your 8-character tracking ID (e.g. DLS7K2M9) in the search bar on our Track page. You'll see verified checkpoint scans, hub transfers and live milestones.",
-      badge: 'Core Telemetry'
-    },
-    {
-      id: 'trk-2',
-      category: 'tracking',
-      question: 'What are piece-level child barcodes (Code 128)?',
-      answer: 'For multi-piece shipments, each individual carton receives its own serialized Code 128 child barcode (e.g. DLS7K2M9-01, -02). This ensures that every individual piece is independently scanned and accounted for at every intake gateway.',
-      badge: 'Multi-Piece'
-    },
-    {
-      id: 'trk-3',
-      category: 'tracking',
-      question: 'How often does highway tracking telemetry update?',
-      answer: 'Our long-haul transit network updates telemetry continuously as vehicles pass through weigh stations, regional toll points, and facility gateway checkpoints. In the tracking dashboard, you can monitor milestone progression in real time.',
-      badge: 'Real-Time'
-    },
-    {
-      id: 'tnd-1',
-      category: 'tenders',
-      question: 'What is the cutoff window for scheduling same-day courier pickup?',
-      answer: 'For same-day commercial pickup, requests must be tendered by 3:00 PM local dispatch time. After 3:00 PM, pickups are scheduled for the next morning priority window (8:00 AM – 12:00 PM).',
-      badge: 'SLA Window'
-    },
-    {
-      id: 'tnd-2',
-      category: 'tenders',
-      question: 'Can I tender packages directly at a logistics gateway hub?',
-      answer: 'Yes. You can select "Drop Off at Gateway Hub" on our Ship page and bring packaged consignments directly to any of our designated intake bays across New York, Chicago, Dallas, and Los Angeles.',
-      badge: 'Hub Intake'
-    },
-    {
-      id: 'tnd-3',
-      category: 'tenders',
-      question: 'What services do you provide for motor vehicles and high-value items?',
-      answer: 'We offer specialized Auto & Vehicle Transport (open-deck or enclosed car carrier transit) and Time-Critical Secure Vault courier services featuring armored transport with dual-custody oversight.',
-      badge: 'Specialized'
-    },
-    {
-      id: 'dlv-1',
-      category: 'delivery',
-      question: 'How is digital proof of delivery (POD) captured?',
-      answer: 'Upon delivery, our courier captures an adult recipient physical signature, printed name, and atomic timestamp. These records are archived directly into the master ledger and transmitted to the consignor.',
-      badge: 'POD Verification'
-    },
-    {
-      id: 'dlv-2',
-      category: 'delivery',
-      question: 'Who issues official shipping documentation like the Bill of Lading (BOL)?',
-      answer: 'All official shipping labels, Bills of Lading, and invoices are certified and issued directly by the agency and dispatch coordinators. They are delivered via secure email or direct communications.',
-      badge: 'Agency Direct'
-    },
-    {
-      id: 'dlv-3',
-      category: 'delivery',
-      question: 'Can I request Saturday or after-hours delivery?',
-      answer: 'Yes. Saturday Expedited Delivery and after-hours commercial dock handovers can be selected during the booking process on our Ship page or requested directly from our central operations desk.',
-      badge: 'Weekend Dispatch'
-    },
-    {
-      id: 'exc-1',
-      category: 'exceptions',
-      question: 'What happens if severe weather or a highway corridor delay occurs?',
-      answer: 'If severe weather or interstate traffic causes a detour, our automated dispatch system immediately recalculates transit timelines and updates the ETA on your tracking timeline. The dispatch desk is notified automatically.',
-      badge: 'Delays & Reroutes'
-    },
-    {
-      id: 'exc-2',
-      category: 'exceptions',
-      question: 'How do I request an in-transit address correction or terminal hold?',
-      answer: `Authorized senders or consignees can ${supportPhone ? `call our 24/7 central dispatch hotline at ${supportPhone}` : `email our 24/7 central dispatch desk at ${dispatchEmail}`} with the master tracking ID to hold the consignment at a regional gateway before final delivery.`,
-      badge: 'Urgent Hold'
-    },
-    {
-      id: 'exc-3',
-      category: 'exceptions',
-      question: 'How do I file a formal inquiry or claims report?',
-      answer: 'To file an inquiry, navigate to our Contact page, select "Delivery Exception" or "Claims", provide your tracking number and details, and our dispatch team will investigate with an initial response under 30 minutes.',
-      badge: 'Claims Support'
-    }
-  ];
-
-  // Filtered FAQs based on category & search query
+  // Search matches the question, the answer and the category name.
   const filteredFaqs = useMemo(() => {
-    return faqs.filter(faq => {
+    const term = searchQuery.trim().toLowerCase();
+    return HELP_ARTICLES.filter((faq) => {
       const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
-      const matchesSearch = searchQuery.trim() === '' ||
-        faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (faq.badge && faq.badge.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesSearch = !term ||
+        faq.question.toLowerCase().includes(term) ||
+        faq.answer.toLowerCase().includes(term) ||
+        categoryLabel(faq.category).toLowerCase().includes(term);
       return matchesCategory && matchesSearch;
     });
-  }, [faqs, activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery]);
 
   const toggleFaq = (id: string) => {
     setOpenFaqId(openFaqId === id ? null : id);
@@ -148,25 +57,13 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
   return (
     <div className="sdl-page-help">
       {/* =========================================================================
-          1. CINEMATIC HERO SECTION
+          1. HERO + SEARCH (CONTENT §8.1)
           ========================================================================= */}
       <section className="sdl-help-hero">
         <div className="help-hero-bg-overlay" />
         <div className="sdl-container-wide help-hero-inner">
-          <div className="help-hero-pill animate-fade-in">
-            <span className="help-pulse-dot" />
-            <span>{dotNumber ? `${dotNumber} · ` : ''}24/7 CLIENT OPERATIONS DESK</span>
-          </div>
+          <h1 className="help-hero-title animate-fade-in">How can we help?</h1>
 
-          <h1 className="help-hero-title animate-fade-in">
-            How Can Our Operations Team <span className="help-highlight-accent">Assist You Today?</span>
-          </h1>
-
-          <p className="help-hero-lead animate-fade-in">
-            Browse verified operational guidelines, learn how our piece-level barcode tracking operates, or connect directly with 24/7 dispatch supervisors.
-          </p>
-
-          {/* Interactive Hero Search Input */}
           <div className="help-search-container animate-fade-in">
             <div className="help-search-input-wrap">
               <Search size={20} className="help-search-icon" />
@@ -174,7 +71,8 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search topics, tracking questions, delivery terms, or claims..."
+                placeholder="Search for answers, e.g. customs, delivery time, documents"
+                aria-label="Search for answers"
                 className="help-search-input"
               />
               {searchQuery && (
@@ -191,135 +89,61 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* =========================================================================
-          2. NETWORK OPERATIONAL STATUS BAR
-          ========================================================================= */}
-      <section className="sdl-help-network-strip">
-        <div className="sdl-container-wide">
-          <div className="network-strip-inner">
-            <div className="network-status-label">
-              <span className="live-radar-dot" />
-              <strong>INTERSTATE LOGISTICS NETWORK STATUS:</strong>
-            </div>
-            <div className="network-nodes-grid">
-              <div className="node-item">
-                <span className="node-code font-mono">JFK GATEWAY</span>
-                <span className="node-status text-emerald">● OPTIMAL</span>
-              </div>
-              <div className="node-item">
-                <span className="node-code font-mono">ORD MIDWEST</span>
-                <span className="node-status text-emerald">● OPTIMAL</span>
-              </div>
-              <div className="node-item">
-                <span className="node-code font-mono">DFW CORRIDOR</span>
-                <span className="node-status text-emerald">● OPTIMAL</span>
-              </div>
-              <div className="node-item">
-                <span className="node-code font-mono">LAX PACIFIC</span>
-                <span className="node-status text-emerald">● OPTIMAL</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          3. CORE ASSISTANCE PILLARS
-          ========================================================================= */}
       <div className="sdl-container-wide sdl-help-body">
+        {/* =========================================================================
+            2. QUICK LINKS
+            ========================================================================= */}
         <div className="help-pillars-grid">
-          <div className="help-pillar-card" onClick={() => onNavigate('track')}>
-            <div className="pillar-icon icon-accent"><MapPin size={24} /></div>
-            <h3>Track a Consignment</h3>
-            <p>Monitor live 60 FPS highway telemetry and verified scan milestones across all regional intake gateways.</p>
-            <span className="pillar-action-link">Open Tracking Radar <ArrowRight size={15} /></span>
-          </div>
-
-          <div className="help-pillar-card" onClick={() => onNavigate('ship')}>
-            <div className="pillar-icon icon-emerald"><Truck size={24} /></div>
-            <h3>Book & Tender Pickup</h3>
-            <p>Schedule time-definite courier pickups or generate a consignment barcode for gateway hub drop-off.</p>
-            <span className="pillar-action-link">Schedule Tender <ArrowRight size={15} /></span>
-          </div>
-
-          <div className="help-pillar-card" onClick={() => onNavigate('quote')}>
-            <div className="pillar-icon icon-sky"><FileText size={24} /></div>
-            <h3>Request Official Tariff</h3>
-            <p>Submit scale weight and route parameters for custom certified rate review by our central tariff desk.</p>
-            <span className="pillar-action-link">Calculate Rates <ArrowRight size={15} /></span>
-          </div>
-
-          <div className="help-pillar-card" onClick={() => onNavigate('contact')}>
-            <div className="pillar-icon icon-amber"><Phone size={24} /></div>
-            <h3>24/7 Operations Desk</h3>
-            <p>Connect immediately with regional dispatch supervisors for urgent in-transit delivery holds or reroutes.</p>
-            <span className="pillar-action-link">Contact Dispatch <ArrowRight size={15} /></span>
-          </div>
+          {QUICK_LINKS.map(({ page, title, icon: Icon, tone }) => (
+            <button key={page} type="button" className="help-pillar-card" onClick={() => onNavigate(page)}>
+              <div className={`pillar-icon ${tone}`}><Icon size={24} /></div>
+              <h3>{title}</h3>
+              <span className="pillar-action-link" aria-hidden="true"><ArrowRight size={15} /></span>
+            </button>
+          ))}
         </div>
 
         {/* =========================================================================
-            4. KNOWLEDGE BASE ACCORDION & TOPIC FILTER
+            3. KNOWLEDGE BASE (CONTENT §8.2)
             ========================================================================= */}
         <section className="sdl-help-faq-section">
           <div className="section-center-header">
-            <span className="section-eyebrow">FREQUENTLY ASKED QUESTIONS</span>
-            <h2>Operational Knowledge Base</h2>
-            <p className="section-desc-sub">Select a category below or use the search bar above to quickly resolve questions.</p>
+            <h2>Answers to common questions</h2>
             <div className="section-header-line" />
           </div>
 
-          {/* Category Filter Pills */}
           <div className="faq-category-pills">
             <button
               type="button"
               className={`cat-pill ${activeCategory === 'all' ? 'active' : ''}`}
               onClick={() => setActiveCategory('all')}
             >
-              All Topics ({faqs.length})
+              All topics ({HELP_ARTICLES.length})
             </button>
-            <button
-              type="button"
-              className={`cat-pill ${activeCategory === 'tracking' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('tracking')}
-            >
-              Tracking & Barcodes
-            </button>
-            <button
-              type="button"
-              className={`cat-pill ${activeCategory === 'tenders' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('tenders')}
-            >
-              Courier Tenders
-            </button>
-            <button
-              type="button"
-              className={`cat-pill ${activeCategory === 'delivery' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('delivery')}
-            >
-              Delivery & POD
-            </button>
-            <button
-              type="button"
-              className={`cat-pill ${activeCategory === 'exceptions' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('exceptions')}
-            >
-              Exceptions & Claims
-            </button>
+            {HELP_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                className={`cat-pill ${activeCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat.id)}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
-          {/* FAQs List */}
           <div className="help-faq-accordion">
             {filteredFaqs.length === 0 ? (
-              <div className="help-empty-search">
+              <div className="help-empty-search" role="status">
                 <AlertTriangle size={36} className="text-amber" />
-                <h3>No Matching Knowledge Topics Found</h3>
-                <p>We couldn't find any articles matching "{searchQuery}". Try searching with different keywords or contact our operations desk directly.</p>
+                <h3>No matching answers.</h3>
+                <p>Try different words, or contact us and we'll answer directly.</p>
                 <button
                   type="button"
                   className="btn-corp-ghost"
                   onClick={() => { setSearchQuery(''); setActiveCategory('all'); }}
                 >
-                  Reset Search Filter
+                  Clear search
                 </button>
               </div>
             ) : (
@@ -331,14 +155,12 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                   <button
                     type="button"
                     className="help-faq-header-btn"
+                    aria-expanded={openFaqId === faq.id}
                     onClick={() => toggleFaq(faq.id)}
                   >
                     <div className="faq-q-text">
                       <HelpCircle size={18} className="text-accent flex-shrink-0" />
                       <span>{faq.question}</span>
-                      {faq.badge && (
-                        <span className="faq-topic-badge font-mono">{faq.badge}</span>
-                      )}
                     </div>
                     {openFaqId === faq.id ? (
                       <ChevronUp size={18} className="text-accent flex-shrink-0" />
@@ -359,13 +181,11 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         </section>
 
         {/* =========================================================================
-            5. NEED IMMEDIATE ASSISTANCE CALLOUT
+            4. FOOTER BANNER
             ========================================================================= */}
         <section className="sdl-help-cta-box">
           <div className="help-cta-content">
-            <div className="help-cta-badge font-mono">24/7 CENTRAL DISPATCH DESK</div>
-            <h2>Still need assistance with an active consignment?</h2>
-            <p>Our logistics coordinators and interstate dispatchers are on duty 24 hours a day, 7 days a week.</p>
+            <h2>Still need help with a shipment?</h2>
             <div className="help-cta-buttons">
               <button
                 type="button"
@@ -373,7 +193,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
                 onClick={() => onNavigate('contact')}
               >
                 <Send size={16} />
-                <span>Submit Dispatch Ticket</span>
+                <span>Contact Support</span>
               </button>
               {supportPhone && (
                 <a

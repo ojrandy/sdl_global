@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Package,
   Truck,
   ArrowRight,
   ArrowLeft,
@@ -8,7 +7,6 @@ import {
   MapPin,
   User,
   Clock,
-  ShieldCheck,
   Plus,
   Trash2,
   FileText,
@@ -16,17 +14,19 @@ import {
   Check,
   Building,
   Layers,
-  Phone,
   Car,
   Lock,
-  Calendar
+  Printer,
+  ListChecks
 } from 'lucide-react';
 import { Barcode } from '../components/Barcode';
 import { useAdminData } from '../context/AdminDataContext';
 import { resolveAddressPrecise } from '../services/geocodingService';
 import './ShipPage.css';
 import { pieceLabel } from '../shared/trackingId';
+import { shipmentStatusLabel } from '../shared/shipmentStatus';
 import { COMPANY, COMPANY_SHORT } from '../config/brand';
+import { SERVICE_OPTIONS, type ServiceOptionId } from '../data/serviceOptions';
 import { CountrySelect } from '../components/forms/CountrySelect';
 import { PhoneInput } from '../components/forms/PhoneInput';
 import { MeasureInput, MoneyInput, UnitToggle, useUnitLabels } from '../components/forms/UnitControls';
@@ -95,6 +95,33 @@ const PICKUP_WINDOWS = [
   'Tomorrow afternoon, 1:00 PM – 5:00 PM (local time)'
 ];
 
+const DROP_OFF_LABEL = `Drop-off at an ${COMPANY_SHORT} gateway`;
+
+const SERVICE_ICONS: Record<ServiceOptionId, React.ElementType> = {
+  express: Clock,
+  freight: Truck,
+  vehicle: Car,
+  vault: Lock
+};
+
+// CONTENT §7.3 steps
+const STEP_TITLES = ['Sender & collection', 'Recipient & delivery', 'Pieces', 'Service & extras'];
+
+// CONTENT §7.3 "How booking works": stage names, bodies from §2.3 (as on Services §3.5).
+const BOOKING_STAGES = [
+  { title: 'Booking', body: 'Book online or with a coordinator. You get your 8-character SDL tracking ID and a barcode label for every piece straight away.' },
+  { title: 'Gateway scan', body: 'We collect from your door, weigh and scan every piece at the origin gateway, and prepare the export and customs documents.' },
+  { title: 'Linehaul & border crossing', body: 'Your cargo travels on the fastest suitable lane: air, ocean or road. Customs clearance and each transfer are logged live.' },
+  { title: 'Proof of delivery', body: 'Final-mile delivery to the door, with a signed digital proof of delivery sent to you the moment it lands.' }
+];
+
+// CONTENT §7.3 next steps
+const NEXT_STEPS = [
+  'Print and attach a label to each piece',
+  'Have the shipment ready at the collection time',
+  'Track progress any time with your ID'
+];
+
 export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
   const { createShipment, generateDocument } = useAdminData();
   const units = useUnitLabels();
@@ -139,8 +166,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     },
   ]);
 
-  // Form State - Service Selection (Strictly 4 authentic core tiers, ZERO freight/ship/train)
-  const [selectedService, setSelectedService] = useState<'courier' | 'linehaul' | 'auto' | 'vault'>('courier');
+  // Form State - Service (one of the four §7.1 services)
+  const [selectedService, setSelectedService] = useState<ServiceOptionId>('express');
   // '' = let SDL recommend
   const [transportMode, setTransportMode] = useState<TransportMode | ''>('');
   const [declaredValue, setDeclaredValue] = useState<number | ''>('');
@@ -222,14 +249,10 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
-  const getServiceName = () => {
-    switch (selectedService) {
-      case 'courier': return 'Priority Express Courier';
-      case 'linehaul': return 'Scheduled Commercial Linehaul';
-      case 'auto': return 'Auto & Vehicle Transport';
-      case 'vault': return 'Time-Critical Secure Vault';
-    }
-  };
+  const getServiceName = () =>
+    (SERVICE_OPTIONS.find((s) => s.id === selectedService) || SERVICE_OPTIONS[0]).name;
+
+  const collectionText = pickupType === 'pickup' ? pickupWindow : DROP_OFF_LABEL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,7 +291,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       totalPieces: piecesList.length,
       trackingNumber: '',
       status: 'AWAITING_PICKUP' as const,
-      statusText: 'Consignment Tender Staged for Intake',
+      statusText: shipmentStatusLabel('BOOKED'),
       currentLocation: originLabel,
       weightLbs: p.weight === '' ? 0 : p.weight,
       dimensions: dimensionsOf(p)
@@ -293,8 +316,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
     try {
       const created = await createShipment({
         status: 'AWAITING_PICKUP',
-        statusText: 'Consignment Tender Registered · Awaiting Intake Scan',
-        statusMessage: `Consignment registered in the ${COMPANY_SHORT} intake system. Linear Code 128 piece barcodes assigned.`,
+        statusText: shipmentStatusLabel('BOOKED'),
+        statusMessage: `${shipmentStatusLabel('BOOKED')} · ${collectionText}`,
         health: 'ON_TRACK',
         progressPercent: 10,
         lastUpdated: 'Just now',
@@ -329,24 +352,15 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
         estimatedDelivery: '2-3 Business Days',
         estimatedDeliveryDetail: 'by 5:00 PM',
         pieces: piecesFormatted,
-        events: [
-          {
-            id: `ev-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-            displayDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            displayTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            status: 'AWAITING_PICKUP',
-            title: 'Consignment Tender Registered & Barcodes Provisioned',
-            location: originLabel,
-            facility: `${senderCity.trim()} Intake Hub`,
-            city: senderCity.trim(),
-            state: originRegion,
-            description: `Shipment tendered via customer intake portal. Courier scheduled for pickup: ${pickupWindow}. Official BOL manifest and labels will be issued by agency dispatch.`,
-            isCompleted: true,
-            isCurrent: true,
-            recordedBy: 'Customer Portal Intake'
-          }
-        ]
+        // Collection and extras chosen on the form, for the operations team.
+        pickupWindow: collectionText,
+        handlingRequirements: {
+          signatureRequired: requireSignature,
+          otherInstructions: [
+            saturdayDelivery ? 'Weekend Delivery requested' : '',
+            deliveryInstructions.trim()
+          ].filter(Boolean).join('. ') || undefined
+        }
       });
       newTrackingId = created.trackingNumber;
     } catch (err: any) {
@@ -417,27 +431,10 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
           <div className="sdl-ship-breadcrumbs">
             <span onClick={() => onNavigate('home')} className="crumb-link">Home</span>
             <span className="crumb-sep">/</span>
-            <span className="crumb-current">Ship a Consignment</span>
+            <span className="crumb-current">Book a shipment</span>
           </div>
 
-          <div className="ship-hero-badge animate-fade-in">
-            <span className="ship-pulse-dot" />
-            <span>COMMERCIAL & CONSUMER CONSIGNMENT TENDER</span>
-          </div>
-
-          <h1 className="ship-hero-title animate-fade-in">
-            Tender & Register Consignments with <span className="text-highlight-accent">Piece-Level Precision.</span>
-          </h1>
-
-          <p className="ship-hero-subtitle animate-fade-in">
-            Register single or multi-piece consignments directly into the {COMPANY} relay network with linear Code 128 barcode provisioning. No customer account required.
-          </p>
-
-          <div className="ship-hero-trust-strip animate-fade-in">
-            <div className="trust-item"><CheckCircle2 size={16} className="text-emerald" /> Guaranteed Space Tender</div>
-            <div className="trust-item"><CheckCircle2 size={16} className="text-emerald" /> Linear Code 128 Piece Barcodes</div>
-            <div className="trust-item"><CheckCircle2 size={16} className="text-emerald" /> 24/7 Central Operations Dispatch</div>
-          </div>
+          <h1 className="ship-hero-title animate-fade-in">Book a shipment</h1>
         </div>
       </section>
 
@@ -448,35 +445,20 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
         {submittedBooking ? (
           /* BOOKING CONFIRMATION SCREEN */
           <div className="sdl-booking-confirmed-card animate-fade-in">
-            <div className="confirm-top-pill">
-              <span className="pulse-dot" />
-              <span>CONSIGNMENT REGISTERED · PENDING DISPATCH INTAKE REVIEW</span>
-            </div>
-
-            <div className="confirm-header">
+            <div className="confirm-header" role="status">
               <CheckCircle2 size={56} className="confirm-check-icon text-emerald" />
-              <h2>Shipment Successfully Registered</h2>
+              <h2>Shipment booked</h2>
               <p>
-                Your consignment has been recorded in the {COMPANY} intake queue. Master tracking identifier <strong className="font-mono">{generatedTracking}</strong> has been provisioned.
+                Your tracking ID is <strong className="font-mono">{generatedTracking}</strong>. Labels for each piece are ready to print.
               </p>
             </div>
 
-            {/* Agency Official Documentation Notice */}
-            <div className="admin-rate-notice-banner">
-              <div className="rate-notice-icon"><ShieldCheck size={24} className="text-accent flex-shrink-0" /></div>
-              <div>
-                <strong>Official Documentation & Invoicing Dispatch Notice</strong>
-                <p>
-                  All official shipping documents, including your <strong>certified Bill of Lading (BOL)</strong>, <strong>Code 128 piece barcode labels</strong>, and <strong>published tariff invoice</strong>, are issued directly by the {COMPANY} dispatch desk and will be transmitted to you via your designated communication channel (email, SMS, or dispatch coordinator).
-                </p>
-              </div>
-            </div>
-
-            {/* Prominent Linear Barcode Card */}
+            {/* Tracking ID and piece labels: this block is what "Print labels" prints. */}
+            <div className="ship-print-labels">
             <div className="confirm-barcode-block">
               <div className="barcode-block-header">
-                <span className="barcode-tag">MASTER WAYBILL CONSIGNMENT</span>
-                <span className="barcode-service">{getServiceName().toUpperCase()}</span>
+                <span className="barcode-tag">{COMPANY}</span>
+                <span className="barcode-service">{getServiceName()}</span>
               </div>
 
               <div className="barcode-render-stage">
@@ -493,7 +475,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 <div><strong>Route:</strong> {placeText(senderCity, senderState, senderCountry)} → {placeText(recipientCity, recipientState, recipientCountry)}</div>
                 <div><strong>Pieces:</strong> {totalPieces} ({formatWeight(totalWeight, units.system)} gross)</div>
                 {transportMode && <div><strong>Mode:</strong> {TRANSPORT_MODE_LABELS[transportMode]}</div>}
-                <div><strong>Tender Mode:</strong> {pickupType === 'pickup' ? 'Courier Pickup Scheduled' : 'Origin Hub Drop-off'}</div>
+                <div><strong>Collection:</strong> {collectionText}</div>
               </div>
             </div>
 
@@ -502,7 +484,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               {piecesList.map((piece, idx) => (
                 <div key={piece.id} className="confirm-piece-card">
                   <div className="piece-card-header">
-                    <span className="font-bold">PIECE {piece.id} of {piecesList.length.toString().padStart(2, '0')}</span>
+                    <span className="font-bold">Piece {idx + 1} of {piecesList.length}</span>
                     <small>{[formatWeight(piece.weight, units.system), formatDimensions(piece, units.system)].filter(Boolean).join(' • ')}</small>
                   </div>
                   <div className="piece-barcode-render">
@@ -517,17 +499,18 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 </div>
               ))}
             </div>
+            </div>
 
-            {/* Next Steps Instructions */}
+            {/* Next steps (CONTENT §7.3); the collection-time step applies to collections only */}
             <div className="confirm-instructions-card">
-              <div className="inst-icon"><Clock size={20} className="text-accent flex-shrink-0" /></div>
+              <div className="inst-icon"><ListChecks size={20} className="text-accent flex-shrink-0" /></div>
               <div>
-                <h4>Next Operational Steps:</h4>
-                <p>
-                  {pickupType === 'pickup'
-                    ? `A courier driver has been scheduled for your selected window (${pickupWindow}). Your assigned dispatch coordinator will contact you to confirm pickup and hand off official paperwork.`
-                    : `Please drop off your parcel at your nearest sort gateway before the evening linehaul departure cutoff (7:30 PM local time).`}
-                </p>
+                <h4>Next steps</h4>
+                <ul className="ship-next-steps">
+                  {NEXT_STEPS.filter((step, i) => i !== 1 || pickupType === 'pickup').map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ul>
               </div>
             </div>
 
@@ -536,9 +519,18 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               <button
                 type="button"
                 className="btn-corp-primary"
+                onClick={() => window.print()}
+              >
+                <Printer size={16} />
+                <span>Print labels</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-corp-ghost"
                 onClick={() => onTrack(generatedTracking)}
               >
-                <span>Track This Shipment Live</span>
+                <span>Track a Shipment</span>
                 <ArrowRight size={16} />
               </button>
 
@@ -550,12 +542,12 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 {copiedTracking ? (
                   <>
                     <Check size={16} className="text-emerald" />
-                    <span>Copied Tracking ID!</span>
+                    <span>Copied</span>
                   </>
                 ) : (
                   <>
                     <Copy size={16} />
-                    <span>Copy Tracking ID</span>
+                    <span>Copy tracking ID</span>
                   </>
                 )}
               </button>
@@ -569,7 +561,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   setCurrentStep(1);
                 }}
               >
-                <span>Register Another Consignment</span>
+                <span>Book another shipment</span>
               </button>
             </div>
           </div>
@@ -587,8 +579,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 >
                   <span className="step-num">{currentStep > 1 ? '✓' : '1'}</span>
                   <div className="step-label-group">
-                    <span className="step-title">Origin & Sender</span>
-                    <span className="step-sub">{senderCity ? placeText(senderCity, senderState, senderCountry) : 'Pickup'}</span>
+                    <span className="step-title">{STEP_TITLES[0]}</span>
+                    <span className="step-sub">{senderCity ? placeText(senderCity, senderState, senderCountry) : 'From'}</span>
                   </div>
                 </button>
 
@@ -599,8 +591,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 >
                   <span className="step-num">{currentStep > 2 ? '✓' : '2'}</span>
                   <div className="step-label-group">
-                    <span className="step-title">Destination</span>
-                    <span className="step-sub">{recipientCity ? placeText(recipientCity, recipientState, recipientCountry) : 'Delivery'}</span>
+                    <span className="step-title">{STEP_TITLES[1]}</span>
+                    <span className="step-sub">{recipientCity ? placeText(recipientCity, recipientState, recipientCountry) : 'To'}</span>
                   </div>
                 </button>
 
@@ -611,8 +603,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 >
                   <span className="step-num">{currentStep > 3 ? '✓' : '3'}</span>
                   <div className="step-label-group">
-                    <span className="step-title">Pieces & Weight</span>
-                    <span className="step-sub">{totalPieces} Pcs • {formatWeight(totalWeight, units.system)}</span>
+                    <span className="step-title">{STEP_TITLES[2]}</span>
+                    <span className="step-sub">{[`${totalPieces} ${totalPieces === 1 ? 'piece' : 'pieces'}`, formatWeight(totalWeight, units.system)].filter(Boolean).join(' · ')}</span>
                   </div>
                 </button>
 
@@ -623,8 +615,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                 >
                   <span className="step-num">4</span>
                   <div className="step-label-group">
-                    <span className="step-title">Service Tier</span>
-                    <span className="step-sub">Review & Tender</span>
+                    <span className="step-title">{STEP_TITLES[3]}</span>
+                    <span className="step-sub">{getServiceName()}</span>
                   </div>
                 </button>
               </div>
@@ -632,12 +624,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               {/* Mobile Real-Time Step Progress Indicator */}
               <div className="mobile-step-summary-bar">
                 <div className="mobile-step-text">
-                  <span className="step-badge-mini">Step {currentStep}/4</span>
+                  <span className="step-badge-mini">{currentStep}/4</span>
                   <strong>
-                    {currentStep === 1 && 'Origin & Pickup Location'}
-                    {currentStep === 2 && 'Destination Recipient'}
-                    {currentStep === 3 && `Pieces (${totalPieces} Pcs • ${formatWeight(totalWeight, units.system)})`}
-                    {currentStep === 4 && 'Service Tier & Tender Review'}
+                    {STEP_TITLES[currentStep - 1]}
                   </strong>
                 </div>
                 <div className="mobile-step-track">
@@ -659,49 +648,45 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <div className="sec-header">
                     <div className="sec-icon"><User size={20} /></div>
                     <div>
-                      <h3>Step 1: Origin & Sender Information</h3>
-                      <p>Specify who is dispatching the consignment and the pickup address.</p>
+                      <h3>1. {STEP_TITLES[0]}</h3>
                     </div>
                   </div>
 
                   <div className="form-fields-grid">
                     <div className="form-group span-2">
-                      <label>Company / Organization (Optional)</label>
+                      <label>Company <span className="sdl-field-optional">(optional)</span></label>
                       <input
                         type="text"
                         value={senderCompany}
                         onChange={(e) => setSenderCompany(e.target.value)}
                         className="sdl-input"
-                        placeholder="e.g. Apex Distribution Logistics LLC"
                       />
                     </div>
 
                     <div className="form-group">
-                      <label>Sender Full Name *</label>
+                      <label>Sender name *</label>
                       <input
                         type="text"
                         required
                         value={senderContact}
                         onChange={(e) => setSenderContact(e.target.value)}
                         className="sdl-input"
-                        placeholder="e.g. John Anderson"
                       />
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="sender-phone">Phone Number *</label>
+                      <label htmlFor="sender-phone">Phone *</label>
                       <PhoneInput id="sender-phone" required value={senderPhone} onChange={setSenderPhone} defaultCountry={senderCountry || 'US'} className="sdl-input" />
                     </div>
 
                     <div className="form-group span-2">
-                      <label>Street Address *</label>
+                      <label>Street address *</label>
                       <input
                         type="text"
                         required
                         value={senderAddress}
                         onChange={(e) => setSenderAddress(e.target.value)}
                         className="sdl-input"
-                        placeholder="e.g. 140 West Street, 8th Floor"
                       />
                     </div>
 
@@ -719,37 +704,42 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     />
                   </div>
 
-                  {/* Tender Method Toggle */}
+                  {/* Collection or drop-off */}
                   <div className="tender-mode-wrap">
-                    <label className="section-sublabel">How will {COMPANY} receive this consignment?</label>
-                    <div className="tender-toggle-row">
-                      <div
+                    <span className="section-sublabel" id="ship-collection-label">Collection</span>
+                    <div className="tender-toggle-row" role="radiogroup" aria-labelledby="ship-collection-label">
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={pickupType === 'pickup'}
                         className={`tender-card ${pickupType === 'pickup' ? 'selected' : ''}`}
                         onClick={() => setPickupType('pickup')}
                       >
                         <Truck size={22} className="text-accent" />
                         <div>
-                          <strong>Schedule Courier Pickup</strong>
-                          <p>Driver dispatches to your dock, office, or facility</p>
+                          <strong>Book a Collection</strong>
                         </div>
-                      </div>
+                      </button>
 
-                      <div
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={pickupType === 'dropoff'}
                         className={`tender-card ${pickupType === 'dropoff' ? 'selected' : ''}`}
                         onClick={() => setPickupType('dropoff')}
                       >
                         <Building size={22} className="text-accent" />
                         <div>
-                          <strong>Drop Off at Logistics Gateway Hub</strong>
-                          <p>Tender directly to regional sortation terminal</p>
+                          <strong>{DROP_OFF_LABEL}</strong>
                         </div>
-                      </div>
+                      </button>
                     </div>
 
                     {pickupType === 'pickup' && (
                       <div className="pickup-window-select">
-                        <label>Preferred Pickup Window</label>
+                        <label htmlFor="ship-collection-window">Collection time</label>
                         <select
+                          id="ship-collection-window"
                           value={pickupWindow}
                           onChange={(e) => setPickupWindow(e.target.value)}
                           className="sdl-input"
@@ -768,7 +758,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       className="btn-corp-primary"
                       onClick={handleNextStep}
                     >
-                      <span>Continue to Destination</span>
+                      <span>Continue</span>
                       <ArrowRight size={16} />
                     </button>
                   </div>
@@ -781,49 +771,45 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <div className="sec-header">
                     <div className="sec-icon"><MapPin size={20} /></div>
                     <div>
-                      <h3>Step 2: Destination & Recipient Information</h3>
-                      <p>Provide the recipient's delivery location and handling notes.</p>
+                      <h3>2. {STEP_TITLES[1]}</h3>
                     </div>
                   </div>
 
                   <div className="form-fields-grid">
                     <div className="form-group span-2">
-                      <label>Recipient Company / Facility (Optional)</label>
+                      <label>Company <span className="sdl-field-optional">(optional)</span></label>
                       <input
                         type="text"
                         value={recipientCompany}
                         onChange={(e) => setRecipientCompany(e.target.value)}
                         className="sdl-input"
-                        placeholder="e.g. Pacific Horizon Technologies Inc."
                       />
                     </div>
 
                     <div className="form-group">
-                      <label>Recipient Contact Name *</label>
+                      <label>Recipient name *</label>
                       <input
                         type="text"
                         required
                         value={recipientContact}
                         onChange={(e) => setRecipientContact(e.target.value)}
                         className="sdl-input"
-                        placeholder="e.g. Michael Johnson"
                       />
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="recipient-phone">Recipient Phone Number *</label>
+                      <label htmlFor="recipient-phone">Phone *</label>
                       <PhoneInput id="recipient-phone" required value={recipientPhone} onChange={setRecipientPhone} defaultCountry={recipientCountry || senderCountry || 'US'} className="sdl-input" />
                     </div>
 
                     <div className="form-group span-2">
-                      <label>Delivery Street Address *</label>
+                      <label>Street address *</label>
                       <input
                         type="text"
                         required
                         value={recipientAddress}
                         onChange={(e) => setRecipientAddress(e.target.value)}
                         className="sdl-input"
-                        placeholder="e.g. 900 Wilshire Blvd, Suite 1400"
                       />
                     </div>
 
@@ -841,12 +827,11 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     />
 
                     <div className="form-group span-2">
-                      <label>Special Delivery Instructions</label>
+                      <label>Delivery instructions <span className="sdl-field-optional">(optional)</span></label>
                       <input
                         type="text"
                         value={deliveryInstructions}
                         onChange={(e) => setDeliveryInstructions(e.target.value)}
-                        placeholder="e.g. Loading dock #4, Direct signature required"
                         className="sdl-input"
                       />
                     </div>
@@ -859,7 +844,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       onClick={handlePrevStep}
                     >
                       <ArrowLeft size={16} />
-                      <span>Back to Origin</span>
+                      <span>Back</span>
                     </button>
 
                     <button
@@ -867,7 +852,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       className="btn-corp-primary"
                       onClick={handleNextStep}
                     >
-                      <span>Continue to Pieces & Weight</span>
+                      <span>Continue</span>
                       <ArrowRight size={16} />
                     </button>
                   </div>
@@ -881,8 +866,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     <div className="sec-icon"><Layers size={20} /></div>
                     <div className="sec-title-wrap">
                       <div>
-                        <h3>Step 3: Multi-Piece Consignment Builder</h3>
-                        <p>Configure individual cartons or pieces with piece-level Code 128 barcodes.</p>
+                        <h3>3. {STEP_TITLES[2]}</h3>
                         <UnitToggle className="ship-unit-toggle" />
                       </div>
                       <button
@@ -890,7 +874,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         className="add-piece-btn"
                         onClick={handleAddPiece}
                       >
-                        <Plus size={15} /> Add Another Piece
+                        <Plus size={15} /> Add a piece
                       </button>
                     </div>
                   </div>
@@ -966,12 +950,12 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                           </div>
 
                           <div className="p-field-desc">
-                            <label>Item Description / Packaging Notes</label>
+                            <label>Contents <span className="sdl-field-optional">(optional)</span></label>
                             <input
                               type="text"
                               value={piece.description}
                               onChange={(e) => handleUpdatePiece(index, 'description', e.target.value)}
-                              placeholder="e.g. Precision Electronics, Document Archive"
+                              placeholder="e.g. Machine spare parts"
                               className="sdl-input"
                             />
                           </div>
@@ -987,7 +971,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       onClick={handlePrevStep}
                     >
                       <ArrowLeft size={16} />
-                      <span>Back to Destination</span>
+                      <span>Back</span>
                     </button>
 
                     <button
@@ -995,7 +979,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       className="btn-corp-primary"
                       onClick={handleNextStep}
                     >
-                      <span>Continue to Service Tier</span>
+                      <span>Continue</span>
                       <ArrowRight size={16} />
                     </button>
                   </div>
@@ -1008,70 +992,36 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <div className="sec-header">
                     <div className="sec-icon"><Truck size={20} /></div>
                     <div>
-                      <h3>Step 4: Service Tier & Special Handling</h3>
-                      <p>Select your required transit tier across our 4 authentic courier services.</p>
+                      <h3>4. {STEP_TITLES[3]}</h3>
                     </div>
                   </div>
 
-                  {/* Service Cards Grid (Zero Freight/Train/Ship) */}
-                  <div className="services-select-grid">
-                    <div
-                      className={`service-option-card ${selectedService === 'courier' ? 'selected' : ''}`}
-                      onClick={() => setSelectedService('courier')}
-                    >
-                      <div className="serv-head">
-                        <Clock size={20} className="text-accent" />
-                        <strong>Priority Express Courier</strong>
-                      </div>
-                      <div className="serv-transit">Next Business Day by 10:30 AM</div>
-                      <div className="serv-rate-status font-mono">RATE PUBLISHED BY ADMIN</div>
-                      <small>Guaranteed direct flight & earliest delivery</small>
-                    </div>
-
-                    <div
-                      className={`service-option-card popular ${selectedService === 'linehaul' ? 'selected' : ''}`}
-                      onClick={() => setSelectedService('linehaul')}
-                    >
-                      <span className="pop-badge">RECOMMENDED</span>
-                      <div className="serv-head">
-                        <Truck size={20} className="text-accent" />
-                        <strong>Scheduled Commercial Linehaul</strong>
-                      </div>
-                      <div className="serv-transit">2 - 3 Business Days</div>
-                      <div className="serv-rate-status font-mono">RATE PUBLISHED BY ADMIN</div>
-                      <small>Scheduled road relay & sortation network</small>
-                    </div>
-
-                    <div
-                      className={`service-option-card ${selectedService === 'auto' ? 'selected' : ''}`}
-                      onClick={() => setSelectedService('auto')}
-                    >
-                      <div className="serv-head">
-                        <Car size={20} className="text-accent" />
-                        <strong>Auto & Vehicle Transport</strong>
-                      </div>
-                      <div className="serv-transit">Specialized 3 - 5 Days</div>
-                      <div className="serv-rate-status font-mono">RATE PUBLISHED BY ADMIN</div>
-                      <small>Enclosed & open-deck door-to-door relocation</small>
-                    </div>
-
-                    <div
-                      className={`service-option-card ${selectedService === 'vault' ? 'selected' : ''}`}
-                      onClick={() => setSelectedService('vault')}
-                    >
-                      <div className="serv-head">
-                        <Lock size={20} className="text-accent" />
-                        <strong>Time-Critical Secure Vault</strong>
-                      </div>
-                      <div className="serv-transit">Dedicated Custody Delivery</div>
-                      <div className="serv-rate-status font-mono">RATE PUBLISHED BY ADMIN</div>
-                      <small>Armored chain-of-custody for high-value tenders</small>
-                    </div>
+                  {/* Service cards: the four §7.1 services, summaries from §3.1 */}
+                  <div className="services-select-grid" role="radiogroup" aria-label="Service">
+                    {SERVICE_OPTIONS.map((s) => {
+                      const Icon = SERVICE_ICONS[s.id];
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={selectedService === s.id}
+                          className={`service-option-card ${selectedService === s.id ? 'selected' : ''}`}
+                          onClick={() => setSelectedService(s.id)}
+                        >
+                          <div className="serv-head">
+                            <Icon size={20} className="text-accent" />
+                            <strong>{s.name}</strong>
+                          </div>
+                          <small>{s.summary}</small>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Transport mode (tracker 2.8) */}
                   <div className="transport-mode-row">
-                    <label htmlFor="ship-mode" className="section-sublabel">Transport Mode</label>
+                    <label htmlFor="ship-mode" className="section-sublabel">Transport mode</label>
                     <select
                       id="ship-mode"
                       value={transportMode}
@@ -1085,7 +1035,7 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </select>
                   </div>
 
-                  {/* Value Add-ons */}
+                  {/* Extras (CONTENT §3.4 add-ons) */}
                   <div className="addons-grid">
                     <div className="addon-checkbox-row">
                       <input
@@ -1095,8 +1045,8 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         onChange={(e) => setRequireSignature(e.target.checked)}
                       />
                       <label htmlFor="signCheck">
-                        <strong>Direct Recipient Signature Confirmation</strong>
-                        <small>Courier will require an authorized physical timestamped signature at delivery</small>
+                        <strong>Signature Confirmation</strong>
+                        <small>Delivery is released only against a named signature.</small>
                       </label>
                     </div>
 
@@ -1108,13 +1058,13 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                         onChange={(e) => setSaturdayDelivery(e.target.checked)}
                       />
                       <label htmlFor="satCheck">
-                        <strong>Saturday Expedited Delivery</strong>
-                        <small>Weekend delivery for urgent residential and commercial consignments</small>
+                        <strong>Weekend Delivery</strong>
+                        <small>Saturday delivery on selected lanes.</small>
                       </label>
                     </div>
 
                     <div className="declared-value-row">
-                      <label htmlFor="ship-declared-value">Declared Consignment Value ({money.currency}, for insurance cover)</label>
+                      <label htmlFor="ship-declared-value">Declared value ({money.currency}) <span className="sdl-field-optional">(optional)</span></label>
                       <div className="value-input-wrap">
                         <span className="curr-sym">{money.symbol}</span>
                         <MoneyInput
@@ -1135,23 +1085,24 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                       onClick={handlePrevStep}
                     >
                       <ArrowLeft size={16} />
-                      <span>Back to Pieces</span>
+                      <span>Back</span>
                     </button>
 
                     <button
                       type="button"
                       disabled={isSubmitting}
+                      aria-busy={isSubmitting}
                       className="btn-corp-primary submit-booking-btn"
                       onClick={handleSubmit}
                     >
                       {isSubmitting ? (
                         <>
                           <span className="spinner-border" />
-                          <span>Provisioning Barcodes & Registering...</span>
+                          <span>Booking…</span>
                         </>
                       ) : (
                         <>
-                          <span>Submit Consignment Manifest</span>
+                          <span>Book shipment</span>
                           <ArrowRight size={17} />
                         </>
                       )}
@@ -1161,20 +1112,19 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
               )}
             </div>
 
-            {/* Right Column: Sticky Real-Time Summary */}
+            {/* Right Column: Summary */}
             <aside className="sdl-ship-sidebar">
               <div className="sidebar-sticky-card">
                 <div className="sidebar-head">
-                  <h3>Consignment Summary</h3>
-                  <span className="badge-live font-mono">MANIFEST DRAFT</span>
+                  <h3>Summary</h3>
                 </div>
 
                 <div className="sidebar-route-preview">
                   <div className="route-loc origin">
                     <MapPin size={16} className="text-accent" />
                     <div>
-                      <small>ORIGIN</small>
-                      <strong>{senderCity ? placeText(senderCity, senderState, senderCountry) : 'Origin'}</strong>
+                      <small>From</small>
+                      <strong>{senderCity ? placeText(senderCity, senderState, senderCountry) : '—'}</strong>
                     </div>
                   </div>
                   <div className="route-arrow-line">
@@ -1184,54 +1134,51 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                   <div className="route-loc dest">
                     <MapPin size={16} className="text-accent" />
                     <div>
-                      <small>DESTINATION</small>
-                      <strong>{recipientCity ? placeText(recipientCity, recipientState, recipientCountry) : 'Destination'}</strong>
+                      <small>To</small>
+                      <strong>{recipientCity ? placeText(recipientCity, recipientState, recipientCountry) : '—'}</strong>
                     </div>
                   </div>
                 </div>
 
                 <div className="sidebar-specs-list">
                   <div className="spec-row">
-                    <span>Total Pieces:</span>
-                    <strong>{totalPieces} Pieces</strong>
+                    <span>Pieces</span>
+                    <strong>{totalPieces}</strong>
                   </div>
                   <div className="spec-row">
-                    <span>Gross Scale Weight:</span>
+                    <span>Weight</span>
                     <strong>{formatWeight(totalWeight, units.system) || '—'}</strong>
                   </div>
                   <div className="spec-row">
-                    <span>Service Tier:</span>
+                    <span>Service</span>
                     <strong className="text-accent">
                       {getServiceName()}
                     </strong>
                   </div>
                   <div className="spec-row">
-                    <span>Transport Mode:</span>
+                    <span>Transport mode</span>
                     <strong>{transportMode ? TRANSPORT_MODE_LABELS[transportMode] : `${COMPANY_SHORT} recommends`}</strong>
                   </div>
                   <div className="spec-row">
-                    <span>Tender Mode:</span>
-                    <strong>{pickupType === 'pickup' ? 'Courier Pickup' : 'Hub Drop-off'}</strong>
+                    <span>Collection</span>
+                    <strong>{pickupType === 'pickup' ? pickupWindow : DROP_OFF_LABEL}</strong>
                   </div>
                   <div className="spec-row">
-                    <span>Signature Required:</span>
-                    <strong>{requireSignature ? 'Yes (Direct)' : 'No'}</strong>
+                    <span>Signature Confirmation</span>
+                    <strong>{requireSignature ? 'Yes' : 'No'}</strong>
                   </div>
+                  {saturdayDelivery && (
+                    <div className="spec-row">
+                      <span>Weekend Delivery</span>
+                      <strong>Yes</strong>
+                    </div>
+                  )}
                 </div>
 
                 <div className="sidebar-pricing-breakdown">
-                  <div className="price-row-status">
-                    <span>Official Rate Tariff:</span>
-                    <strong className="text-amber font-mono">● PENDING ADMIN REVIEW</strong>
-                  </div>
                   <p className="admin-publishing-note">
-                    All tariff quotes and official billing paperwork are reviewed by central dispatch and issued directly to you alongside your certified BOL manifest.
+                    Your coordinator confirms the rate before collection.
                   </p>
-                </div>
-
-                <div className="sidebar-trust-box">
-                  <ShieldCheck size={18} className="text-emerald flex-shrink-0" />
-                  <p>All tendered consignments receive append-only tracking events and individual Code 128 piece barcodes.</p>
                 </div>
               </div>
             </aside>
@@ -1240,41 +1187,23 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       </div>
 
       {/* =========================================================================
-          3. HOW SHIPMENT INTAKE WORKS SECTION
+          3. HOW BOOKING WORKS (CONTENT §7.3)
           ========================================================================= */}
       <section className="sdl-ship-process-section">
         <div className="sdl-container-wide">
           <div className="section-center-header">
-            <span className="section-eyebrow">OPERATIONAL PROVENANCE</span>
-            <h2>How Consignment Tender Works</h2>
-            <p className="section-desc-sub">From initial registration to hub ingestion, line-haul by air, sea or road, and final direct recipient signature.</p>
+            <h2>How booking works</h2>
             <div className="section-header-line" />
           </div>
 
           <div className="process-steps-grid">
-            <div className="p-step-card">
-              <div className="step-badge">01</div>
-              <h4>Consignment Tender</h4>
-              <p>Consignment record and master Code 128 barcode are provisioned instantly in our central intake queue.</p>
-            </div>
-
-            <div className="p-step-card">
-              <div className="step-badge">02</div>
-              <h4>Gateway Ingestion Scan</h4>
-              <p>Origin hub scans each carton, verifying scale weight, certified dimensions, and custody handover.</p>
-            </div>
-
-            <div className="p-step-card">
-              <div className="step-badge">03</div>
-              <h4>Air, Sea or Road Relay</h4>
-              <p>Consignment travels across verified corridor sortation hubs with real-time waypoint checkpoint scans.</p>
-            </div>
-
-            <div className="p-step-card">
-              <div className="step-badge">04</div>
-              <h4>Proof of Delivery</h4>
-              <p>Final destination delivery with timestamped physical signature and instant digital POD signoff.</p>
-            </div>
+            {BOOKING_STAGES.map((stage, i) => (
+              <div key={stage.title} className="p-step-card">
+                <div className="step-badge">{String(i + 1).padStart(2, '0')}</div>
+                <h4>{stage.title}</h4>
+                <p>{stage.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
