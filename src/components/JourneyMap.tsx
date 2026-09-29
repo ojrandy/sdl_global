@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import { destroyMap } from '../utils/leaflet';
+import type L from 'leaflet';
+import { destroyMap, useLeaflet, type Leaflet } from '../utils/leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RouteCheckpoint, ShipmentStatus } from '../types/shipment';
 import { calculateRouteGeometry, calculateEstimatedPosition, fetchLiveRoadRoute, findNearestPointOnPolyline, type TransportMode } from '../services/routingEngine';
@@ -98,6 +98,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   const fullPolylineRef = useRef<[number, number][]>([]);
   const isInitializedRef = useRef<boolean>(false);
   const lastFittedRouteRef = useRef<string>('');
+  const L = useLeaflet(mapContainerRef);
 
   const [activeLayer, setActiveLayer] = useState<'voyager' | 'satellite' | 'dark'>('voyager');
 
@@ -147,7 +148,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   };
 
   // Helper to create map pin icons
-  const createCustomPin = (colorClass: string, label: string, role: string) => {
+  const createCustomPin = (leaflet: Leaflet, colorClass: string, label: string, role: string) => {
     const isCurrent = colorClass === 'pin-current';
     const isDelivered = role.includes('DELIVERED') || shipmentStatus === 'DELIVERED';
     const bg = colorClass === 'pin-origin' 
@@ -162,7 +163,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     // moving pulses for every viewer, all the time, whether or not anyone's watching.
     const isActuallyMoving = shipmentStatus === 'IN_TRANSIT';
 
-    return L.divIcon({
+    return leaflet.divIcon({
       className: 'sdl-clean-map-marker',
       html: `
         <div class="map-pin-container ${colorClass} ${isActuallyMoving ? 'is-simulating' : ''}">
@@ -215,7 +216,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   // 1. Separate Tile Layer Switcher (Preserves camera pan/zoom without resetting)
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!L || !map) return;
     if (tileLayerRef.current) {
       map.removeLayer(tileLayerRef.current);
     }
@@ -232,7 +233,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   // 2. BASE MAP & ROUTE INITIALIZATION (Runs on Mount & Route Changes)
   // =========================================================================
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!L || !mapContainerRef.current) return;
 
     let map = mapInstanceRef.current;
     if (!map) {
@@ -305,24 +306,24 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
       // Create or update Origin Marker
       if (!originMarkerRef.current) {
         originMarkerRef.current = L.marker(originLatLng, {
-          icon: createCustomPin('pin-origin', originPt.name || 'Origin Terminal', 'ORIGIN TERMINAL')
+          icon: createCustomPin(L, 'pin-origin', originPt.name || 'Origin Terminal', 'ORIGIN TERMINAL')
         }).addTo(map);
       } else {
         originMarkerRef.current.setLatLng(originLatLng);
         originMarkerRef.current.setIcon(
-          createCustomPin('pin-origin', originPt.name || 'Origin Terminal', 'ORIGIN TERMINAL')
+          createCustomPin(L, 'pin-origin', originPt.name || 'Origin Terminal', 'ORIGIN TERMINAL')
         );
       }
 
       // Create or update Destination Marker
       if (!destMarkerRef.current) {
         destMarkerRef.current = L.marker(destLatLng, {
-          icon: createCustomPin('pin-destination', destPt.name || 'Destination Hub', 'DESTINATION HUB')
+          icon: createCustomPin(L, 'pin-destination', destPt.name || 'Destination Hub', 'DESTINATION HUB')
         }).addTo(map);
       } else {
         destMarkerRef.current.setLatLng(destLatLng);
         destMarkerRef.current.setIcon(
-          createCustomPin('pin-destination', destPt.name || 'Destination Hub', 'DESTINATION HUB')
+          createCustomPin(L, 'pin-destination', destPt.name || 'Destination Hub', 'DESTINATION HUB')
         );
       }
 
@@ -332,13 +333,13 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
 
       if (!vehicleMarkerRef.current) {
         vehicleMarkerRef.current = L.marker([estPos.lat, estPos.lng], {
-          icon: createCustomPin('pin-current', currentLocationText || 'In transit', roleText),
+          icon: createCustomPin(L, 'pin-current', currentLocationText || 'In transit', roleText),
           zIndexOffset: 1000
         }).addTo(map);
       } else {
         vehicleMarkerRef.current.setLatLng([estPos.lat, estPos.lng]);
         vehicleMarkerRef.current.setIcon(
-          createCustomPin('pin-current', currentLocationText || 'In transit', roleText)
+          createCustomPin(L, 'pin-current', currentLocationText || 'In transit', roleText)
         );
       }
 
@@ -412,7 +413,8 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     destPt.lat,
     destPt.lng,
     destPt.name,
-    transportMode
+    transportMode,
+    L
   ]);
 
   // =========================================================================
@@ -420,7 +422,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   // =========================================================================
   useEffect(() => {
     const fullPolyline = fullPolylineRef.current;
-    if (!fullPolyline || fullPolyline.length < 2) return;
+    if (!L || !fullPolyline || fullPolyline.length < 2) return;
 
     const clampedProgress = Math.max(0, Math.min(100, progressPercent ?? 0));
     const vehiclePos = resolveVehiclePosition(fullPolyline, clampedProgress);
@@ -444,7 +446,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
     if (vehicleMarkerRef.current) {
       vehicleMarkerRef.current.setLatLng([estPos.lat, estPos.lng]);
       vehicleMarkerRef.current.setIcon(
-        createCustomPin('pin-current', currentLocationText || 'In transit', roleText)
+        createCustomPin(L, 'pin-current', currentLocationText || 'In transit', roleText)
       );
     }
   }, [
@@ -482,7 +484,7 @@ export const JourneyMap: React.FC<JourneyMapProps> = ({
   };
 
   const handleRecenter = () => {
-    if (mapInstanceRef.current) {
+    if (L && mapInstanceRef.current) {
       mapInstanceRef.current.invalidateSize();
       const points = (fullPolylineRef.current && fullPolylineRef.current.length > 1)
         ? fullPolylineRef.current

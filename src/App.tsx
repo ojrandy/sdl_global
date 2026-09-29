@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
@@ -13,8 +13,11 @@ import { ContactPage } from './pages/ContactPage';
 import { HelpPage } from './pages/HelpPage';
 import { LegalPage } from './pages/LegalPage';
 import { LocationsPage } from './pages/LocationsPage';
-import { AdminApp } from './admin/AdminApp';
-import { AdminLogin } from './admin/AdminLogin';
+// The admin console's code is its own chunk, fetched only when the admin page opens, so public
+// visitors never download it (MOTION_3D_SPEC §2). Its stylesheets stay in the main bundle, in
+// their original place (see admin/styles.ts); that also keeps the `admin-login-shell`
+// placeholder styled while the session check and the chunk load.
+import './admin/styles';
 import { TrackingLoadingScreen } from './components/TrackingLoadingScreen';
 import { AdminDataProvider, useAdminData } from './context/AdminDataContext';
 // DEMO DATA — remove before launch (tracker 6.7). Client mock-shipment fallback used by the two lookups below.
@@ -25,6 +28,11 @@ import { api } from './services/api';
 import { simulationEngine } from './services/simulationEngine';
 import { ADMIN_HOST, ADMIN_CONSOLE_NAME, COMPANY } from './config/brand';
 import './styles/global.css';
+
+const loadAdminApp = () => import('./admin/AdminApp');
+const loadAdminLogin = () => import('./admin/AdminLogin');
+const AdminApp = lazy(() => loadAdminApp().then((m) => ({ default: m.AdminApp })));
+const AdminLogin = lazy(() => loadAdminLogin().then((m) => ({ default: m.AdminLogin })));
 
 const KNOWN_PAGES = ['home', 'track', 'services', 'quote', 'ship', 'about', 'help', 'contact', 'legal', 'locations', 'admin'];
 
@@ -137,6 +145,9 @@ function MainAppContent() {
   // console full of failed 401 requests and empty/mock data.
   useEffect(() => {
     if (currentPage === 'admin' && !adminAuthChecked) {
+      // Fetch the console code while the session is checked, so the split adds no wait.
+      loadAdminLogin().catch(() => {});
+      loadAdminApp().catch(() => {});
       api.checkSession().then(isAdmin => {
         setIsAdminAuthed(isAdmin);
         setAdminAuthChecked(true);
@@ -370,17 +381,21 @@ function MainAppContent() {
   // If on Admin page, render dedicated Admin Command Center layout — gated behind the
   // session check above so no admin data ever loads into the page before login succeeds.
   if (currentPage === 'admin') {
+    const adminPlaceholder = <div className="admin-login-shell" />;
     if (!adminAuthChecked) {
-      return <div className="admin-login-shell" />;
-    }
-    if (!isAdminAuthed) {
-      return <AdminLogin onNavigatePublic={handleNavigate} />;
+      return adminPlaceholder;
     }
     return (
-      <AdminApp
-        onNavigatePublic={handleNavigate}
-        onViewPublicTracking={handleTrackShipment}
-      />
+      <Suspense fallback={adminPlaceholder}>
+        {!isAdminAuthed ? (
+          <AdminLogin onNavigatePublic={handleNavigate} />
+        ) : (
+          <AdminApp
+            onNavigatePublic={handleNavigate}
+            onViewPublicTracking={handleTrackShipment}
+          />
+        )}
+      </Suspense>
     );
   }
 

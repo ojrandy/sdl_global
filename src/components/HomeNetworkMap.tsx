@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import { destroyMap, fitWorldView } from '../utils/leaflet';
+import type L from 'leaflet';
+import { destroyMap, fitWorldView, useLeaflet, type Leaflet } from '../utils/leaflet';
 import { greatCircleSegments } from '../utils/greatCircle';
 import { GATEWAYS, TRADE_LANES, getGateway } from '../data/gateways';
 import 'leaflet/dist/leaflet.css';
@@ -16,8 +16,8 @@ const DEMO_LANE: [string, string] = ['LOS', 'LHR'];
 // Below this zoom only the selected gateway keeps its code label (labels overlap in Europe).
 const LABEL_ZOOM = 3;
 
-const gatewayIcon = (code: string, isSelected: boolean) =>
-  L.divIcon({
+const gatewayIcon = (leaflet: Leaflet, code: string, isSelected: boolean) =>
+  leaflet.divIcon({
     className: 'hub-leaflet-marker-wrap',
     html: `
       <div class="hub-marker-beacon ${isSelected ? 'active-beacon' : ''}">
@@ -38,9 +38,10 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeCode, onSe
   const lastCodeRef = useRef(activeCode);
   const onSelectRef = useRef(onSelectGateway);
   onSelectRef.current = onSelectGateway;
+  const L = useLeaflet(mapContainerRef);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapInstanceRef.current) return;
+    if (!L || !mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
       center: [20, 15],
@@ -82,7 +83,7 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeCode, onSe
 
     GATEWAYS.forEach((gw) => {
       const marker = L.marker([gw.lat, gw.lng], {
-        icon: gatewayIcon(gw.code, gw.code === activeCode),
+        icon: gatewayIcon(L, gw.code, gw.code === activeCode),
         title: `${gw.name}, ${gw.country}`,
         keyboard: true
       }).addTo(map);
@@ -123,6 +124,8 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeCode, onSe
     syncLabelMode();
 
     mapInstanceRef.current = map;
+    // The map opens on the whole network, even if a gateway was picked before it loaded.
+    lastCodeRef.current = activeCode;
 
     return () => {
       if (demoTimer !== undefined) window.clearInterval(demoTimer);
@@ -130,17 +133,17 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeCode, onSe
       mapInstanceRef.current = null;
       markersRef.current = {};
     };
-  }, []);
+  }, [L]);
 
   // Restyle markers when the selection changes and fly to a newly picked gateway
   // (the initial view stays on the whole network).
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!L || !map) return;
 
     GATEWAYS.forEach((gw) => {
       const marker = markersRef.current[gw.code];
-      marker?.setIcon(gatewayIcon(gw.code, gw.code === activeCode));
+      marker?.setIcon(gatewayIcon(L, gw.code, gw.code === activeCode));
       marker?.setZIndexOffset(gw.code === activeCode ? 1000 : 0);
     });
 
@@ -150,7 +153,7 @@ export const HomeNetworkMap: React.FC<HomeNetworkMapProps> = ({ activeCode, onSe
     if (target) {
       map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), LABEL_ZOOM), { duration: 1.2 });
     }
-  }, [activeCode]);
+  }, [activeCode, L]);
 
   return (
     <div ref={wrapperRef} className="home-network-map-wrapper">

@@ -1,7 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import {
   FileText,
   Tag,
@@ -55,6 +53,15 @@ import {
 interface DocumentCenterViewProps {
   onOpenShipmentDetail?: (trackingNumber: string) => void;
   onSelectView?: (view: any) => void;
+}
+
+// jspdf and html2canvas are only needed when a PDF is actually generated, so they are
+// downloaded on demand rather than with the admin console (MOTION_3D_SPEC §2).
+function loadPdfTools() {
+  return Promise.all([import('jspdf'), import('html2canvas')]).then(([pdf, canvas]) => ({
+    jsPDF: pdf.default,
+    html2canvas: canvas.default,
+  }));
 }
 
 /**
@@ -320,6 +327,10 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
       setPreviewDoc(doc);
     }
     setToastMessage(`Preparing PDF for ${doc.id}...`);
+    // Fetch the PDF libraries while the paper mounts. A failed download is reported by the
+    // try/catch below; this catch only stops it counting as unhandled if we return early.
+    const pdfTools = loadPdfTools();
+    pdfTools.catch(() => {});
 
     // Give the paper a moment to mount/render before snapshotting it
     await new Promise(resolve => setTimeout(resolve, alreadyOpen ? 50 : 300));
@@ -339,6 +350,7 @@ export const DocumentCenterView: React.FC<DocumentCenterViewProps> = ({
     await waitForImagesToLoad(paperEl);
 
     try {
+      const { jsPDF, html2canvas } = await pdfTools;
       const canvas = await html2canvas(paperEl, {
         scale: 2,
         backgroundColor: '#ffffff',

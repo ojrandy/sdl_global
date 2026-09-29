@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import { destroyMap, fitWorldView } from '../utils/leaflet';
+import type L from 'leaflet';
+import { destroyMap, fitWorldView, useLeaflet } from '../utils/leaflet';
 import { greatCircleSegments } from '../utils/greatCircle';
 import { useNow } from '../utils/useNow';
 import { GATEWAYS, TRADE_LANES, type Gateway, getGateway, getLanePartners, formatGatewayTime } from '../data/gateways';
@@ -12,7 +12,7 @@ interface FacilityNetworkMapProps {
   onContactGateway?: (code: string) => void;
 }
 
-const WORLD_BOUNDS = L.latLngBounds(GATEWAYS.map((g) => [g.lat, g.lng] as [number, number]));
+const WORLD_BOUNDS: L.LatLngBoundsLiteral = GATEWAYS.map((g) => [g.lat, g.lng] as [number, number]);
 const GATEWAY_ZOOM = 5;
 // Below this zoom pins shrink to dots (the selected one keeps its code) so clusters stay readable.
 const COMPACT_PIN_ZOOM = 2;
@@ -24,9 +24,10 @@ export const FacilityNetworkMap: React.FC<FacilityNetworkMapProps> = ({ onContac
   const markersRef = useRef<{ [code: string]: L.Marker }>({});
   const [selectedGateway, setSelectedGateway] = useState<Gateway>(GATEWAYS[0]);
   const now = useNow();
+  const L = useLeaflet(mapContainerRef);
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!L || !mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
@@ -127,7 +128,7 @@ export const FacilityNetworkMap: React.FC<FacilityNetworkMapProps> = ({ onContac
         markersRef.current = {};
       }
     };
-  }, []);
+  }, [L]);
 
   // Keep the active pin highlighted
   useEffect(() => {
@@ -136,7 +137,7 @@ export const FacilityNetworkMap: React.FC<FacilityNetworkMapProps> = ({ onContac
       marker.getElement()?.querySelector('.facility-map-marker-pin')?.classList.toggle('active', isSelected);
       marker.setZIndexOffset(isSelected ? 1000 : 0);
     });
-  }, [selectedGateway]);
+  }, [selectedGateway, L]);
 
   const handleSelectGateway = (gw: Gateway) => {
     setSelectedGateway(gw);
