@@ -78,7 +78,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
   const [holdReason, setHoldReason] = useState('Severe Weather Condition');
   const [customHoldReason, setCustomHoldReason] = useState('');
   const [holdHours, setHoldHours] = useState(4);
-  const [delayReason, setDelayReason] = useState('Interstate Corridor Congestion');
+  const [delayReason, setDelayReason] = useState('Road Congestion');
   const [delayHours, setDelayHours] = useState(4);
   const [returnReason, setReturnReason] = useState('Delivery Refused / Recipient Unavailable');
   const [signedBy, setSignedBy] = useState(
@@ -512,7 +512,7 @@ export const ShipmentControlModal: React.FC<ShipmentControlModalProps> = ({
                     value={delayReason}
                     onChange={(e) => setDelayReason(e.target.value)}
                   >
-                    <option value="Interstate Corridor Congestion">Highway Congestion</option>
+                    <option value="Road Congestion">Road Congestion</option>
                     <option value="Weather Routing Deviation">Weather Highway Reroute</option>
                     <option value="Mechanical Maintenance">Vehicle Maintenance</option>
                   </select>

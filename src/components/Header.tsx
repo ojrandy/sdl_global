@@ -18,7 +18,17 @@ import {
 } from 'lucide-react';
 import { COMPANY, LOGO, LOGO_ALT } from '../config/brand';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import './Header.css';
+
+// Moves keyboard focus past the header to the page content. A button, not an in-page
+// "#main" link: the site uses hash routing, so changing the hash would change the page.
+function skipToContent() {
+  const main = document.querySelector<HTMLElement>('main');
+  if (!main) return;
+  main.setAttribute('tabindex', '-1');
+  main.focus();
+}
 
 interface HeaderProps {
   activePage?: string;
@@ -46,13 +56,23 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, [mobileMenuOpen]);
 
+  useEscapeKey(mobileMenuOpen, () => setMobileMenuOpen(false));
+
   const handleNav = (page: string, param?: string) => {
     onNavigate(page, param);
     setMobileMenuOpen(false);
   };
 
+  const goHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleNav('home');
+  };
+
   return (
     <header className="sdl-header-wrapper">
+      <button type="button" className="sdl-skip-link" onClick={skipToContent}>
+        Skip to main content
+      </button>
       {/* 1. TOP UTILITY BAR (Hidden completely on mobile to eliminate clutter) */}
       <div className="sdl-topbar hide-mobile-topbar">
         <div className="sdl-container-wide sdl-topbar-inner">
@@ -87,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="sdl-main-header">
         <div className="sdl-container-wide sdl-header-inner">
           {/* Brand Logo */}
-          <div className="sdl-logo-wrap" onClick={() => handleNav('home')}>
+          <a href="#/" className="sdl-logo-wrap" onClick={goHome} aria-label={`${COMPANY} home`}>
             <img
               src={LOGO}
               alt={LOGO_ALT}
@@ -104,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }
               }}
             />
-          </div>
+          </a>
 
           {/* Desktop Nav Links */}
           <nav className="sdl-nav-links">
@@ -177,6 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
             className={`sdl-mobile-toggle-btn ${mobileMenuOpen ? 'is-active' : ''}`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -188,13 +209,16 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="sdl-drawer-backdrop" onClick={() => setMobileMenuOpen(false)}>
           <div
             className="sdl-mobile-drawer-sheet animate-slide-left"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header with Logo and Close */}
             <div className="drawer-header">
-              <div className="drawer-logo" onClick={() => handleNav('home')}>
+              <a href="#/" className="drawer-logo" onClick={goHome} aria-label={`${COMPANY} home`}>
                 <img src={LOGO} alt={LOGO_ALT} className="drawer-logo-img" />
-              </div>
+              </a>
               <button
                 type="button"
                 className="drawer-close-btn"

@@ -274,6 +274,7 @@
 }
 
 .drawer-logo {
+  display: block;
   cursor: pointer;
 }
 

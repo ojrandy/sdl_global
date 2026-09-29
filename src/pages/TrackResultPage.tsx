@@ -306,7 +306,7 @@ export const TrackResultPage: React.FC<TrackResultPageProps> = ({
       facility: `${originCity} Regional Processing Center`,
       city: originCity,
       state: originState,
-      description: `${isVehicle ? 'Vehicle' : 'Cargo'} processed and departed ${originCity} facility; is moving along verified interstate corridor toward ${destCity}.`,
+      description: `${isVehicle ? 'Vehicle' : 'Cargo'} processed and departed ${originCity} facility; is moving along its planned route toward ${destCity}.`,
       isCurrent: true,
       isCompleted: true
     },

@@ -5,6 +5,7 @@ import { Barcode } from './Barcode';
 import './ShipmentDocuments.css';
 import { DocumentHeaderBrand, DocumentIdLine, DocumentLegalFooter } from './DocumentBrand';
 import { formatWeightBoth } from '../shared/units';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 interface ShipmentDocumentsProps {
   documents: ShipmentDocument[];
@@ -18,6 +19,7 @@ export const ShipmentDocuments: React.FC<ShipmentDocumentsProps> = ({
   className = '',
 }) => {
   const [selectedDoc, setSelectedDoc] = useState<ShipmentDocument | null>(null);
+  useEscapeKey(selectedDoc !== null, () => setSelectedDoc(null));
 
   const handleOpenDoc = (doc: ShipmentDocument) => {
     if (doc.status === 'AVAILABLE') {
@@ -80,14 +82,20 @@ export const ShipmentDocuments: React.FC<ShipmentDocumentsProps> = ({
       {/* Document Preview Modal */}
       {selectedDoc && (
         <div className="sdl-modal-overlay" onClick={() => setSelectedDoc(null)}>
-          <div className="sdl-modal-paper" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="sdl-modal-paper"
+            role="dialog"
+            aria-modal="true"
+            aria-label={selectedDoc.title}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sdl-modal-header">
               <div className="modal-title-wrap">
                 <FileText size={20} className="text-blue" />
                 <h3>{selectedDoc.title}</h3>
                 <span className="modal-version-tag">{selectedDoc.version}</span>
               </div>
-              <button className="modal-close-btn" onClick={() => setSelectedDoc(null)}>
+              <button type="button" className="modal-close-btn" onClick={() => setSelectedDoc(null)} aria-label="Close">
                 <X size={20} />
               </button>
             </div>

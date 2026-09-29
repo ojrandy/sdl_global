@@ -291,6 +291,15 @@
   color: var(--sdl-white);
 }
 
+/* The admin wizard's .step-sub (slate-400, 2.6:1) also reaches this page; slate-500 reads at 4.8:1. */
+.step-nav-item .step-sub {
+  color: var(--sdl-slate-500);
+}
+
+.step-nav-item.active .step-sub {
+  color: var(--sdl-slate-300);
+}
+
 /* Validation Error Alert */
 .form-validation-error {
   background: #fef2f2;

@@ -23,6 +23,7 @@ import { Shipment } from '../../types/shipment';
 import './OperationsCenter.css';
 import { WeightText } from '../../components/forms/UnitControls';
 import { shipmentStatusLabel, shipmentStatusTone, type StatusTone } from '../../shared/shipmentStatus';
+import { GATEWAYS } from '../../data/gateways';
 
 // Badge colours per status family (names come from CONTENT §6.3).
 const OPS_STATUS_CHIP: Record<StatusTone, { className: string; dot: string }> = {
@@ -149,7 +150,7 @@ export const OperationsCenter: React.FC<OperationsCenterProps> = ({
             <span>Network Status: Optimal</span>
           </span>
           <span className="subhead-sep">·</span>
-          <span className="subhead-text">8 Commercial Interstate Hubs Active</span>
+          <span className="subhead-text">{GATEWAYS.length} Gateways in Network</span>
         </div>
         <div className="subhead-right">
           <span className="subhead-date">

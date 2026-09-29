@@ -423,11 +423,11 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
       <section className="sdl-ship-hero">
         <div className="sdl-ship-hero-bg" />
         <div className="sdl-container-wide ship-hero-container">
-          <div className="sdl-ship-breadcrumbs">
-            <span onClick={() => onNavigate('home')} className="crumb-link">Home</span>
+          <nav className="sdl-ship-breadcrumbs" aria-label="Breadcrumb">
+            <a href="#/" onClick={(e) => { e.preventDefault(); onNavigate('home'); }} className="crumb-link">Home</a>
             <span className="crumb-sep">/</span>
-            <span className="crumb-current">Book a shipment</span>
-          </div>
+            <span className="crumb-current" aria-current="page">Book a shipment</span>
+          </nav>
 
           <h1 className="ship-hero-title animate-fade-in">Book a shipment</h1>
         </div>
@@ -649,8 +649,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
                   <div className="form-fields-grid">
                     <div className="form-group span-2">
-                      <label>Company <span className="sdl-field-optional">(optional)</span></label>
+                      <label htmlFor="ship-sender-company">Company <span className="sdl-field-optional">(optional)</span></label>
                       <input
+                        id="ship-sender-company"
                         type="text"
                         value={senderCompany}
                         onChange={(e) => setSenderCompany(e.target.value)}
@@ -659,8 +660,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>Sender name *</label>
+                      <label htmlFor="ship-sender-name">Sender name *</label>
                       <input
+                        id="ship-sender-name"
                         type="text"
                         required
                         value={senderContact}
@@ -675,8 +677,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="form-group span-2">
-                      <label>Street address *</label>
+                      <label htmlFor="ship-sender-address">Street address *</label>
                       <input
+                        id="ship-sender-address"
                         type="text"
                         required
                         value={senderAddress}
@@ -772,8 +775,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
 
                   <div className="form-fields-grid">
                     <div className="form-group span-2">
-                      <label>Company <span className="sdl-field-optional">(optional)</span></label>
+                      <label htmlFor="ship-recipient-company">Company <span className="sdl-field-optional">(optional)</span></label>
                       <input
+                        id="ship-recipient-company"
                         type="text"
                         value={recipientCompany}
                         onChange={(e) => setRecipientCompany(e.target.value)}
@@ -782,8 +786,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>Recipient name *</label>
+                      <label htmlFor="ship-recipient-name">Recipient name *</label>
                       <input
+                        id="ship-recipient-name"
                         type="text"
                         required
                         value={recipientContact}
@@ -798,8 +803,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     </div>
 
                     <div className="form-group span-2">
-                      <label>Street address *</label>
+                      <label htmlFor="ship-recipient-address">Street address *</label>
                       <input
+                        id="ship-recipient-address"
                         type="text"
                         required
                         value={recipientAddress}
@@ -822,8 +828,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                     />
 
                     <div className="form-group span-2">
-                      <label>Delivery instructions <span className="sdl-field-optional">(optional)</span></label>
+                      <label htmlFor="ship-delivery-instructions">Delivery instructions <span className="sdl-field-optional">(optional)</span></label>
                       <input
+                        id="ship-delivery-instructions"
                         type="text"
                         value={deliveryInstructions}
                         onChange={(e) => setDeliveryInstructions(e.target.value)}
@@ -945,8 +952,9 @@ export const ShipPage: React.FC<ShipPageProps> = ({ onTrack, onNavigate }) => {
                           </div>
 
                           <div className="p-field-desc">
-                            <label>Contents <span className="sdl-field-optional">(optional)</span></label>
+                            <label htmlFor={`ship-piece-${index}-contents`}>Contents <span className="sdl-field-optional">(optional)</span></label>
                             <input
+                              id={`ship-piece-${index}-contents`}
                               type="text"
                               value={piece.description}
                               onChange={(e) => handleUpdatePiece(index, 'description', e.target.value)}

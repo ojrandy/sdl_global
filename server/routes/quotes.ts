@@ -231,11 +231,17 @@ quotesRouter.patch('/:id/status', (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: `Quote request ${id} not found` });
     }
 
+    // A customer can only answer a quote that is on offer (the same rule as the public page's
+    // Accept button), so a quote that is unpriced, expired, declined or booked can't be flipped.
+    if (!req.session?.isAdmin && row.status !== 'QUOTE_PUBLISHED' && row.status !== 'RATE_PUBLISHED') {
+      return res.status(409).json({ success: false, error: 'This quote is no longer open.' });
+    }
+
     // Re-opening an expired quote previously left its old validUntil date frozen in the
     // past — the moment it was reopened it was already stale/expired again. The client
     // computes a fresh date (today + the configured quote validity window) and sends it
-    // here to merge into the persisted pricing blob.
-    if (validUntil && row.pricing_json) {
+    // here to merge into the persisted pricing blob. Admin only: a customer can't extend a price.
+    if (validUntil && row.pricing_json && req.session?.isAdmin) {
       const pricing = JSON.parse(row.pricing_json);
       pricing.validUntil = validUntil;
       db.prepare('UPDATE quote_requests SET status = ?, pricing_json = ? WHERE id = ?').run(status, JSON.stringify(pricing), id);

@@ -42,6 +42,47 @@ button {
   background: none;
 }
 
+/* Keyboard focus ring (tracker 6.5). :focus-visible shows it for keyboard users only, not on mouse
+   clicks. :where() keeps specificity at zero, so a component's own focus style still wins. The
+   brand red is 5.5:1 on white and 3.2:1 on Ink, above the 3:1 minimum for focus indicators. */
+:where(a, button, [role="button"], [tabindex], summary, select, input, textarea):focus-visible {
+  outline: 2px solid var(--sdl-color-focus);
+  outline-offset: 2px;
+}
+
+/* "Skip to main content": hidden until focused by the first Tab press (Header.tsx). */
+.sdl-skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10000;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--sdl-radius-md);
+  background: var(--sdl-ink-950);
+  color: var(--sdl-white);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transform: translateY(-200%);
+}
+
+.sdl-skip-link:focus {
+  transform: translateY(0);
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Visitors who ask their OS for less motion get no fades, slides or pulses (MOTION_3D_SPEC). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 input, select, textarea {
   font-family: inherit;
   font-size: inherit;

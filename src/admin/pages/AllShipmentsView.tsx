@@ -30,6 +30,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
+import { resolveLocation } from '../../services/geocodingService';
 import { Shipment, ShipmentStatus } from '../../types/shipment';
 import { EditShipmentModal } from '../components/EditShipmentModal';
 import { DeleteShipmentModal } from '../components/DeleteShipmentModal';
@@ -139,27 +140,30 @@ export const AllShipmentsView: React.FC<AllShipmentsViewProps> = ({
     e.preventDefault();
     // The server assigns the tracking ID; on failure nothing is added and the modal stays open.
     let newShip: Shipment;
+    // The quick form has no country field; take it from the city/region entered.
+    const originCountry = resolveLocation([senderCity, senderState].filter(Boolean).join(', '))?.country || '';
+    const destCountry = resolveLocation([recipientCity, recipientState].filter(Boolean).join(', '))?.country || '';
     try {
       newShip = await createShipment({
         shipmentType,
         service,
         totalWeightLbs: parseFloat(weight) || 10,
         totalPieces: parseInt(pieces) || 1,
-        origin: { city: senderCity, state: senderState, country: 'United States' },
-        destination: { city: recipientCity, state: recipientState, country: 'United States' },
+        origin: { city: senderCity, state: senderState, country: originCountry },
+        destination: { city: recipientCity, state: recipientState, country: destCountry },
         sender: {
           name: senderName,
           city: senderCity,
           state: senderState,
           addressLine: senderAddress,
-          country: 'United States'
+          country: originCountry
         },
         recipient: {
           name: recipientName,
           city: recipientCity,
           state: recipientState,
           addressLine: recipientAddress,
-          country: 'United States'
+          country: destCountry
         },
         currentLocation: `${senderCity}, ${senderState}`,
         currentFacility: `${senderCity} Regional Gateway`,

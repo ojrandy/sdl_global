@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Headphones, X, CheckCircle, Send } from 'lucide-react';
 import './SupportModal.css';
 import { api } from '../services/api';
+import { useEscapeKey } from '../utils/useEscapeKey';
 
 // CONTENT §6.4
 export const SUPPORT_ISSUE_TYPES = ['Delay', 'Address change', 'Damage', 'Customs question', 'Other'] as const;
@@ -38,6 +39,8 @@ export const SupportModal: React.FC<SupportModalProps> = ({
     setError('');
     setTicket(null);
   }, [isOpen, initialTrackingNumber, defaultIssueType]);
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

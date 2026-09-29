@@ -535,7 +535,7 @@ export function resolveLocation(input: string): GeoLocationResult | null {
       lat: stateInfo.lat,
       lng: stateInfo.lng,
       timezone: stateInfo.tz,
-      facilityName: `${stateInfo.name} Interstate Gateway`,
+      facilityName: `${stateInfo.name} Gateway`,
       country: 'United States',
       isExactCoordinate: false
     };

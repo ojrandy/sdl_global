@@ -15,6 +15,7 @@ import { trackRouter } from './routes/track.js';
 import { statsRouter } from './routes/stats.js';
 import { authRouter } from './routes/auth.js';
 import { messagesRouter } from './routes/messages.js';
+import { seoRouter } from './seo.js';
 import { requireAdminAuth, SESSION_COOKIE } from './middleware/auth.js';
 
 dotenv.config(); // reload trigger for tsx watch after .env changes
@@ -54,6 +55,9 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
 }));
+
+// robots.txt, sitemap.xml and the admin-host noindex header; host-aware, so before anything else.
+app.use(seoRouter);
 
 // credentials:true + a specific origin (not '*', which browsers reject alongside
 // credentialed requests) — the admin session cookie has to actually reach the API for

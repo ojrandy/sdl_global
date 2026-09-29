@@ -2595,7 +2595,7 @@ export const CreateShipmentView: React.FC<CreateShipmentViewProps> = ({
                             <label>Emergency Response Contact</label>
                             <input
                               type="text"
-                              placeholder="1-800-535-5053 (CHEMTREC)"
+                              placeholder="24-hour emergency response number"
                             />
                           </div>
                         </div>

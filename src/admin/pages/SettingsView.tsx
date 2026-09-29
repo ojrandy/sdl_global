@@ -564,7 +564,7 @@ export const SettingsView: React.FC = () => {
                     value="USD ($) — United States Dollar"
                     className="settings-input disabled-bg"
                   />
-                  <small>Standard currency across all United States logistics corridors.</small>
+                  <small>Prices are stored in US dollars; the display currency setting converts them for customers.</small>
                 </div>
               </div>
             </div>

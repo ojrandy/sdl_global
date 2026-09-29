@@ -600,7 +600,7 @@ const normalizeShipment = (s: any): Shipment => {
       origin: {
         city: originCity,
         state: originState,
-        country: 'United States',
+        country: tq.originCountry || originGeo?.country || '',
         lat: originGeo?.lat || 40.7128,
         lng: originGeo?.lng || -74.0060,
         facility: originGeo?.facilityName || `${originCity} Gateway Hub`
@@ -608,7 +608,7 @@ const normalizeShipment = (s: any): Shipment => {
       destination: {
         city: destCity,
         state: destState,
-        country: 'United States',
+        country: tq.destCountry || destGeo?.country || '',
         lat: destGeo?.lat || 34.0522,
         lng: destGeo?.lng || -118.2437,
         facility: destGeo?.facilityName || `${destCity} Sort Hub`
@@ -622,15 +622,15 @@ const normalizeShipment = (s: any): Shipment => {
         email: tq.requesterEmail || tq.customerEmail,
         city: originCity,
         state: originState,
-        postalCode: tq.originZip || tq.origin?.postalCode || '10001',
-        country: 'USA'
+        postalCode: tq.originZip || tq.origin?.postalCode || undefined,
+        country: tq.originCountry || originGeo?.country || ''
       },
       recipient: {
         name: tq.recipientName || 'Designated Consignee',
         city: destCity,
         state: destState,
-        postalCode: tq.destZip || tq.destination?.postalCode || '90001',
-        country: 'USA'
+        postalCode: tq.destZip || tq.destination?.postalCode || undefined,
+        country: tq.destCountry || destGeo?.country || ''
       },
       estimatedDelivery: 'Aug 25, 2026',
       estimatedDeliveryDetail: 'by 5:00 PM',
@@ -850,7 +850,7 @@ const normalizeShipment = (s: any): Shipment => {
       } : {
         city: originCity,
         state: originState,
-        country: 'United States',
+        country: resolveLocation(`${originCity}, ${originState}`)?.country || '',
         lat: resolveLocation(`${originCity}, ${originState}`)?.lat || 40.7128,
         lng: resolveLocation(`${originCity}, ${originState}`)?.lng || -74.0060,
         facility: resolveLocation(`${originCity}, ${originState}`)?.facilityName || `${originCity} Intake Hub`
@@ -863,15 +863,15 @@ const normalizeShipment = (s: any): Shipment => {
       } : {
         city: destCity,
         state: destState,
-        country: 'United States',
+        country: resolveLocation(`${destCity}, ${destState}`)?.country || '',
         lat: resolveLocation(`${destCity}, ${destState}`)?.lat || 34.0522,
         lng: resolveLocation(`${destCity}, ${destState}`)?.lng || -118.2437,
         facility: resolveLocation(`${destCity}, ${destState}`)?.facilityName || `${destCity} Sort Center`
       },
       currentLocation: normalizedLocation,
       currentFacility: (typeof shipmentData.currentFacility === 'string' ? shipmentData.currentFacility : null) || (typeof shipmentData.currentLocation === 'object' ? (shipmentData.currentLocation as any)?.facility : null) || `${originCity} Intake Terminal`,
-      sender: shipmentData.sender || { name: 'Shipper', city: originCity, state: originState, country: 'United States' },
-      recipient: shipmentData.recipient || { name: 'Consignee', city: destCity, state: destState, country: 'United States' },
+      sender: shipmentData.sender || { name: 'Shipper', city: originCity, state: originState, country: resolveLocation(`${originCity}, ${originState}`)?.country || '' },
+      recipient: shipmentData.recipient || { name: 'Consignee', city: destCity, state: destState, country: resolveLocation(`${destCity}, ${destState}`)?.country || '' },
       estimatedDelivery: normalizedDelivery,
       estimatedDeliveryDetail: shipmentData.estimatedDeliveryDetail || (typeof shipmentData.estimatedDelivery === 'object' ? (shipmentData.estimatedDelivery as any)?.timeWindow : null) || 'by 5:00 PM',
       routeCheckpoints: shipmentData.routeCheckpoints || [],

@@ -17,6 +17,7 @@ import { getShipmentByTrackingNumber } from '../data/mockShipments';
 import { Shipment } from '../types/shipment';
 import { api } from '../services/api';
 import { useCompanyContact } from '../utils/useCompanyContact';
+import { useEscapeKey } from '../utils/useEscapeKey';
 import { parseTrackingInput } from '../shared/trackingId';
 import { shipmentStatusLabel, shipmentStatusTone } from '../shared/shipmentStatus';
 import './TrackPage.css';
@@ -61,6 +62,7 @@ export const TrackPage: React.FC<TrackPageProps> = ({ onTrack, onNavigate, notFo
 
   // Batch Multi-Tracking Drawer State
   const [batchModalOpen, setBatchModalOpen] = useState(false);
+  useEscapeKey(batchModalOpen, () => setBatchModalOpen(false));
   const [batchResults, setBatchResults] = useState<BatchResult[]>([]);
   const [batchFilter, setBatchFilter] = useState<'ALL' | 'IN_TRANSIT' | 'DELIVERED' | 'DELAYED'>('ALL');
 

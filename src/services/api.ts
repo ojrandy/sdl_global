@@ -236,7 +236,11 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(shipment || {})
     });
-    return handleResponse<{ trackingNumber: string; data: Shipment }>(res);
+    // The new ID is sent beside `data` (a raw database row), and handleResponse returns only
+    // `data`, so read it from the top-level body first.
+    const body = await res.clone().json().catch(() => null);
+    const data = await handleResponse<Shipment>(res);
+    return { trackingNumber: body?.trackingNumber, data };
   },
 
   // Admin Documents

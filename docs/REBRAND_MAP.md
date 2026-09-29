@@ -133,19 +133,25 @@ grep -rniE "\bUSA\b|United States|\bU\.S\.|1-800|555-01" src server
 grep -rli "duolingo" dist dist-server
 ```
 
-**Allowed hits (document each here):** *Sweep run 2026-09-28 (tracker 1.12) on source and a fresh `npm run build`.*
+**Phase 6 gate (tracker 6.1), 2026-09-29:** source and a fresh `npm run build` show **zero unexplained hits**. Every hit left is in the table below. Fixed in this pass: the last 5 `interstate` lines (public delay reason "Interstate Corridor Congestion" → "Road Congestion", state-centroid facility "{State} Interstate Gateway" → "{State} Gateway", the demo fallback event text, the admin ops strip "8 Commercial Interstate Hubs" → the live gateway count) and the U.S. defaults found by the S2 review (admin edit / quick-create / quote conversion stamped "United States"/"USA" and 10001/90001 postcodes; Settings "United States logistics corridors"; the CHEMTREC 1-800 placeholder).
+
+**Allowed hits (document each here):** *Sweep run 2026-09-28 (tracker 1.12) on source and a fresh `npm run build`; re-run 2026-09-29 (tracker 6.1).*
 | Hit | Why it's allowed |
 |---|---|
 | `server/db.ts:9`, `:11` (`OLD_BRAND_SETTINGS`), and the same strings in `dist-server/server/db.js` | Startup migration: finds the old seed's company name and email in an existing `settings` table and rewrites them to SDL values. It has to know the old values to match them. Nothing old is shown to users. |
 | `server/db.ts:31` (`LEGACY_DB_FILE`), and `dist-server/server/db.js` | Only used to warn at startup that an old database file is present and ignored (DEPLOYMENT §4). |
 | `scripts/trackingId.test.ts:56`, `:75`; `scripts/references.test.ts:43` | Negative tests: they assert that old `DXP-` IDs are rejected and that generated references contain no old-brand text. Not part of the build. |
 | `CLAUDE.md`, `PROMPTS.md`, `docs/*.md` | Rebrand documentation that has to name the old strings to describe the job. Internal only; not in `dist/`. Review before the repo goes public. |
-| Binary files: `Public/brand/og-image.jpg`, `Public/images/sdl/hero-home-1024.jpg`, `Public/images/sdl/track-hero-1024.webp` (and their `dist/` copies), `images/free-cc0/locations-hero.webp`, `images/landingimage.png` | False positives: `dxp` matched random bytes in compressed image data (e.g. `LdXP`, `DXP` between binary bytes). No text metadata. |
+| Binary files: `Public/brand/og-image.jpg`, `Public/images/sdl/hero-home-1024.jpg`, `Public/images/sdl/track-hero-1024.webp`, `Public/images/sdl/about-hero-1024.webp` (and their `dist/` copies), `images/free-cc0/locations-hero.webp`, `images/landingimage.png` | False positives: `dxp` matched random bytes in compressed image data (e.g. `LdXP`, `DXP` between binary bytes). No text metadata. |
 | `screens/*.png` (4 files) | False positives in binary data, like the images above. The folder itself is due to leave the repo (§5). |
 | `data/sdl_global.db-wal` | Local dev database (gitignored, never deployed): stale WAL pages still hold pre-rebrand demo rows. CLAUDE.md rule 9: not touched. It clears on the next checkpoint or when the local DB is recreated. |
 | `dex\b` (the tracker 1.12 pattern) | The only real word hit is "FedEx Custom Critical" (`src/pages/HomePage.tsx:142`), a third-party carrier name, not the old brand. Every other hit is `index`/`z-index`/`tabIndex`. That carrier list is invented partner content and belongs to task 3.14. |
 
-**Not allowed, deferred to their own tasks** (US-only wording and placeholder data, not old-brand names; listed so the Phase 6 gate still catches them):
+| `scripts/routing.test.ts:46` | Negative test: asserts route descriptions contain no "interstate/highway" wording. |
+| S2 review (`USA\|United States\|U.S.`), 2026-09-29 | Remaining hits are real geography, not U.S.-only assumptions: U.S. gateways (JFK, IAH, LAX) in `gateways.ts`, the U.S. state tables in `geocodingService.ts` / `timeZones.ts` (used only when a place is in the U.S.), country aliases in `countries.ts`, the Houston demo place (6.7) and code comments. |
+| `(212)/(415) 555-01xx` pet presets in `CreateShipmentView.tsx` (admin chunk only) | Reserved fictional range (never a real number). They pre-fill the admin wizard's pet fields: clear with the demo data (tracker 6.7, Blocked #47). |
+
+**History: deferred at 1.12, now closed by 2.x/3.x and 6.1** (kept for the record):
 | Hits (2026-09-28) | Owner task |
 |---|---|
 | `nationwide\|interstate`: 64 lines in `src/` (pages 46, services 10, components 5, admin 3) | 2.2–2.4 (services, `USJourneyMap`), 3.2–3.13 (page copy) |
