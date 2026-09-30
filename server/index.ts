@@ -69,6 +69,14 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// API answers are per-visitor (session, admin data) and must never be stored by Hostinger's
+// CDN or the browser; a replayed/emptied login response broke sign-in on fresh browsers.
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Cache-Control', 'no-store, private');
+  next();
+});
+
 if (ADMIN_PROXY_TARGET) {
   // Admin-subdomain deployment: forward every /api request to the real app untouched, cookies
   // included. Mounted before any body-parser so the raw request stream reaches the upstream

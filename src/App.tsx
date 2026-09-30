@@ -26,7 +26,7 @@ import { Shipment } from './types/shipment';
 import { QuoteRequest } from './types/admin';
 import { api } from './services/api';
 import { simulationEngine } from './services/simulationEngine';
-import { ADMIN_HOST, ADMIN_CONSOLE_NAME, COMPANY } from './config/brand';
+import { ADMIN_HOST, ADMIN_CONSOLE_NAME, COMPANY, SITE_URL } from './config/brand';
 import './styles/global.css';
 
 const loadAdminApp = () => import('./admin/AdminApp');
@@ -262,6 +262,12 @@ function MainAppContent() {
   }, [getShipment, quoteRequests, shipments, currentShipment]);
 
   const handleNavigate = (page: string, param?: string) => {
+    // The admin host only ever shows the console; public pages live on the main domain.
+    if (isAdminHost() && page !== 'admin') {
+      const path = page === 'home' ? '' : (param ? `/${page}/${param}` : `/${page}`);
+      window.location.assign(path ? `${SITE_URL}/#${path}` : `${SITE_URL}/`);
+      return;
+    }
     if (page === 'quote' && param) {
       setPreselectedService(param);
     }
@@ -407,7 +413,13 @@ function MainAppContent() {
         ) : (
           <AdminApp
             onNavigatePublic={handleNavigate}
-            onViewPublicTracking={handleTrackShipment}
+            onViewPublicTracking={(trk) => {
+              if (isAdminHost()) {
+                window.location.assign(`${SITE_URL}/#/track/${encodeURIComponent(trk)}`);
+              } else {
+                handleTrackShipment(trk);
+              }
+            }}
           />
         )}
       </Suspense>

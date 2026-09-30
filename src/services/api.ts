@@ -26,17 +26,28 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export const api = {
   // Admin Auth
   async login(password: string): Promise<{ success: boolean }> {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ password })
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        cache: 'no-store',
+        body: JSON.stringify({ password })
+      });
+    } catch {
+      throw new Error("Can't reach the server. Check your connection and try again.");
+    }
     let json: any;
     try {
       json = await res.json();
     } catch {
-      throw new Error(`Server returned non-JSON response (HTTP ${res.status})`);
+      // The hosting CDN has been seen answering with an empty or HTML body. The body is
+      // unreliable but the session cookie isn't, so ask the server whether login took.
+      if (res.ok && await api.checkSession()) return { success: true };
+      if (res.status === 401) throw new Error('Incorrect password.');
+      if (res.status === 429) throw new Error('Too many login attempts. Try again in a few minutes.');
+      throw new Error('Sign-in is temporarily unavailable. Please try again in a moment.');
     }
     if (!res.ok || json.success === false) {
       throw new Error(json.error || `HTTP error ${res.status}`);
@@ -50,7 +61,7 @@ export const api = {
 
   async checkSession(): Promise<boolean> {
     try {
-      const res = await fetch(`${API_BASE}/auth/session`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/auth/session`, { credentials: 'include', cache: 'no-store' });
       const json = await res.json();
       return Boolean(json?.isAdmin);
     } catch {
