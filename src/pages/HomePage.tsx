@@ -54,14 +54,14 @@ const SERVICES: { title: string; body: string; cta: string; image: SdlImageName;
     body: 'Time-critical documents and parcels, door to door, with the fastest available routing and customs pre-clearance where possible.',
     cta: 'Explore Express',
     image: 'service-priority-express',
-    alt: 'Ground crew loading palletised air cargo into an SDL aircraft at sunset'
+    alt: 'Ground crew raising a cargo pallet to the hold door of a wide-body aircraft'
   },
   {
     title: 'Scheduled Freight & Linehaul',
     body: 'Air, ocean (FCL and LCL) and road freight on fixed departures, for regular volumes that need predictable transit times.',
     cta: 'Explore Freight',
     image: 'service-freight-linehaul',
-    alt: 'Container ship being loaded by gantry cranes at a port terminal'
+    alt: 'Dock workers on a container ship deck as gantry cranes load stacked containers'
   },
   {
     title: 'Vehicle Shipping & Transport',
@@ -509,7 +509,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <div className="about-main-img-wrapper">
               <ResponsiveImage
                 name="about-operations"
-                alt="SDL warehouse staff member checking stacked, labelled cartons on a tablet"
+                alt="Warehouse staff member checking stock on a tablet between loaded pallet racks"
                 sizes="(max-width: 1024px) 100vw, 45vw"
                 imgClassName="about-main-img"
               />
@@ -519,7 +519,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onTrack, onNavigate }) => {
             <div className="about-thumb-overlap">
               <ResponsiveImage
                 name="about-team"
-                alt="Smiling SDL team member in a branded cap at a container yard"
+                alt="Smiling support coordinator wearing a headset"
                 sizes="72px"
                 imgClassName="about-thumb-img"
               />

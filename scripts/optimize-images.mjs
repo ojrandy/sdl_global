@@ -17,6 +17,8 @@ const STEP_WIDTHS = [640, 1024, 1600, 2400];
 // Every card/tile photo is cropped to this exact square so rows line up at the same height.
 // 340 px is the largest square every supplied brand-img file can fill without upscaling.
 const CARD_SIZE = 340;
+// Larger square variants for retina screens, emitted only when the source is big enough.
+const CARD_STEP_SIZES = [640, 1024, 1400];
 
 fs.mkdirSync(BRAND_OUT, { recursive: true });
 fs.mkdirSync(PHOTO_OUT, { recursive: true });
@@ -155,8 +157,8 @@ const PHOTOS = [
   // Services and About heroes: two different bands of the landing image until dedicated photos exist.
   { name: 'services-hero', src: 'landingimage.png', kind: 'hero', aspect: 12 / 5, position: 'top' },
   { name: 'about-hero', src: 'landingimage.png', kind: 'hero', aspect: 12 / 5, position: 'bottom' },
-  { name: 'service-priority-express', src: 'brand-img1.PNG', kind: 'card' },
-  { name: 'service-freight-linehaul', src: 'brand-img2.PNG', kind: 'card' },
+  { name: 'service-priority-express', src: 'free-pexels/service-priority-express.jpg', kind: 'card' },
+  { name: 'service-freight-linehaul', src: 'free-pexels/service-freight-linehaul.jpg', kind: 'card' },
   { name: 'service-vehicle-transport', src: 'free-cc0/service-vehicle-transport.webp', kind: 'card' },
   { name: 'service-secure-vault', src: 'free-cc0/service-secure-vault.webp', kind: 'card' },
   { name: 'industry-healthcare', src: 'site/healthcare-pharma.jpg', kind: 'card' },
@@ -164,9 +166,10 @@ const PHOTOS = [
   { name: 'industry-automotive', src: 'site/automotive-parts.jpg', kind: 'card' },
   { name: 'industry-ecommerce', src: 'site/ecommerce-retail.jpg', kind: 'card' },
   { name: 'track-result-vehicle', src: 'brand-img3.PNG', kind: 'card' },
-  { name: 'about-operations', src: 'brand-img4.PNG', kind: 'card' },
+  { name: 'about-operations', src: 'free-pexels/about-operations.jpg', kind: 'card' },
   { name: 'contact-team', src: 'brand-img5.PNG', kind: 'card' },
-  { name: 'about-team', src: 'brand-img7.PNG', kind: 'card', crop: { left: 0, top: 40, width: 262, height: 262 } },
+  // Shown as a 72 px thumbnail: crop tight on the face.
+  { name: 'about-team', src: 'free-pexels/about-team.jpg', kind: 'card', crop: { left: 950, top: 80, width: 900, height: 900 } },
 ];
 
 // `position` picks which part of the source a cover crop keeps (sharp: 'centre', 'top', 'bottom', ...).
@@ -192,7 +195,7 @@ async function buildPhotos() {
       // Never upscale: a source smaller than CARD_SIZE is output at its own size. Every card is
       // still a 1:1 square, so CSS renders them all at the same height.
       const base = Math.min(CARD_SIZE, maxSquare);
-      const sizes = [base, ...(maxSquare >= 640 ? [640] : [])];
+      const sizes = [base, ...CARD_STEP_SIZES.filter(s => s <= maxSquare)];
       for (const s of sizes) {
         await writeVariants(factory, p.name, s, s);
         variants.push(s);

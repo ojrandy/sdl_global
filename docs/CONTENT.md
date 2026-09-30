@@ -486,8 +486,8 @@ Several SDL photos show the logo lettered as "SOL" (AI-generated artwork), so th
 | about-hero | images/landingimage.png (12:5, bottom band) | SDL truck and container ship on the quay at sunset |
 | track-hero | images/landingimage.png (2:1 crop) | SDL truck, cargo ship and aircraft at a container port at sunset |
 | locations-hero | images/free-cc0/locations-hero.webp | Aerial view of rows of shipping containers at a port terminal |
-| service-priority-express | images/brand-img1.PNG | Ground crew loading palletised air cargo into an SDL aircraft at sunset |
-| service-freight-linehaul | images/brand-img2.PNG | Container ship being loaded by gantry cranes at a port terminal |
+| service-priority-express | images/free-pexels/service-priority-express.jpg | Ground crew raising a cargo pallet to the hold door of a wide-body aircraft |
+| service-freight-linehaul | images/free-pexels/service-freight-linehaul.jpg | Dock workers on a container ship deck as gantry cranes load stacked containers |
 | service-vehicle-transport | images/free-cc0/service-vehicle-transport.webp | Roll-on/roll-off vehicle carrier ship berthed at a harbour quay |
 | service-secure-vault | images/free-cc0/service-secure-vault.webp | Close-up of the combination lock on a metal security case |
 | industry-healthcare | images/site/healthcare-pharma.jpg | Worker in gloves and a clean-room gown carrying sealed boxes |
@@ -495,8 +495,8 @@ Several SDL photos show the logo lettered as "SOL" (AI-generated artwork), so th
 | industry-automotive | images/site/automotive-parts.jpg | Mechanic working on a car engine with a spanner |
 | industry-ecommerce | images/site/ecommerce-retail.jpg | Online seller packing parcels next to a laptop |
 | track-result-vehicle | images/brand-img3.PNG | Two SDL trucks travelling along a highway at sunset |
-| about-operations | images/brand-img4.PNG | SDL warehouse staff member checking stacked, labelled cartons on a tablet |
-| about-team | images/brand-img7.PNG (cropped) | Smiling SDL team member in a branded cap at a container yard |
+| about-operations | images/free-pexels/about-operations.jpg | Warehouse staff member checking stock on a tablet between loaded pallet racks |
+| about-team | images/free-pexels/about-team.jpg (cropped) | Smiling support coordinator wearing a headset |
 | contact-team | images/brand-img5.PNG | SDL team member carrying a branded backpack at an airport cargo area |
 | og-image | images/landingimage.png | (social preview, no alt needed) |
 

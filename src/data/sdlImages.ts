@@ -14,8 +14,8 @@ export const SDL_IMAGES = {
   'callback-banner': { width: 1672, height: 557, widths: [640, 1024, 1600] },
   'services-hero': { width: 1672, height: 697, widths: [640, 1024, 1600] },
   'about-hero': { width: 1672, height: 697, widths: [640, 1024, 1600] },
-  'service-priority-express': { width: 340, height: 340, widths: [340] },
-  'service-freight-linehaul': { width: 340, height: 340, widths: [340] },
+  'service-priority-express': { width: 340, height: 340, widths: [340, 640, 1024, 1400] },
+  'service-freight-linehaul': { width: 340, height: 340, widths: [340, 640, 1024, 1400] },
   'service-vehicle-transport': { width: 340, height: 340, widths: [340] },
   'service-secure-vault': { width: 340, height: 340, widths: [340, 640] },
   'industry-healthcare': { width: 340, height: 340, widths: [340, 640] },
@@ -23,9 +23,9 @@ export const SDL_IMAGES = {
   'industry-automotive': { width: 340, height: 340, widths: [340] },
   'industry-ecommerce': { width: 340, height: 340, widths: [340] },
   'track-result-vehicle': { width: 340, height: 340, widths: [340] },
-  'about-operations': { width: 340, height: 340, widths: [340] },
+  'about-operations': { width: 340, height: 340, widths: [340, 640, 1024, 1400] },
   'contact-team': { width: 340, height: 340, widths: [340] },
-  'about-team': { width: 262, height: 262, widths: [262] },
+  'about-team': { width: 340, height: 340, widths: [340, 640] },
 } satisfies Record<string, SdlImageInfo>;
 
 export type SdlImageName = keyof typeof SDL_IMAGES;

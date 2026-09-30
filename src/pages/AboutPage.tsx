@@ -182,7 +182,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
               <div className="about-visual-card">
                 <ResponsiveImage
                   name="about-operations"
-                  alt="SDL warehouse staff member checking stacked, labelled cartons on a tablet"
+                  alt="Warehouse staff member checking stock on a tablet between loaded pallet racks"
                   sizes="(max-width: 1024px) 100vw, 45vw"
                   className="about-terminal-media"
                   imgClassName="about-terminal-img"
